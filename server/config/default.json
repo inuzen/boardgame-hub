@@ -1,0 +1,3 @@
+{
+    "postgresURI": "postgres://evgenijpajkacev:12345@localhost:5432/boardgames"
+}
