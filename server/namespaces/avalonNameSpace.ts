@@ -1,3 +1,4 @@
+import { getQuestsForPlayerCount } from './engine';
 import { Namespace, Server, Socket } from 'socket.io';
 import { createPlayer, createRoom, findAndDeletePlayer, getPlayerList, assignRoles } from './dbActions';
 
@@ -30,7 +31,11 @@ class Connection {
     async assignRoles(roomCode: string) {
         await assignRoles(roomCode);
         const updatedPlayers = await getPlayerList(roomCode);
-        this.socket.emit('players', updatedPlayers);
+        updatedPlayers.forEach((player: any) => {
+            // TODO include initial role message
+            this.ns.to(player.socketId).emit('role', player.role);
+            this.ns.to(roomCode).emit('quests', getQuestsForPlayerCount(updatedPlayers.length));
+        });
     }
 
     disconnect() {}

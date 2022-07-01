@@ -4,3 +4,5 @@ export const vote = (vote: boolean) => {
         payload: vote,
     };
 };
+
+const initSocketActions = (socket: any) => {};

@@ -1,6 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.initNameSpace = void 0;
+const engine_1 = require("./engine");
 const dbActions_1 = require("./dbActions");
 class Connection {
     socket;
@@ -26,7 +27,11 @@ class Connection {
     async assignRoles(roomCode) {
         await (0, dbActions_1.assignRoles)(roomCode);
         const updatedPlayers = await (0, dbActions_1.getPlayerList)(roomCode);
-        this.socket.emit('players', updatedPlayers);
+        updatedPlayers.forEach((player) => {
+            // TODO include initial role message
+            this.ns.to(player.socketId).emit('role', player.role);
+            this.ns.to(roomCode).emit('quests', (0, engine_1.getQuestsForPlayerCount)(updatedPlayers.length));
+        });
     }
     disconnect() { }
 }

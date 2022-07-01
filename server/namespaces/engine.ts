@@ -1,35 +1,73 @@
 import { shuffle } from '../utils/utils';
 import { ROLES, Player, Role, SIDES, ROLE_LIST } from './types';
-
-// TODO maybe join role and quest constants
-// in a format of "player_count": [good, evil]
-const ROLE_DISTRIBUTION: Record<number, number[]> = {
-    2: [1, 1],
-    3: [1, 2],
-    5: [3, 2],
-    6: [4, 2],
-    7: [4, 3],
-    8: [5, 3],
-    9: [6, 3],
-    10: [6, 4],
+interface QuestDistribution {
+    questPartySize: number[];
+    good: number;
+    evil: number;
+}
+// in a format of "player_count": {questPartySize: [2, 3, ...], good: 1, evil: 1}
+export const DISTRIBUTION: Record<number, QuestDistribution> = {
+    2: {
+        questPartySize: [1, 1, 1, 2, 1],
+        good: 1,
+        evil: 1,
+    },
+    3: {
+        questPartySize: [1, 2, 1, 2, 1],
+        good: 2,
+        evil: 1,
+    },
+    4: {
+        questPartySize: [1, 2, 3, 2, 2],
+        good: 3,
+        evil: 1,
+    },
+    5: {
+        questPartySize: [2, 3, 2, 3, 3],
+        good: 3,
+        evil: 2,
+    },
+    6: {
+        questPartySize: [2, 3, 4, 3, 4],
+        good: 4,
+        evil: 2,
+    },
+    7: {
+        questPartySize: [2, 3, 3, 4, 4],
+        good: 4,
+        evil: 3,
+    },
+    8: {
+        questPartySize: [3, 4, 4, 5, 5],
+        good: 5,
+        evil: 3,
+    },
+    9: {
+        questPartySize: [3, 4, 4, 5, 5],
+        good: 6,
+        evil: 3,
+    },
+    10: {
+        questPartySize: [3, 4, 4, 5, 5],
+        good: 6,
+        evil: 4,
+    },
 };
 
-// playerCount: [1st quest party size, 2nd quest party size, ...]
-export const QUESTS: Record<number, number[]> = {
-    5: [2, 3, 2, 3, 3],
-    6: [2, 3, 4, 3, 4],
-    7: [2, 3, 3, 4, 4],
-    8: [3, 4, 4, 5, 5],
-    9: [3, 4, 4, 5, 5],
-    10: [3, 4, 4, 5, 5],
-};
+export const getQuestsForPlayerCount = (playerCount: number): any[] =>
+    DISTRIBUTION[playerCount].questPartySize.map((questPartySize, i) => {
+        return {
+            partySize: questPartySize,
+            result: i > 1 && Math.random() < 0.5 ? 'success' : 'fail',
+        };
+    });
 
-export const createRoleDistributionArray = (num: number, extraRolesList: ROLE_LIST[] = []) => {
+export const createRoleDistributionArray = (playerCount: number, extraRolesList: ROLE_LIST[] = []) => {
     const defaultRoles = [ROLES.MERLIN, ROLES.ASSASSIN];
     const extraRoles = extraRolesList.map((el) => ROLES[el]);
     const roles = defaultRoles.concat(extraRoles);
 
-    const [good, evil] = ROLE_DISTRIBUTION[num];
+    const { good, evil } = DISTRIBUTION[playerCount];
 
     const extraGoodRoles = roles.filter((role) => role.side === SIDES.GOOD);
     const extraEvilRoles = roles.filter((role) => role.side === SIDES.EVIL);
@@ -42,29 +80,6 @@ export const createRoleDistributionArray = (num: number, extraRolesList: ROLE_LI
 
     return shuffle(goodRoles.concat(evilRoles));
 };
-
-// export const generateRoles = (playerArray: Player[], extraRolesList: ROLE_LIST[]) => {
-//     const playerCount = playerArray.length;
-
-//     const shuffledPlayers = shuffle(playerArray);
-//     const roles = createRoleDistributionArray(playerCount, extraRolesList);
-
-//     if (shuffledPlayers.length !== roles.length) {
-//         console.error('more players then roles');
-//         throw new Error();
-//     }
-//     // Maybe there is a better way but oh well
-//     const playersWithRoles = shuffledPlayers.map((player, i) => ({ ...player, role: roles[i] }));
-//     // the second shuffle is to prevent sending to players list of roles in the same order. e.g. For good side Merlin player will always be the first in the list
-//     const shuffledPlayersWithRoles = shuffle(playersWithRoles).map((el, i) => ({ ...el, id: i + 1 }));
-//     return {
-//         allPlayers: shuffledPlayersWithRoles,
-//         good: shuffledPlayersWithRoles.filter((el) => el.role.side === SIDES.GOOD),
-//         evil: shuffledPlayersWithRoles.filter((el) => el.role.side === SIDES.EVIL),
-//     };
-// };
-
-// type GeneratedRoles = ReturnType<typeof generateRoles>;
 
 // export const createMessageByRole = (role: ROLE_LIST, assignedRoles: GeneratedRoles): string => {
 //     switch (role) {

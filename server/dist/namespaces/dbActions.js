@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assignRoles = exports.findAndDeletePlayer = exports.updatePlayer = exports.createPlayer = exports.createRoom = exports.removeRoomAndPlayers = exports.getPlayerList = void 0;
+exports.assignRoles = exports.findAndDeletePlayer = exports.updatePlayer = exports.createPlayer = exports.updateRoom = exports.createRoom = exports.removeRoomAndPlayers = exports.getPlayerList = void 0;
 const db_1 = require("../config/db");
 const engine_1 = require("./engine");
 const getPlayerList = async (roomCode) => {
@@ -42,6 +42,14 @@ const createRoom = async (roomCode) => {
     });
 };
 exports.createRoom = createRoom;
+const updateRoom = async (roomCode, newData) => {
+    await db_1.AvalonRoom.update(newData, {
+        where: {
+            roomCode,
+        },
+    });
+};
+exports.updateRoom = updateRoom;
 const createPlayer = async ({ roomCode, name, socketId }) => {
     await db_1.AvalonPlayer.create({
         roomCode,
@@ -51,7 +59,6 @@ const createPlayer = async ({ roomCode, name, socketId }) => {
 };
 exports.createPlayer = createPlayer;
 const updatePlayer = async ({ socketId, updatedProperties }) => {
-    console.log(updatedProperties, 'updatePlayer');
     await db_1.AvalonPlayer.update(updatedProperties, {
         where: {
             socketId: socketId,
@@ -89,11 +96,9 @@ const findAndDeletePlayer = async (socketId) => {
 };
 exports.findAndDeletePlayer = findAndDeletePlayer;
 const assignRoles = async (roomCode) => {
-    console.log(roomCode, 'assigning roles');
     const players = await (0, exports.getPlayerList)(roomCode);
     const playerCount = players.length;
     const rolesForPlayers = (0, engine_1.createRoleDistributionArray)(playerCount);
-    console.log(players);
     const updateArray = players.map((player, i) => {
         return (0, exports.updatePlayer)({
             socketId: player.socketId,
