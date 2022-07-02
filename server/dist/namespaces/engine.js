@@ -54,7 +54,7 @@ exports.DISTRIBUTION = {
 const getQuestsForPlayerCount = (playerCount) => exports.DISTRIBUTION[playerCount].questPartySize.map((questPartySize, i) => {
     return {
         partySize: questPartySize,
-        result: i > 0 && Math.random() < 0.5 ? 'success' : 'fail',
+        result: i > 1 && Math.random() < 0.5 ? 'success' : 'fail',
     };
 });
 exports.getQuestsForPlayerCount = getQuestsForPlayerCount;

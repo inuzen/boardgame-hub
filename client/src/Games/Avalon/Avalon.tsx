@@ -1,78 +1,69 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { useParams } from 'react-router-dom';
-import { Socket, io } from 'socket.io-client';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
-import { selectNickname } from '../../app/appSlice';
+import { startConnecting, getQuests, getAllPlayers, disconnect, startGame } from './store/avalonSlice';
 import { QuestItem } from './Components/QuestItem';
+import { PlayerItem } from './Components/PlayerItem';
 import './avalon.scss';
 
 const Avalon = (props: any) => {
     const { roomCode } = useParams();
-    const [socket, setSocket] = useState<Socket | null>(null);
-    // const socket = useAppSelector(selectSocket);
-    // const dispatch = useAppDispatch();
-    const nickname = useAppSelector(selectNickname);
-    // TODO move these to redux
-    const [players, setPlayers] = useState<any[]>([]);
-    const [role, setRole] = useState<string>('');
-    const [quests, setQuests] = useState<number[]>([]);
+
+    const dispatch = useAppDispatch();
+
+    const players = useAppSelector(getAllPlayers);
+    const quests = useAppSelector(getQuests);
+
     // TODO add additional rules where quest could be selected by leader
     useEffect(() => {
-        const newSocket = io(`http://${window.location.hostname}:3001/avalon`);
-        setSocket(newSocket);
+        dispatch(startConnecting(roomCode || ''));
 
-        if (roomCode) {
-            newSocket.emit('room', { roomCode, nickname });
-        }
-        // newSocket.emit('get players', roomCode);
         return () => {
-            newSocket.close();
+            dispatch(disconnect);
         };
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
-    useEffect(() => {
-        if (socket) {
-            socket.on('players', (data: any[]) => {
-                setPlayers(data);
-            });
-            socket.on('role', (role: string) => {
-                setRole(role);
-            });
-            socket.on('quests', (quests: number[]) => {
-                setQuests(quests);
-            });
-        }
-    }, [socket]);
     const onStartGame = () => {
-        socket?.emit('get roles', roomCode);
+        dispatch(startGame());
     };
     return (
         <div>
             <h1>Avalon: Room id - {roomCode}</h1>
             <div className="mainContainer">
-                <div className="gameFieldContainer">
-                    {quests.map((quest: any, i) => (
-                        <QuestItem
-                            isActive={i === 0}
-                            playerCount={quest.partySize}
-                            key={i}
-                            number={i + 1}
-                            result={quest.result}
-                        />
-                    ))}
-                </div>
-                <div className="playerList">
+                <div className="playerListContainer">
                     <h2>Players:</h2>
-                    <ul>
+                    <div className="playerList">
                         {players.map((player: any) => (
-                            <li key={player.id}>{player.name}</li>
+                            <PlayerItem key={player.socketId} {...player} />
                         ))}
-                    </ul>
-                    {role && <p>Your role is {role}</p>}
+                    </div>
+
                     <button onClick={onStartGame} disabled={players.length < 2}>
                         Start game
                     </button>
+                </div>
+                <div className="gameFieldContainer">
+                    <p>Current Leader: {}</p>
+                    <div className="questContainer">
+                        {quests.map((quest: any, i) => (
+                            <QuestItem
+                                isActive={i === 0}
+                                playerCount={quest.partySize}
+                                key={i}
+                                number={i + 1}
+                                result={quest.result}
+                            />
+                        ))}
+                    </div>
+                    <p>Vote Track:</p>
+                    <div className="voteTrack">
+                        {[1, 2, 3, 4, 5].map((i: number) => (
+                            <div className="voteTrackItem" key={i}>
+                                {i}
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         </div>

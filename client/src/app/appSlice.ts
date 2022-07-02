@@ -4,10 +4,12 @@ import { RootState } from './store';
 
 export interface AppState {
     nickname: string;
+    roomCode: string;
 }
 
 const initialState: AppState = {
     nickname: '',
+    roomCode: '',
 };
 
 export const appSlice = createSlice({
@@ -19,10 +21,14 @@ export const appSlice = createSlice({
             // @ts-ignore
             state.nickname = action.payload;
         },
+        setRoomCode: (state, action: PayloadAction<string>) => {
+            // @ts-ignore
+            state.roomCode = action.payload;
+        },
     },
 });
 
-export const { setNickname } = appSlice.actions;
+export const { setNickname, setRoomCode } = appSlice.actions;
 
 export const selectNickname = (state: RootState) => state.app.nickname;
 

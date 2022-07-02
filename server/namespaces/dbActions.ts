@@ -24,6 +24,8 @@ export interface IAvalonRoom {
     extraRoles: ROLE_LIST[];
     missedTeamVotes: number;
     questHistory: boolean[];
+    leaderCanSelectQuest: boolean;
+    gameInProgress: boolean;
 }
 
 export const getPlayerList = async (roomCode: string) => {
