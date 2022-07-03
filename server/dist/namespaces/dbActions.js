@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assignRoles = exports.findAndDeletePlayer = exports.updatePlayer = exports.createPlayer = exports.updateRoom = exports.createRoom = exports.removeRoomAndPlayers = exports.getPlayerList = void 0;
+exports.assignRoles = exports.findAndDeletePlayer = exports.updatePlayer = exports.createPlayer = exports.updateQuest = exports.initQuests = exports.getQuests = exports.updateRoom = exports.createRoom = exports.getRoomWithPlayers = exports.removeRoomAndPlayers = exports.countPlayers = exports.getPlayerList = void 0;
 const db_1 = require("../config/db");
 const engine_1 = require("./engine");
 const getPlayerList = async (roomCode) => {
@@ -12,6 +12,15 @@ const getPlayerList = async (roomCode) => {
     return players;
 };
 exports.getPlayerList = getPlayerList;
+const countPlayers = async (roomCode) => {
+    const playerCount = await db_1.AvalonPlayer.count({
+        where: {
+            roomCode,
+        },
+    });
+    return playerCount;
+};
+exports.countPlayers = countPlayers;
 const removeRoomAndPlayers = async (roomCode) => {
     const room = await db_1.AvalonRoom.findOne({
         where: {
@@ -34,10 +43,24 @@ const removeRoomAndPlayers = async (roomCode) => {
     }
 };
 exports.removeRoomAndPlayers = removeRoomAndPlayers;
-const createRoom = async (roomCode) => {
-    await db_1.AvalonRoom.findOrCreate({
+const getRoomWithPlayers = async (roomCode) => {
+    const room = await db_1.AvalonRoom.findOne({
         where: {
             roomCode,
+        },
+        include: db_1.AvalonPlayer,
+    });
+    return room;
+};
+exports.getRoomWithPlayers = getRoomWithPlayers;
+const createRoom = async (roomCode, socketId) => {
+    return await db_1.AvalonRoom.findOrCreate({
+        where: {
+            roomCode,
+        },
+        defaults: {
+            roomCode,
+            hostSocketId: socketId,
         },
     });
 };
@@ -50,6 +73,54 @@ const updateRoom = async (roomCode, newData) => {
     });
 };
 exports.updateRoom = updateRoom;
+// get all quests for a room
+const getQuests = async (roomCode) => {
+    const quests = await db_1.AvalonQuest.findAll({
+        where: {
+            roomCode,
+        },
+    });
+    return quests;
+};
+exports.getQuests = getQuests;
+const initQuests = async (roomCode, numberOfPlayers) => {
+    const { questPartySize } = engine_1.DISTRIBUTION[numberOfPlayers];
+    const quests = await db_1.AvalonQuest.findAll({
+        where: {
+            roomCode,
+        },
+    });
+    if (quests.length) {
+        await db_1.AvalonQuest.destroy({
+            where: {
+                roomCode,
+            },
+        });
+    }
+    await db_1.AvalonQuest.bulkCreate(questPartySize.map((partySize, i) => {
+        return { roomCode, questNumber: i + 1, questPartySize: partySize, questResult: '', active: i === 0 };
+    }));
+};
+exports.initQuests = initQuests;
+const updateQuest = async ({ roomCode, questNumber, questResult, active }) => {
+    const currentActiveQuest = await db_1.AvalonQuest.findOne({
+        where: {
+            roomCode,
+            active: true,
+        },
+    });
+    if (currentActiveQuest && currentActiveQuest.questNumber !== questNumber && active) {
+        currentActiveQuest.active = false;
+        await currentActiveQuest.save();
+    }
+    await db_1.AvalonQuest.update({ active, questResult: questResult || '' }, {
+        where: {
+            roomCode,
+            questNumber,
+        },
+    });
+};
+exports.updateQuest = updateQuest;
 const createPlayer = async ({ roomCode, name, socketId }) => {
     await db_1.AvalonPlayer.create({
         roomCode,

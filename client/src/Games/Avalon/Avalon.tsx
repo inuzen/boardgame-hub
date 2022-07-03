@@ -13,6 +13,7 @@ const Avalon = (props: any) => {
 
     const players = useAppSelector(getAllPlayers);
     const quests = useAppSelector(getQuests);
+    console.log(quests);
 
     // TODO add additional rules where quest could be selected by leader
     useEffect(() => {
@@ -46,13 +47,13 @@ const Avalon = (props: any) => {
                 <div className="gameFieldContainer">
                     <p>Current Leader: {}</p>
                     <div className="questContainer">
-                        {quests.map((quest: any, i) => (
+                        {quests.map(({ active, questNumber, questPartySize, questResult }: any, i) => (
                             <QuestItem
-                                isActive={i === 0}
-                                playerCount={quest.partySize}
+                                isActive={active}
+                                playerCount={questPartySize}
                                 key={i}
-                                number={i + 1}
-                                result={quest.result}
+                                number={questNumber}
+                                result={questResult}
                             />
                         ))}
                     </div>

@@ -1,5 +1,5 @@
-import { AvalonRoom, AvalonPlayer } from '../config/db';
-import { createRoleDistributionArray } from './engine';
+import { AvalonRoom, AvalonPlayer, AvalonQuest } from '../config/db';
+import { createRoleDistributionArray, DISTRIBUTION } from './engine';
 import { ROLE_LIST } from './types';
 
 export interface IAvalonPlayer {
@@ -36,6 +36,14 @@ export const getPlayerList = async (roomCode: string) => {
     });
     return players;
 };
+export const countPlayers = async (roomCode: string) => {
+    const playerCount = await AvalonPlayer.count({
+        where: {
+            roomCode,
+        },
+    });
+    return playerCount;
+};
 
 export const removeRoomAndPlayers = async (roomCode: string) => {
     const room = await AvalonRoom.findOne({
@@ -59,10 +67,25 @@ export const removeRoomAndPlayers = async (roomCode: string) => {
     }
 };
 
-export const createRoom = async (roomCode: string) => {
-    await AvalonRoom.findOrCreate({
+export const getRoomWithPlayers = async (roomCode: string) => {
+    const room = await AvalonRoom.findOne({
         where: {
             roomCode,
+        },
+        include: AvalonPlayer,
+    });
+
+    return room;
+};
+
+export const createRoom = async (roomCode: string, socketId: string) => {
+    return await AvalonRoom.findOrCreate({
+        where: {
+            roomCode,
+        },
+        defaults: {
+            roomCode,
+            hostSocketId: socketId,
         },
     });
 };
@@ -73,6 +96,69 @@ export const updateRoom = async (roomCode: string, newData: any) => {
             roomCode,
         },
     });
+};
+
+type Quest = {
+    roomCode: string;
+    questNumber: number;
+    questPartySize: number;
+    questResult: 'success' | 'fail' | '';
+    active: boolean;
+};
+
+// get all quests for a room
+export const getQuests = async (roomCode: string) => {
+    const quests = await AvalonQuest.findAll({
+        where: {
+            roomCode,
+        },
+    });
+    return quests;
+};
+
+export const initQuests = async (roomCode: string, numberOfPlayers: number) => {
+    const { questPartySize } = DISTRIBUTION[numberOfPlayers];
+    const quests = await AvalonQuest.findAll({
+        where: {
+            roomCode,
+        },
+    });
+    if (quests.length) {
+        await AvalonQuest.destroy({
+            where: {
+                roomCode,
+            },
+        });
+    }
+    await AvalonQuest.bulkCreate(
+        questPartySize.map((partySize: number, i): Quest => {
+            return { roomCode, questNumber: i + 1, questPartySize: partySize, questResult: '', active: i === 0 };
+        }),
+    );
+};
+
+export const updateQuest = async ({ roomCode, questNumber, questResult, active }: Quest) => {
+    const currentActiveQuest = await AvalonQuest.findOne({
+        where: {
+            roomCode,
+            active: true,
+        },
+    });
+
+    if (currentActiveQuest && currentActiveQuest.questNumber !== questNumber && active) {
+        currentActiveQuest.active = false;
+        await currentActiveQuest.save();
+    }
+
+    await AvalonQuest.update(
+        { active, questResult: questResult || '' },
+        {
+            where: {
+                roomCode,
+                questNumber,
+            },
+        },
+    );
 };
 
 export const createPlayer = async ({ roomCode, name, socketId }: IAvalonPlayer) => {

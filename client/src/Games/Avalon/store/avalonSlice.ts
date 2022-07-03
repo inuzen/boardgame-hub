@@ -5,7 +5,6 @@ import { Socket, io } from 'socket.io-client';
 export interface AvalonPlayer {
     name: string;
     socketId: string;
-    role?: string;
     isLeader?: boolean;
     isHost?: boolean;
     currentVote?: boolean;
@@ -15,6 +14,7 @@ export interface AvalonPlayer {
 export interface AvalonState {
     players: AvalonPlayer[];
     hostSocketId: string;
+    socketId: string;
     partySize: number;
     evilScore: number;
     goodScore: number;
@@ -29,6 +29,7 @@ export interface AvalonState {
     quests: number[];
     isEstablishingConnection: boolean;
     isConnected: boolean;
+    role: string;
 }
 
 const initialState: AvalonState = {
@@ -41,13 +42,15 @@ const initialState: AvalonState = {
     nominatedPlayers: [],
     extraRoles: [],
     missedTeamVotes: 1,
-    quests: [],
+    quests: [0, 0, 0, 0, 0],
     questHistory: [],
     leaderCanSelectQuest: false,
     gameInProgress: false,
     isEstablishingConnection: false,
     isConnected: false,
     hostSocketId: '',
+    socketId: '',
+    role: '',
 };
 
 // export const connect = createAsyncThunk('avalon/connect', async () => {
@@ -98,5 +101,7 @@ export const { receivePlayers, startConnecting, connectionEstablished, disconnec
 // in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
 export const getAllPlayers = (state: RootState) => state.avalon.players;
 export const getQuests = (state: RootState) => state.avalon.quests;
+export const isCurrentLeader = (state: RootState) => state.avalon.currentLeader === state.avalon.socketId;
+export const isHost = (state: RootState) => state.avalon.hostSocketId === state.avalon.socketId;
 
 export default avalonSlice.reducer;
