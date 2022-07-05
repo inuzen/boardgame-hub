@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.assignRoles = exports.findAndDeletePlayer = exports.updatePlayer = exports.createPlayer = exports.updateQuest = exports.initQuests = exports.getQuests = exports.updateRoom = exports.createRoom = exports.getRoomWithPlayers = exports.removeRoomAndPlayers = exports.countPlayers = exports.getPlayerList = void 0;
+exports.assignRoles = exports.findAndDeletePlayer = exports.updatePlayer = exports.createPlayer = exports.updateQuest = exports.initQuests = exports.getQuests = exports.updateRoom = exports.createRoom = exports.getRoomWithPlayers = exports.removeRoomAndPlayers = exports.nominatePlayer = exports.countPlayers = exports.getPlayerBySocketId = exports.getPlayerList = void 0;
 const db_1 = require("../config/db");
 const engine_1 = require("./engine");
 const getPlayerList = async (roomCode) => {
@@ -8,10 +8,30 @@ const getPlayerList = async (roomCode) => {
         where: {
             roomCode,
         },
+        order: [['order', 'ASC']],
     });
     return players;
 };
 exports.getPlayerList = getPlayerList;
+// export const getPlayerRole = async (roomCode: string, socketId: string) => {
+//     const player = await AvalonPlayer.findOne({
+//         where: {
+//             roomCode,
+//             socketId,
+//         },
+//     });
+//     return player?.role;
+// };
+const getPlayerBySocketId = async (roomCode, socketId) => {
+    const player = await db_1.AvalonPlayer.findOne({
+        where: {
+            roomCode,
+            socketId,
+        },
+    });
+    return player;
+};
+exports.getPlayerBySocketId = getPlayerBySocketId;
 const countPlayers = async (roomCode) => {
     const playerCount = await db_1.AvalonPlayer.count({
         where: {
@@ -21,6 +41,14 @@ const countPlayers = async (roomCode) => {
     return playerCount;
 };
 exports.countPlayers = countPlayers;
+const nominatePlayer = async (roomCode, playerId) => {
+    const selectedPlayer = await (0, exports.getPlayerBySocketId)(roomCode, playerId);
+    if (selectedPlayer) {
+        selectedPlayer.nominated = selectedPlayer.nominated ? false : true;
+        await selectedPlayer.save();
+    }
+};
+exports.nominatePlayer = nominatePlayer;
 const removeRoomAndPlayers = async (roomCode) => {
     const room = await db_1.AvalonRoom.findOne({
         where: {
@@ -48,7 +76,7 @@ const getRoomWithPlayers = async (roomCode) => {
         where: {
             roomCode,
         },
-        include: db_1.AvalonPlayer,
+        include: { model: db_1.AvalonPlayer, order: [['order', 'ASC']], attributes: { exclude: ['role'] } },
     });
     return room;
 };
@@ -79,6 +107,7 @@ const getQuests = async (roomCode) => {
         where: {
             roomCode,
         },
+        order: [['questNumber', 'ASC']],
     });
     return quests;
 };
@@ -121,12 +150,8 @@ const updateQuest = async ({ roomCode, questNumber, questResult, active }) => {
     });
 };
 exports.updateQuest = updateQuest;
-const createPlayer = async ({ roomCode, name, socketId }) => {
-    await db_1.AvalonPlayer.create({
-        roomCode,
-        name,
-        socketId,
-    });
+const createPlayer = async (player) => {
+    await db_1.AvalonPlayer.create(player);
 };
 exports.createPlayer = createPlayer;
 const updatePlayer = async ({ socketId, updatedProperties }) => {
@@ -166,14 +191,20 @@ const findAndDeletePlayer = async (socketId) => {
     }
 };
 exports.findAndDeletePlayer = findAndDeletePlayer;
+// also assigns the first leader
 const assignRoles = async (roomCode) => {
     const players = await (0, exports.getPlayerList)(roomCode);
     const playerCount = players.length;
+    const firstLeaderOrderNumber = Math.floor(Math.random() * playerCount);
     const rolesForPlayers = (0, engine_1.createRoleDistributionArray)(playerCount);
     const updateArray = players.map((player, i) => {
         return (0, exports.updatePlayer)({
             socketId: player.socketId,
-            updatedProperties: { role: rolesForPlayers[i].roleName },
+            updatedProperties: {
+                role: rolesForPlayers[i].roleName,
+                isCurrentLeader: i === firstLeaderOrderNumber,
+                order: i,
+            },
         });
     });
     await Promise.all(updateArray);

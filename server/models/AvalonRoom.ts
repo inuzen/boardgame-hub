@@ -14,6 +14,22 @@ export default (sequelize: Sequelize, DataTypes: any) =>
         votingArray: {
             type: DataTypes.ARRAY(DataTypes.STRING),
         },
+        missedTeamVotes: {
+            type: DataTypes.INTEGER,
+            defaultValue: 1,
+        },
+        nominationInProgress: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        votingInProgress: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        currentLeaderId: {
+            type: DataTypes.STRING,
+            defaultValue: '',
+        },
 
         // timestamps: false,
         // options

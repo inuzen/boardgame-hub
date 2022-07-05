@@ -1,42 +1,45 @@
-import { createAsyncThunk, createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { RootState, AppThunk } from '../../../app/store';
-import { Socket, io } from 'socket.io-client';
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { RootState } from '../../../app/store';
+
+import { AvalonRoomServer } from './types';
 
 export interface AvalonPlayer {
-    name: string;
     socketId: string;
-    isLeader?: boolean;
-    isHost?: boolean;
-    currentVote?: boolean;
-    nominated?: boolean;
-    selected: boolean;
+    roomCode: string;
+    name: string;
+    role: string;
+    isHost: boolean;
+    isCurrentLeader: boolean;
+    order: number;
+    nominated: boolean;
 }
-export interface AvalonState {
+
+interface ConnectionState {
+    isConnected: boolean;
+    isEstablishingConnection: boolean;
+}
+
+// TODO split in two types - one common with server and the rest is FE specific
+export interface AvalonState extends ConnectionState {
     players: AvalonPlayer[];
     hostSocketId: string;
     socketId: string;
-    partySize: number;
-    evilScore: number;
-    goodScore: number;
     currentQuest: number;
     currentLeader: string | null;
     nominatedPlayers: string[];
+    nominationInProgress: boolean;
+    votingInProgress: boolean;
     extraRoles: string[];
     missedTeamVotes: number;
     questHistory: boolean[];
     leaderCanSelectQuest: boolean;
     gameInProgress: boolean;
     quests: number[];
-    isEstablishingConnection: boolean;
-    isConnected: boolean;
     role: string;
 }
 
 const initialState: AvalonState = {
     players: [],
-    partySize: 0,
-    evilScore: 0,
-    goodScore: 0,
     currentQuest: 1,
     currentLeader: null,
     nominatedPlayers: [],
@@ -51,6 +54,8 @@ const initialState: AvalonState = {
     hostSocketId: '',
     socketId: '',
     role: '',
+    nominationInProgress: false,
+    votingInProgress: false,
 };
 
 // export const connect = createAsyncThunk('avalon/connect', async () => {
@@ -68,16 +73,16 @@ export const avalonSlice = createSlice({
         startConnecting: (state, action: PayloadAction<string>) => {
             state.isEstablishingConnection = true;
         },
-        connectionEstablished: (state) => {
+        connectionEstablished: (state, action) => {
             state.isConnected = true;
             state.isEstablishingConnection = true;
+            state.socketId = action.payload;
         },
         disconnect: (state) => {
-            state.isConnected = false;
-            state.isEstablishingConnection = false;
+            state = { ...initialState };
         },
         receivePlayers: (state, action: PayloadAction<any[]>) => {
-            state.players = action.payload;
+            state.players = action.payload; //.sort((a, b) => a.order - b.order);
         },
         receiveQuests: (state, action: PayloadAction<any[]>) => {
             state.quests = action.payload;
@@ -85,23 +90,53 @@ export const avalonSlice = createSlice({
         startGame: (state) => {
             state.gameInProgress = true;
         },
+        nominatePlayer: (state, action: PayloadAction<string>) => {},
+        updateRoom: (state, action: PayloadAction<AvalonRoomServer>) => {
+            console.log(action.payload);
+
+            state.players = action.payload.AvalonPlayers; //.sort((a, b) => a.order - b.order);
+            state.currentQuest = action.payload.currentRound;
+            state.missedTeamVotes = action.payload.missedTeamVotes;
+            state.nominationInProgress = action.payload.nominationInProgress;
+            state.votingInProgress = action.payload.votingInProgress;
+            state.currentLeader = action.payload.currentLeaderId;
+        },
+        onVote: (state, action: PayloadAction<'yes' | 'no'>) => {},
+        assignRole: (state, action: PayloadAction<string>) => {
+            state.role = action.payload;
+        },
+        confirmParty: (state, action: PayloadAction<string>) => {
+            state.votingInProgress = true;
+        },
     },
-    // extraReducers: (builder) => {
-    //     builder.addCase(connect.fulfilled, (state, action) => {
-    //         state.socket = action.payload;
-    //     });
-    // },
 });
 
-export const { receivePlayers, startConnecting, connectionEstablished, disconnect, receiveQuests, startGame } =
-    avalonSlice.actions;
+export const {
+    receivePlayers,
+    startConnecting,
+    connectionEstablished,
+    disconnect,
+    receiveQuests,
+    startGame,
+    nominatePlayer,
+    updateRoom,
+    onVote,
+    assignRole,
+    confirmParty,
+} = avalonSlice.actions;
 
-// The function below is called a selector and allows us to select a value from
-// the state. Selectors can also be defined inline where they're used instead of
-// in the slice file. For example: `useSelector((state: RootState) => state.counter.value)`
 export const getAllPlayers = (state: RootState) => state.avalon.players;
 export const getQuests = (state: RootState) => state.avalon.quests;
+
+export const selectCurrentLeader = (state: RootState) => state.avalon.currentLeader;
 export const isCurrentLeader = (state: RootState) => state.avalon.currentLeader === state.avalon.socketId;
-export const isHost = (state: RootState) => state.avalon.hostSocketId === state.avalon.socketId;
+
+export const selectHost = (state: RootState) => state.avalon.players?.find((player) => player.isHost)?.socketId;
+export const isHost = (state: RootState) =>
+    state.avalon.players?.find((player) => player.isHost)?.socketId === state.avalon.socketId;
+
+export const selectMissedVotes = (state: RootState) => state.avalon.missedTeamVotes;
+
+export const selectRole = (state: RootState) => state.avalon.role;
 
 export default avalonSlice.reducer;

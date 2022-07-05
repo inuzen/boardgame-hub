@@ -1,17 +1,7 @@
 import { AvalonRoom, AvalonPlayer, AvalonQuest } from '../config/db';
+import { AvalonPlayerType } from '../models/AvalonPlayer';
 import { createRoleDistributionArray, DISTRIBUTION } from './engine';
 import { ROLE_LIST } from './types';
-
-export interface IAvalonPlayer {
-    roomCode: string;
-    name: string;
-    socketId: string;
-    role?: string;
-    isCurrentLeader?: boolean;
-    isHost?: boolean;
-    currentVote?: boolean;
-    isNominated?: boolean;
-}
 
 export interface IAvalonRoom {
     hostSocketId: number;
@@ -26,6 +16,8 @@ export interface IAvalonRoom {
     questHistory: boolean[];
     leaderCanSelectQuest: boolean;
     gameInProgress: boolean;
+    nominationInProgress: boolean;
+    votingInProgress: boolean;
 }
 
 export const getPlayerList = async (roomCode: string) => {
@@ -33,8 +25,29 @@ export const getPlayerList = async (roomCode: string) => {
         where: {
             roomCode,
         },
+        order: [['order', 'ASC']],
     });
     return players;
+};
+
+// export const getPlayerRole = async (roomCode: string, socketId: string) => {
+//     const player = await AvalonPlayer.findOne({
+//         where: {
+//             roomCode,
+//             socketId,
+//         },
+//     });
+//     return player?.role;
+// };
+
+export const getPlayerBySocketId = async (roomCode: string, socketId: string) => {
+    const player = await AvalonPlayer.findOne({
+        where: {
+            roomCode,
+            socketId,
+        },
+    });
+    return player;
 };
 export const countPlayers = async (roomCode: string) => {
     const playerCount = await AvalonPlayer.count({
@@ -43,6 +56,14 @@ export const countPlayers = async (roomCode: string) => {
         },
     });
     return playerCount;
+};
+
+export const nominatePlayer = async (roomCode: string, playerId: string) => {
+    const selectedPlayer = await getPlayerBySocketId(roomCode, playerId);
+    if (selectedPlayer) {
+        selectedPlayer.nominated = selectedPlayer.nominated ? false : true;
+        await selectedPlayer.save();
+    }
 };
 
 export const removeRoomAndPlayers = async (roomCode: string) => {
@@ -72,7 +93,7 @@ export const getRoomWithPlayers = async (roomCode: string) => {
         where: {
             roomCode,
         },
-        include: AvalonPlayer,
+        include: { model: AvalonPlayer, order: [['order', 'ASC']], attributes: { exclude: ['role'] } },
     });
 
     return room;
@@ -112,6 +133,7 @@ export const getQuests = async (roomCode: string) => {
         where: {
             roomCode,
         },
+        order: [['questNumber', 'ASC']],
     });
     return quests;
 };
@@ -161,12 +183,8 @@ export const updateQuest = async ({ roomCode, questNumber, questResult, active }
     );
 };
 
-export const createPlayer = async ({ roomCode, name, socketId }: IAvalonPlayer) => {
-    await AvalonPlayer.create({
-        roomCode,
-        name,
-        socketId,
-    });
+export const createPlayer = async (player: AvalonPlayerType) => {
+    await AvalonPlayer.create(player);
 };
 
 export const updatePlayer = async ({ socketId, updatedProperties }: any) => {
@@ -205,15 +223,20 @@ export const findAndDeletePlayer = async (socketId: string) => {
     }
 };
 
+// also assigns the first leader
 export const assignRoles = async (roomCode: string) => {
     const players: any[] = await getPlayerList(roomCode);
     const playerCount = players.length;
+    const firstLeaderOrderNumber = Math.floor(Math.random() * playerCount);
     const rolesForPlayers = createRoleDistributionArray(playerCount);
-
     const updateArray = players.map((player, i) => {
         return updatePlayer({
             socketId: player.socketId,
-            updatedProperties: { role: rolesForPlayers[i].roleName },
+            updatedProperties: {
+                role: rolesForPlayers[i].roleName,
+                isCurrentLeader: i === firstLeaderOrderNumber,
+                order: i,
+            },
         });
     });
     await Promise.all(updateArray);

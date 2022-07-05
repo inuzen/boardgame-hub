@@ -6,6 +6,11 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
         allowNull: false,
         defaultValue: '',
     },
+    roomCode: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        defaultValue: '',
+    },
     name: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -14,13 +19,29 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
     role: {
         type: DataTypes.STRING,
     },
-    isAdmin: {
+    isHost: {
         type: DataTypes.BOOLEAN,
         // allowNull: false,
     },
-    isLeader: {
+    isCurrentLeader: {
         type: DataTypes.BOOLEAN,
         // allowNull: false,
+    },
+    order: {
+        type: DataTypes.INTEGER,
+        defaultValue: 1,
+    },
+    nominated: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
+    globalVote: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+    },
+    questVote: {
+        type: DataTypes.STRING,
+        defaultValue: '',
     },
     // timestamps: false,
     // options

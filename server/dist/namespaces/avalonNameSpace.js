@@ -15,11 +15,23 @@ class Connection {
         // socket.on('get roles', async () => await this.assignRoles());
         // socket.on('get quests', async () => await this.getQuests());
         socket.on('start game', async () => await this.startGame());
+        socket.on('nominate player', async (playerId) => await this.nominatePlayer(playerId));
+        socket.on('global vote', async (vote) => await this.vote(vote, true));
+        socket.on('quest vote', async (vote) => await this.vote(vote));
         socket.on('room', async ({ roomCode, nickname }) => {
             const [_, created] = await (0, dbActions_1.createRoom)(roomCode, socket.id);
             socket.join(roomCode);
             this.roomCode = roomCode;
-            await (0, dbActions_1.createPlayer)({ roomCode, socketId: socket.id, name: nickname, isHost: created });
+            await (0, dbActions_1.createPlayer)({
+                roomCode,
+                socketId: socket.id,
+                name: nickname,
+                isHost: created,
+                role: '',
+                order: 1,
+                questVote: null,
+                globalVote: null,
+            });
             const players = await (0, dbActions_1.getPlayerList)(roomCode);
             ns.to(roomCode).emit('players', players);
             if (players.length > 1) {
@@ -40,19 +52,31 @@ class Connection {
     async startGame() {
         // TODO Support extra roles
         await (0, dbActions_1.assignRoles)(this.roomCode);
+        const players = await (0, dbActions_1.getPlayerList)(this.roomCode);
+        // random number
+        await (0, dbActions_1.updateRoom)(this.roomCode, {
+            isGameStarted: true,
+            nominationInProgress: true,
+            currentLeaderId: players.find((player) => player.isCurrentLeader)?.socketId || '',
+        });
         // this.getQuests();
         const roomInfo = await (0, dbActions_1.getRoomWithPlayers)(this.roomCode);
-        this.ns.to(this.roomCode).emit('update room', { roomInfo });
+        this.ns.to(this.roomCode).emit('update room', roomInfo);
+        players.forEach((player) => {
+            this.ns.to(player.socketId).emit('assigned role', player.role);
+        });
     }
-    // async assignRoles() {
-    // await assignRoles(this.roomCode);
-    // const updatedPlayers = await getPlayerList(this.roomCode);
-    // updatedPlayers.forEach((player: any) => {
-    //     // TODO include initial role message
-    //     this.ns.to(player.socketId).emit('role', player.role);
-    // });
-    // this.ns.to(this.roomCode).emit('quests', getQuestsForPlayerCount(updatedPlayers.length));
-    // }
+    async nominatePlayer(playerId) {
+        await (0, dbActions_1.nominatePlayer)(this.roomCode, playerId);
+        const playerList = await (0, dbActions_1.getPlayerList)(this.roomCode);
+        this.ns.to(this.roomCode).emit('players', playerList);
+    }
+    async vote(vote, isGlobal = false) {
+        const voterId = this.socket.id;
+        if (isGlobal) {
+            await (0, dbActions_1.updatePlayer)({ socketId: voterId, updatedProperties: { currentVote: vote } });
+        }
+    }
     disconnect() { }
 }
 const initNameSpace = (io) => {
