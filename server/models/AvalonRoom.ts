@@ -1,34 +1,74 @@
-import { Sequelize } from 'sequelize/types';
-
+import { InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize/types';
+import { ROLE_LIST } from '../namespaces/types';
+export interface AvalonRoomType {
+    roomCode: string;
+    currentQuest?: number;
+    hostSocketId: string;
+    currentLeaderId?: string | null;
+    extraRoles?: ROLE_LIST[];
+    missedTeamVotes?: number;
+    currentQuestResults?: boolean[];
+    leaderCanSelectQuest?: boolean;
+    gameInProgress?: boolean;
+    nominationInProgress?: boolean;
+    globalVoteInProgress?: boolean;
+    questVoteInProgress?: boolean;
+    revealVotes?: boolean;
+}
+interface AvalonRoomModel
+    extends AvalonRoomType,
+        Model<InferAttributes<AvalonRoomModel>, InferCreationAttributes<AvalonRoomModel>> {}
 export default (sequelize: Sequelize, DataTypes: any) =>
-    sequelize.define('AvalonRoom', {
+    sequelize.define<AvalonRoomModel>('AvalonRoom', {
         roomCode: {
             type: DataTypes.STRING,
             primaryKey: true,
         },
-        currentRound: {
+        hostSocketId: {
+            type: DataTypes.STRING,
+            allowNull: false,
+            defaultValue: '',
+        },
+        currentQuest: {
             type: DataTypes.INTEGER,
             allowNull: false,
             defaultValue: 1,
         },
-        votingArray: {
-            type: DataTypes.ARRAY(DataTypes.STRING),
-        },
+        // votingArray: {
+        //     type: DataTypes.ARRAY(DataTypes.STRING),
+        // },
         missedTeamVotes: {
             type: DataTypes.INTEGER,
             defaultValue: 1,
+            allowNull: false,
         },
         nominationInProgress: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
-        votingInProgress: {
+        globalVoteInProgress: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        questVoteInProgress: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        gameInProgress: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
+        revealVotes: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
         currentLeaderId: {
             type: DataTypes.STRING,
             defaultValue: '',
+        },
+        currentQuestResults: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            defaultValue: [],
         },
 
         // timestamps: false,

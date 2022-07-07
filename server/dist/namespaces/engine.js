@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getCurrentQuestPartySize = exports.createRoleDistributionArray = exports.getQuestsForPlayerCount = exports.DISTRIBUTION = void 0;
+exports.createRoleDistributionArray = exports.getQuestsForPlayerCount = exports.DISTRIBUTION = void 0;
 const utils_1 = require("../utils/utils");
 const types_1 = require("./types");
 // in a format of "player_count": {questPartySize: [2, 3, ...], good: 1, evil: 1}
@@ -94,5 +94,3 @@ exports.createRoleDistributionArray = createRoleDistributionArray;
 //             return '';
 //     }
 // };
-const getCurrentQuestPartySize = () => { };
-exports.getCurrentQuestPartySize = getCurrentQuestPartySize;

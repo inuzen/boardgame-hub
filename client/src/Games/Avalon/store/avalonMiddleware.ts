@@ -7,6 +7,7 @@ import {
     updateRoom,
     disconnect,
     assignRole,
+    addPlayerToVotedList,
 } from './avalonSlice';
 import { AvalonEvents } from './AvalonEvents';
 import { AvalonRoomServer } from './types';
@@ -50,13 +51,17 @@ const avalonMiddleware: Middleware = (store) => {
             socket.on('assigned role', (role: string) => {
                 store.dispatch(assignRole(role));
             });
+
+            socket.on('player voted', (playerId: string) => {
+                store.dispatch(addPlayerToVotedList(playerId));
+            });
+
             socket.on('disconnect', () => {
                 socket.close();
-                store.dispatch(disconnect());
+                // store.dispatch(disconnect());
             });
         }
         if (isConnectionEstablished) {
-            // add emits here
             switch (action.type) {
                 case AvalonEvents.DISCONNECT:
                     socket.close();
@@ -69,9 +74,14 @@ const avalonMiddleware: Middleware = (store) => {
                     break;
                 case AvalonEvents.GLOBAL_VOTE:
                     socket.emit('global vote', action.payload);
+                    console.log('emitted global vote');
+
                     break;
                 case AvalonEvents.QUEST_VOTE:
                     socket.emit('quest vote', action.payload);
+                    break;
+                case AvalonEvents.CONFIRM_PARTY:
+                    socket.emit('confirm party');
                     break;
                 default:
                     break;

@@ -18,6 +18,13 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
     },
     role: {
         type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+    },
+    side: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
     },
     isHost: {
         type: DataTypes.BOOLEAN,
@@ -37,12 +44,18 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
     },
     globalVote: {
         type: DataTypes.STRING,
-        defaultValue: '',
+        allowNull: true,
+        defaultValue: null,
     },
     questVote: {
         type: DataTypes.STRING,
-        defaultValue: '',
+        allowNull: true,
+        defaultValue: null,
     },
+    // hasVoted: {
+    //     type: DataTypes.BOOLEAN,
+    //     defaultValue: false,
+    // },
     // timestamps: false,
     // options
 });

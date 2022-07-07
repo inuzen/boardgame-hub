@@ -19,6 +19,8 @@ interface ConnectionState {
     isEstablishingConnection: boolean;
 }
 
+type Vote = 'yes' | 'no' | null;
+
 // TODO split in two types - one common with server and the rest is FE specific
 export interface AvalonState extends ConnectionState {
     players: AvalonPlayer[];
@@ -28,7 +30,12 @@ export interface AvalonState extends ConnectionState {
     currentLeader: string | null;
     nominatedPlayers: string[];
     nominationInProgress: boolean;
-    votingInProgress: boolean;
+    globalVoteInProgress: boolean;
+    globalVote: Vote;
+    revealVotes: boolean;
+    // hasVoted: boolean;
+    questVoteInProgress: boolean;
+    questVote: Vote;
     extraRoles: string[];
     missedTeamVotes: number;
     questHistory: boolean[];
@@ -36,6 +43,8 @@ export interface AvalonState extends ConnectionState {
     gameInProgress: boolean;
     quests: number[];
     role: string;
+    nominated: boolean;
+    votedPlayers: string[];
 }
 
 const initialState: AvalonState = {
@@ -54,8 +63,14 @@ const initialState: AvalonState = {
     hostSocketId: '',
     socketId: '',
     role: '',
+    nominated: false,
     nominationInProgress: false,
-    votingInProgress: false,
+    globalVoteInProgress: false,
+    globalVote: null,
+    questVoteInProgress: false,
+    questVote: null,
+    revealVotes: false,
+    votedPlayers: [],
 };
 
 // export const connect = createAsyncThunk('avalon/connect', async () => {
@@ -82,7 +97,7 @@ export const avalonSlice = createSlice({
             state = { ...initialState };
         },
         receivePlayers: (state, action: PayloadAction<any[]>) => {
-            state.players = action.payload; //.sort((a, b) => a.order - b.order);
+            state.players = action.payload.sort((a, b) => a.order - b.order);
         },
         receiveQuests: (state, action: PayloadAction<any[]>) => {
             state.quests = action.payload;
@@ -93,20 +108,36 @@ export const avalonSlice = createSlice({
         nominatePlayer: (state, action: PayloadAction<string>) => {},
         updateRoom: (state, action: PayloadAction<AvalonRoomServer>) => {
             console.log(action.payload);
+            state.players = action.payload.AvalonPlayers.sort((a, b) => a.order - b.order);
 
-            state.players = action.payload.AvalonPlayers; //.sort((a, b) => a.order - b.order);
-            state.currentQuest = action.payload.currentRound;
+            state.nominated = action.payload.AvalonPlayers.some(
+                (player) => player.nominated && player.socketId === state.socketId,
+            );
+            state.currentQuest = action.payload.currentQuest;
             state.missedTeamVotes = action.payload.missedTeamVotes;
             state.nominationInProgress = action.payload.nominationInProgress;
-            state.votingInProgress = action.payload.votingInProgress;
+            state.globalVoteInProgress = action.payload.globalVoteInProgress;
+            state.questVoteInProgress = action.payload.questVoteInProgress;
             state.currentLeader = action.payload.currentLeaderId;
+            if (state.revealVotes !== action.payload.revealVotes) {
+                state.votedPlayers = [];
+                state.revealVotes = action.payload.revealVotes;
+            }
+
+            // @ts-ignore
+            state.quests = action.payload.AvalonQuests.sort((a, b) => a.questNumber - b.questNumber);
         },
-        onVote: (state, action: PayloadAction<'yes' | 'no'>) => {},
+        globalVote: (state, action: PayloadAction<'yes' | 'no'>) => {},
+        questVote: (state, action: PayloadAction<'yes' | 'no'>) => {},
         assignRole: (state, action: PayloadAction<string>) => {
             state.role = action.payload;
         },
-        confirmParty: (state, action: PayloadAction<string>) => {
-            state.votingInProgress = true;
+        confirmParty: (state) => {
+            state.votedPlayers = [];
+            // state.globalVoteInProgress = true;
+        },
+        addPlayerToVotedList: (state, action: PayloadAction<string>) => {
+            state.votedPlayers.push(action.payload);
         },
     },
 });
@@ -120,9 +151,11 @@ export const {
     startGame,
     nominatePlayer,
     updateRoom,
-    onVote,
     assignRole,
     confirmParty,
+    addPlayerToVotedList,
+    globalVote,
+    questVote,
 } = avalonSlice.actions;
 
 export const getAllPlayers = (state: RootState) => state.avalon.players;
@@ -138,5 +171,11 @@ export const isHost = (state: RootState) =>
 export const selectMissedVotes = (state: RootState) => state.avalon.missedTeamVotes;
 
 export const selectRole = (state: RootState) => state.avalon.role;
+
+export const shouldShowVoteButtons = (state: RootState) =>
+    state.avalon.globalVoteInProgress ||
+    (state.avalon.questVoteInProgress &&
+        state.avalon.nominated &&
+        !state.avalon.votedPlayers.includes(state.avalon.socketId));
 
 export default avalonSlice.reducer;

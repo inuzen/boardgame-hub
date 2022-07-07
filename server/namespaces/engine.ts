@@ -105,5 +105,3 @@ export const createRoleDistributionArray = (playerCount: number, extraRolesList:
 //             return '';
 //     }
 // };
-
-export const getCurrentQuestPartySize = () => {};

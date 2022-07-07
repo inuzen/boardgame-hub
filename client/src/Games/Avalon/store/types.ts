@@ -3,20 +3,26 @@ export interface AvalonPlayerServer {
     roomCode: string;
     name: string;
     role: string;
+    side: string;
     isHost: boolean;
     isCurrentLeader: boolean;
     order: number;
     nominated: boolean;
+    globalVote: 'yes' | 'no' | null;
 }
 
 export interface AvalonRoomServer {
     roomCode: string;
     AvalonGameId: string | null;
     AvalonPlayers: AvalonPlayerServer[];
-    currentRound: number;
+    currentQuest: number;
     votingArray: string[] | null;
     missedTeamVotes: number;
     currentLeaderId: string;
     nominationInProgress: boolean;
-    votingInProgress: boolean;
+    globalVoteInProgress: boolean;
+    questVoteInProgress: boolean;
+    gameInProgress: boolean;
+    revealVotes: boolean;
+    currentQuestResults: string[];
 }

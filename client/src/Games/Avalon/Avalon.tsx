@@ -1,14 +1,17 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import {
     getQuests,
     getAllPlayers,
     startGame,
     isHost,
-    onVote,
+    globalVote,
     selectMissedVotes,
     selectRole,
     confirmParty,
+    isCurrentLeader,
+    questVote,
+    shouldShowVoteButtons,
 } from './store/avalonSlice';
 import { QuestItem } from './Components/QuestItem';
 import { PlayerItem } from './Components/PlayerItem';
@@ -23,8 +26,11 @@ const Avalon = ({ roomCode }: any) => {
     const host = useAppSelector(isHost);
     const missedVotes = useAppSelector(selectMissedVotes);
     const role = useAppSelector(selectRole);
-    const foo = useAppSelector((state) => state.avalon.nominationInProgress);
-    console.log(foo);
+    const isLeader = useAppSelector(isCurrentLeader);
+    const nominationInProgress = useAppSelector((state) => state.avalon.nominationInProgress);
+    const globalVoteInProgress = useAppSelector((state) => state.avalon.globalVoteInProgress);
+    const questVoteInProgress = useAppSelector((state) => state.avalon.questVoteInProgress);
+    const showVoteControls = useAppSelector(shouldShowVoteButtons);
 
     // TODO add additional rules where quest could be selected by leader
 
@@ -33,14 +39,28 @@ const Avalon = ({ roomCode }: any) => {
     };
 
     const voteYes = () => {
-        onVote('yes');
+        if (globalVoteInProgress) {
+            dispatch(globalVote('yes'));
+        }
+        if (questVoteInProgress) {
+            dispatch(questVote('yes'));
+        }
     };
 
     const voteNo = () => {
-        onVote('no');
+        if (globalVoteInProgress) {
+            dispatch(globalVote('no'));
+        }
+        if (questVoteInProgress) {
+            dispatch(questVote('no'));
+        }
     };
 
-    const onConfirmParty = () => {};
+    const onConfirmParty = () => {
+        dispatch(confirmParty());
+    };
+
+    const onContinue = () => {};
 
     return (
         <div>
@@ -62,12 +82,12 @@ const Avalon = ({ roomCode }: any) => {
                     </div>
                 </div>
                 <div className="gameFieldContainer">
-                    <p>Current Leader: {players.find((player) => player.isCurrentLeader)?.name}</p>
-                    <p>Vote in Progress: {useAppSelector((state) => state.avalon.votingInProgress).toString()}</p>
-                    <p>
-                        Nomination in progress:{' '}
-                        {useAppSelector((state) => state.avalon.nominationInProgress).toString()}
-                    </p>
+                    <div>Current Leader: {players.find((player) => player.isCurrentLeader)?.name}</div>
+                    <div>Vote in Progress: {globalVoteInProgress.toString()}</div>
+                    <div>Quest in Progress: {questVoteInProgress.toString()}</div>
+                    <div>Nomination in progress: {nominationInProgress.toString()}</div>
+                    {/* <div>Global Vote Results: {}</div> */}
+                    {/* <div>Quest Vote Results: {}</div> */}
                     <div className="questContainer">
                         {quests.map(({ active, questNumber, questPartySize, questResult }: any, i) => (
                             <QuestItem
@@ -92,9 +112,14 @@ const Avalon = ({ roomCode }: any) => {
                     </div>
                 </div>
                 <div>
-                    <button onClick={voteYes}>Yes</button>
-                    <button onClick={voteNo}>No</button>
-                    <button onClick={voteNo}>Confirm Party</button>
+                    {showVoteControls && (
+                        <div>
+                            <button onClick={voteYes}>Yes</button>
+                            <button onClick={voteNo}>No</button>
+                        </div>
+                    )}
+                    {isLeader && nominationInProgress && <button onClick={onConfirmParty}>Confirm Party</button>}
+                    {/* {isLeader && <button onClick={onContinue}>Continue</button>} */}
                 </div>
                 {role && <p>Your role is: {role}</p>}
             </div>

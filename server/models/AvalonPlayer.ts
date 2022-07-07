@@ -1,4 +1,5 @@
 import { InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize/types';
+import { SIDES } from '../namespaces/types';
 
 type VoteType = 'yes' | 'no';
 export interface AvalonPlayerType {
@@ -6,12 +7,14 @@ export interface AvalonPlayerType {
     roomCode: string;
     name: string;
     socketId: string;
-    role: string;
+    role: string | null;
     isCurrentLeader?: boolean;
     isHost: boolean;
     globalVote: VoteType | null;
     questVote: VoteType | null;
     nominated?: boolean;
+    side?: SIDES | null;
+    // hasVoted?: boolean;
 }
 
 interface AvalonPlayerModel
@@ -37,6 +40,13 @@ export default (sequelize: Sequelize, DataTypes: any) =>
         },
         role: {
             type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: null,
+        },
+        side: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: null,
         },
         isHost: {
             type: DataTypes.BOOLEAN,
@@ -48,7 +58,7 @@ export default (sequelize: Sequelize, DataTypes: any) =>
         },
         order: {
             type: DataTypes.INTEGER,
-            defaultValue: 1,
+            defaultValue: 0,
         },
         nominated: {
             type: DataTypes.BOOLEAN,
@@ -56,12 +66,18 @@ export default (sequelize: Sequelize, DataTypes: any) =>
         },
         globalVote: {
             type: DataTypes.STRING,
-            defaultValue: '',
+            allowNull: true,
+            defaultValue: null,
         },
         questVote: {
             type: DataTypes.STRING,
-            defaultValue: '',
+            allowNull: true,
+            defaultValue: null,
         },
+        // hasVoted: {
+        //     type: DataTypes.BOOLEAN,
+        //     defaultValue: false,
+        // },
         // timestamps: false,
         // options
     });
