@@ -51,6 +51,10 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonRoom', {
         type: DataTypes.ARRAY(DataTypes.STRING),
         defaultValue: [],
     },
+    gameMessage: {
+        type: DataTypes.STRING,
+        defaultValue: '',
+    },
     // timestamps: false,
     // options
 });

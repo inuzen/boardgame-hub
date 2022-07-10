@@ -12,6 +12,7 @@ import {
     isCurrentLeader,
     questVote,
     shouldShowVoteButtons,
+    selectSecretInfo,
 } from './store/avalonSlice';
 import { QuestItem } from './Components/QuestItem';
 import { PlayerItem } from './Components/PlayerItem';
@@ -26,11 +27,20 @@ const Avalon = ({ roomCode }: any) => {
     const host = useAppSelector(isHost);
     const missedVotes = useAppSelector(selectMissedVotes);
     const role = useAppSelector(selectRole);
+    const secretInfo = useAppSelector(selectSecretInfo);
     const isLeader = useAppSelector(isCurrentLeader);
+    const gameMessage = useAppSelector((state) => state.avalon.gameMessage);
     const nominationInProgress = useAppSelector((state) => state.avalon.nominationInProgress);
     const globalVoteInProgress = useAppSelector((state) => state.avalon.globalVoteInProgress);
     const questVoteInProgress = useAppSelector((state) => state.avalon.questVoteInProgress);
     const showVoteControls = useAppSelector(shouldShowVoteButtons);
+    const gameOverInfo = useAppSelector((state) => state.avalon.gameOverInfo);
+    const enoughPlayersNominated = useAppSelector(
+        (state) =>
+            state.avalon.players.filter((p) => p.nominated).length ===
+            // @ts-ignore
+            state.avalon.quests.find((q) => q.active)?.questPartySize,
+    );
 
     // TODO add additional rules where quest could be selected by leader
 
@@ -60,8 +70,6 @@ const Avalon = ({ roomCode }: any) => {
         dispatch(confirmParty());
     };
 
-    const onContinue = () => {};
-
     return (
         <div>
             <h1>Avalon: Room id - {roomCode}</h1>
@@ -81,13 +89,10 @@ const Avalon = ({ roomCode }: any) => {
                         ))}
                     </div>
                 </div>
+                {gameOverInfo && <div>{`Game is over and ${gameOverInfo.goodWon ? 'Good' : 'Evil'} won!`}</div>}
                 <div className="gameFieldContainer">
                     <div>Current Leader: {players.find((player) => player.isCurrentLeader)?.name}</div>
-                    <div>Vote in Progress: {globalVoteInProgress.toString()}</div>
-                    <div>Quest in Progress: {questVoteInProgress.toString()}</div>
-                    <div>Nomination in progress: {nominationInProgress.toString()}</div>
-                    {/* <div>Global Vote Results: {}</div> */}
-                    {/* <div>Quest Vote Results: {}</div> */}
+                    <div>{gameMessage}</div>
                     <div className="questContainer">
                         {quests.map(({ active, questNumber, questPartySize, questResult }: any, i) => (
                             <QuestItem
@@ -118,10 +123,13 @@ const Avalon = ({ roomCode }: any) => {
                             <button onClick={voteNo}>No</button>
                         </div>
                     )}
-                    {isLeader && nominationInProgress && <button onClick={onConfirmParty}>Confirm Party</button>}
+                    {isLeader && nominationInProgress && enoughPlayersNominated && (
+                        <button onClick={onConfirmParty}>Confirm Party</button>
+                    )}
                     {/* {isLeader && <button onClick={onContinue}>Continue</button>} */}
                 </div>
                 {role && <p>Your role is: {role}</p>}
+                {secretInfo && <p>{secretInfo}</p>}
             </div>
         </div>
     );

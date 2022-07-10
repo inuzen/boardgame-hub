@@ -9,7 +9,8 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonQuest', {
     },
     questResult: {
         type: DataTypes.STRING,
-        defaultValue: '',
+        allowNull: true,
+        defaultValue: null,
     },
     active: {
         type: DataTypes.BOOLEAN,

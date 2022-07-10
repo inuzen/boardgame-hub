@@ -1,7 +1,8 @@
+import { Op } from 'sequelize';
 import { AvalonRoom, AvalonPlayer, AvalonQuest } from '../config/db';
-import { AvalonPlayerType } from '../models/AvalonPlayer';
+import { AvalonPlayerModel, AvalonPlayerType } from '../models/AvalonPlayer';
 import { AvalonRoomType } from '../models/AvalonRoom';
-import { createRoleDistributionArray, DISTRIBUTION } from './engine';
+import { createMessageByRole, createRoleDistributionArray, DISTRIBUTION } from './engine';
 
 export const getPlayerList = async (roomCode: string) => {
     const players = await AvalonPlayer.findAll({
@@ -11,6 +12,16 @@ export const getPlayerList = async (roomCode: string) => {
         order: [['order', 'ASC']],
     });
     return players;
+};
+
+export const findPlayer = async (roomCode: string, where: Record<string, any>) => {
+    const player = await AvalonPlayer.findOne({
+        where: {
+            roomCode,
+            ...where,
+        },
+    });
+    return player;
 };
 
 export const createPlayer = async (player: AvalonPlayerType) => {
@@ -88,9 +99,31 @@ export const countPlayers = async (roomCode: string, condition?: Record<string, 
 };
 
 export const nominatePlayer = async (roomCode: string, playerId: string) => {
-    const selectedPlayer = await getPlayerBySocketId(roomCode, playerId);
+    const players = await getPlayerList(roomCode);
+    const { selectedPlayer, nominatedCount } = players.reduce(
+        (acc: { selectedPlayer: AvalonPlayerModel | null; nominatedCount: number }, currPlayer) => {
+            if (currPlayer.socketId === playerId) {
+                acc.selectedPlayer = currPlayer;
+            }
+            if (currPlayer.nominated) {
+                acc.nominatedCount++;
+            }
+            return acc;
+        },
+        {
+            selectedPlayer: null,
+            nominatedCount: 0,
+        },
+    );
     if (selectedPlayer) {
-        selectedPlayer.nominated = selectedPlayer.nominated ? false : true;
+        const quest = await getActiveQuest(roomCode);
+        if (selectedPlayer.nominated) {
+            selectedPlayer.nominated = false;
+        }
+
+        if (!selectedPlayer.nominated && quest?.questPartySize! > nominatedCount) {
+            selectedPlayer.nominated = true;
+        }
         await selectedPlayer.save();
     }
 };
@@ -124,7 +157,11 @@ export const getRoomWithPlayers = async (roomCode: string) => {
             roomCode,
         },
         include: [
-            { model: AvalonPlayer, order: [['order', 'ASC']], attributes: { exclude: ['role', 'side'] } },
+            {
+                model: AvalonPlayer,
+                order: [['order', 'ASC']],
+                attributes: { exclude: ['role', 'side', 'secretInformation'] },
+            },
             { model: AvalonQuest, order: [['questNumber', 'ASC']] },
         ],
     });
@@ -166,7 +203,7 @@ type Quest = {
     roomCode: string;
     questNumber: number;
     questPartySize: number;
-    questResult: 'success' | 'fail' | '';
+    questResult: 'success' | 'fail' | null;
     active: boolean;
 };
 
@@ -177,6 +214,16 @@ export const getQuests = async (roomCode: string) => {
             roomCode,
         },
         order: [['questNumber', 'ASC']],
+    });
+    return quests;
+};
+
+export const getActiveQuest = async (roomCode: string) => {
+    const quests = await AvalonQuest.findOne({
+        where: {
+            roomCode,
+            active: true,
+        },
     });
     return quests;
 };
@@ -197,7 +244,7 @@ export const initQuests = async (roomCode: string, numberOfPlayers: number) => {
     }
     await AvalonQuest.bulkCreate(
         questPartySize.map((partySize: number, i): Quest => {
-            return { roomCode, questNumber: i + 1, questPartySize: partySize, questResult: '', active: i === 0 };
+            return { roomCode, questNumber: i + 1, questPartySize: partySize, questResult: null, active: i === 0 };
         }),
     );
 };
@@ -233,7 +280,7 @@ export const changeActiveQuest = async (roomCode: string, questNumber: number) =
 export const updateQuestResult = async (
     roomCode: string,
     questNumber: number,
-    questResult: 'success' | 'fail' | '',
+    questResult: 'success' | 'fail' | null,
 ) => {
     await AvalonQuest.update(
         { questResult },
@@ -274,22 +321,26 @@ export const updateQuestResult = async (
 // also assigns the first leader
 
 export const assignRoles = async (roomCode: string) => {
-    const players: any[] = await getPlayerList(roomCode);
+    const players: AvalonPlayerModel[] = await getPlayerList(roomCode);
     const playerCount = players.length;
     const firstLeaderOrderNumber = Math.floor(Math.random() * playerCount);
     const rolesForPlayers = createRoleDistributionArray(playerCount);
-    const updateArray = players.map((player, i) => {
-        return updatePlayer({
-            socketId: player.socketId,
-            updatedProperties: {
-                role: rolesForPlayers[i].roleName,
-                side: rolesForPlayers[i].side,
-                isCurrentLeader: i === firstLeaderOrderNumber,
-                order: i,
-            },
-        });
+
+    players.forEach((player, i) => {
+        player.role = rolesForPlayers[i].roleName;
+        player.side = rolesForPlayers[i].side;
+        player.isCurrentLeader = i === firstLeaderOrderNumber;
+        player.order = i;
     });
-    await Promise.all(updateArray);
+
+    const addSecretInformation = players.map((player, i, arr) => {
+        console.log('secret information', i, arr.length);
+
+        player.secretInformation = createMessageByRole(player, arr);
+        return player.save();
+    });
+
+    await Promise.all(addSecretInformation);
 };
 
 export const switchToNextLeader = async (roomCode: string) => {
@@ -317,41 +368,37 @@ export const switchToNextLeader = async (roomCode: string) => {
     return '';
 };
 
+// TODO maybe return the game state
 export const handleGlobalVote = async (roomCode: string) => {
     const players = await getPlayerList(roomCode);
     const playerCount = players.length;
     const votedPlayers = players.filter((player) => !!player.globalVote);
     const roomState = await getRoom(roomCode);
-    console.log(playerCount, votedPlayers.length, 'COUNTS');
 
-    if (votedPlayers.length === playerCount) {
-        console.log('all players voted');
+    if (roomState && votedPlayers.length === playerCount) {
+        roomState.globalVoteInProgress = false;
+        roomState.revealVotes = true;
 
         const votedInFavor = players.filter((player) => player.globalVote === 'yes');
         if (votedInFavor.length > votedPlayers.length / 2) {
-            console.log('global vote success');
-
-            await updateRoom(roomCode, {
-                globalVoteInProgress: false,
-                questVoteInProgress: true,
-                revealVotes: true,
-                missedTeamVotes: 1,
-                // currentQuest: roomState?.currentQuest! + 1,
-            });
+            roomState.questVoteInProgress = true;
+            roomState.missedTeamVotes = 1;
         } else {
-            console.log('global vote fail');
             const newLeaderId = await switchToNextLeader(roomCode);
-            await updateRoom(roomCode, {
-                globalVoteInProgress: false,
-                questVoteInProgress: false,
-                nominationInProgress: true,
-                revealVotes: true,
-                missedTeamVotes: roomState?.missedTeamVotes! + 1,
-                // currentQuest: roomState?.currentQuest! + 1,
-                currentLeaderId: newLeaderId,
-            });
+            roomState.questVoteInProgress = false;
+            roomState.nominationInProgress = true;
+            roomState.missedTeamVotes = roomState?.missedTeamVotes! + 1;
+            roomState.currentLeaderId = newLeaderId;
+        }
+        await roomState.save();
+        if (roomState.missedTeamVotes === 5) {
+            return {
+                gameEnded: true,
+                goodWon: false,
+            };
         }
     }
+    return null;
 };
 
 export const clearVotes = async (roomCode: string) => {
@@ -389,6 +436,35 @@ export const handleQuestVote = async (roomCode: string) => {
         roomState.currentQuest = nextQuestNumber;
         await roomState.save();
         await clearVotes(roomCode);
-        await changeActiveQuest(roomCode, nextQuestNumber);
+
+        const gameEnd = await checkForEndGame(roomCode);
+        // Need this check in case the quest is selected manually
+        if (gameEnd.gameEnded) {
+            return gameEnd;
+        } else {
+            await changeActiveQuest(roomCode, nextQuestNumber);
+        }
     }
+    return null;
 };
+
+export const checkForEndGame = async (roomCode: string) => {
+    const quests = await AvalonQuest.findAll({
+        where: {
+            roomCode,
+            questResult: {
+                [Op.not]: null,
+            },
+        },
+    });
+
+    const wonQuests = quests.filter((quest) => quest.questResult === 'success');
+    const failedQuests = quests.filter((quest) => quest.questResult === 'fail');
+
+    return {
+        gameEnded: wonQuests.length === 3 || failedQuests.length === 3,
+        goodWon: wonQuests.length === 3,
+    };
+};
+
+export const restoreDefaults = async (roomCode: string) => {};

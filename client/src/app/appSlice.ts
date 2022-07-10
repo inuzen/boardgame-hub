@@ -8,7 +8,7 @@ export interface AppState {
 }
 
 const initialState: AppState = {
-    nickname: '',
+    nickname: Math.random().toString(36).substring(2, 4),
     roomCode: '',
 };
 

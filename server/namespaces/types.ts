@@ -1,36 +1,3 @@
-export interface SessionData {
-    game: Game;
-    extraRoles: ROLE_LIST[];
-    roleMenuCallerId: number | undefined;
-}
-
-export interface Game {
-    hostId?: number;
-    allPlayers: Player[];
-    partySize: number;
-    evilScore: number;
-    goodScore: number;
-    currentQuest: number;
-    currentLeader: Player | null;
-    nominatedPlayers: Player[];
-    extraRoles: ROLE_LIST[];
-    missedVotes: number;
-    votingArray: Vote[];
-    possibleMerlin: Player | null;
-    questHistory: Record<number, boolean | null>;
-}
-export type Vote = {
-    vote: boolean;
-    player?: Player;
-};
-export interface Player {
-    telegramId: number;
-    id: number;
-    role: Role | null;
-    username: string;
-    name: string;
-}
-
 export enum SIDES {
     GOOD = 'GOOD',
     EVIL = 'EVIL',

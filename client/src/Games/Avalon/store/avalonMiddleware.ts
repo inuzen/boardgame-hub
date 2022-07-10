@@ -8,6 +8,7 @@ import {
     disconnect,
     assignRole,
     addPlayerToVotedList,
+    gameOver,
 } from './avalonSlice';
 import { AvalonEvents } from './AvalonEvents';
 import { AvalonRoomServer } from './types';
@@ -48,12 +49,17 @@ const avalonMiddleware: Middleware = (store) => {
                 store.dispatch(updateRoom(roomData));
             });
 
-            socket.on('assigned role', (role: string) => {
-                store.dispatch(assignRole(role));
+            // TODO add side?
+            socket.on('assigned role', (secret: { role: string; secretInfo: string }) => {
+                store.dispatch(assignRole(secret));
             });
 
             socket.on('player voted', (playerId: string) => {
                 store.dispatch(addPlayerToVotedList(playerId));
+            });
+
+            socket.on('game over', (gameRes: any) => {
+                store.dispatch(gameOver(gameRes));
             });
 
             socket.on('disconnect', () => {
@@ -74,8 +80,6 @@ const avalonMiddleware: Middleware = (store) => {
                     break;
                 case AvalonEvents.GLOBAL_VOTE:
                     socket.emit('global vote', action.payload);
-                    console.log('emitted global vote');
-
                     break;
                 case AvalonEvents.QUEST_VOTE:
                     socket.emit('quest vote', action.payload);

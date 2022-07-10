@@ -14,10 +14,11 @@ export interface AvalonPlayerType {
     questVote: VoteType | null;
     nominated?: boolean;
     side?: SIDES | null;
+    secretInformation?: string | null;
     // hasVoted?: boolean;
 }
 
-interface AvalonPlayerModel
+export interface AvalonPlayerModel
     extends AvalonPlayerType,
         Model<InferAttributes<AvalonPlayerModel>, InferCreationAttributes<AvalonPlayerModel>> {}
 
@@ -70,6 +71,11 @@ export default (sequelize: Sequelize, DataTypes: any) =>
             defaultValue: null,
         },
         questVote: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: null,
+        },
+        secretInformation: {
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: null,

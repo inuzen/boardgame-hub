@@ -36,7 +36,7 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
     },
     order: {
         type: DataTypes.INTEGER,
-        defaultValue: 1,
+        defaultValue: 0,
     },
     nominated: {
         type: DataTypes.BOOLEAN,
@@ -48,6 +48,11 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
         defaultValue: null,
     },
     questVote: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+    },
+    secretInformation: {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,

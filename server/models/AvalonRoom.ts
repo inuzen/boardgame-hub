@@ -13,6 +13,7 @@ export interface AvalonRoomType {
     nominationInProgress?: boolean;
     globalVoteInProgress?: boolean;
     questVoteInProgress?: boolean;
+    gameMessage?: string;
     revealVotes?: boolean;
 }
 interface AvalonRoomModel
@@ -69,6 +70,10 @@ export default (sequelize: Sequelize, DataTypes: any) =>
         currentQuestResults: {
             type: DataTypes.ARRAY(DataTypes.STRING),
             defaultValue: [],
+        },
+        gameMessage: {
+            type: DataTypes.STRING,
+            defaultValue: '',
         },
 
         // timestamps: false,

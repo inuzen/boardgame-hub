@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createRoleDistributionArray = exports.getQuestsForPlayerCount = exports.DISTRIBUTION = void 0;
+exports.createMessageByRole = exports.createRoleDistributionArray = exports.getQuestsForPlayerCount = exports.DISTRIBUTION = void 0;
 const utils_1 = require("../utils/utils");
 const types_1 = require("./types");
 // in a format of "player_count": {questPartySize: [2, 3, ...], good: 1, evil: 1}
@@ -72,25 +72,30 @@ const createRoleDistributionArray = (playerCount, extraRolesList = []) => {
     return (0, utils_1.shuffle)(goodRoles.concat(evilRoles));
 };
 exports.createRoleDistributionArray = createRoleDistributionArray;
-// export const createMessageByRole = (role: ROLE_LIST, assignedRoles: GeneratedRoles): string => {
-//     switch (role) {
-//         case ROLE_LIST.MERLIN:
-//             return `Evil players are: ${assignedRoles.evil
-//                 .reduce((acc: string[], evilPlayer) => {
-//                     if (evilPlayer.role?.key !== ROLE_LIST.MORDRED) {
-//                         acc.push(getPlayerRef(evilPlayer));
-//                     }
-//                     return acc;
-//                 }, [])
-//                 .join(', ')}`;
-//         case ROLE_LIST.PERCIVAL:
-//             const merlin = assignedRoles.good.find((pl) => pl.role.key === ROLE_LIST.MERLIN)!;
-//             const morgana = assignedRoles.evil.find((pl) => pl.role.key === ROLE_LIST.MORGANA)!;
-//             const concealed = shuffle([merlin, morgana]);
-//             return morgana
-//                 ? `Merlin is either ${concealed.map(getPlayerRef).join(' or ')}`
-//                 : `Merlin is ${getPlayerRef(merlin)}`;
-//         default:
-//             return '';
-//     }
-// };
+const createMessageByRole = (player, allPlayers) => {
+    console.log('createMessageByRole', player.side);
+    console.log(player.role, 'player.role');
+    // TODO do something with uppercase
+    switch (player.role?.toUpperCase()) {
+        case types_1.ROLE_LIST.MERLIN:
+            console.log('MERLIN');
+            return `Evil players are: ${allPlayers
+                .reduce((acc, player) => {
+                if (player.side === types_1.SIDES.EVIL && player.role !== types_1.ROLE_LIST.MORDRED) {
+                    acc.push(player.name);
+                }
+                return acc;
+            }, [])
+                .join(', ')}`;
+        case types_1.ROLE_LIST.PERCIVAL:
+            const merlin = allPlayers.find((pl) => pl.role === types_1.ROLE_LIST.MERLIN);
+            const morgana = allPlayers.find((pl) => pl.role === types_1.ROLE_LIST.MORGANA);
+            const concealed = (0, utils_1.shuffle)([merlin, morgana]);
+            return morgana
+                ? `Merlin is either ${concealed.map((pl) => pl.name).join(' or ')}`
+                : `Merlin is ${merlin.name}`;
+        default:
+            return '';
+    }
+};
+exports.createMessageByRole = createMessageByRole;

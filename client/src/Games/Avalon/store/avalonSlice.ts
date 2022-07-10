@@ -1,13 +1,13 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import { RootState } from '../../../app/store';
 
-import { AvalonRoomServer } from './types';
+import { AvalonRoomServer, ROLE_LIST } from './types';
 
 export interface AvalonPlayer {
     socketId: string;
     roomCode: string;
     name: string;
-    role: string;
+    role: ROLE_LIST;
     isHost: boolean;
     isCurrentLeader: boolean;
     order: number;
@@ -45,6 +45,9 @@ export interface AvalonState extends ConnectionState {
     role: string;
     nominated: boolean;
     votedPlayers: string[];
+    gameOverInfo: { gameEnded: boolean; goodWon: boolean } | null;
+    gameMessage: string;
+    secretInfo: string;
 }
 
 const initialState: AvalonState = {
@@ -58,6 +61,7 @@ const initialState: AvalonState = {
     questHistory: [],
     leaderCanSelectQuest: false,
     gameInProgress: false,
+    gameOverInfo: null,
     isEstablishingConnection: false,
     isConnected: false,
     hostSocketId: '',
@@ -71,6 +75,8 @@ const initialState: AvalonState = {
     questVote: null,
     revealVotes: false,
     votedPlayers: [],
+    gameMessage: '',
+    secretInfo: '',
 };
 
 // export const connect = createAsyncThunk('avalon/connect', async () => {
@@ -104,7 +110,10 @@ export const avalonSlice = createSlice({
         },
         startGame: (state) => {
             state.gameInProgress = true;
+            state.gameOverInfo = null;
+            state.votedPlayers = [];
         },
+        // TODO prevent nomination if quest in progress
         nominatePlayer: (state, action: PayloadAction<string>) => {},
         updateRoom: (state, action: PayloadAction<AvalonRoomServer>) => {
             console.log(action.payload);
@@ -123,14 +132,18 @@ export const avalonSlice = createSlice({
                 state.votedPlayers = [];
                 state.revealVotes = action.payload.revealVotes;
             }
+            state.gameMessage = action.payload.gameMessage;
 
             // @ts-ignore
             state.quests = action.payload.AvalonQuests.sort((a, b) => a.questNumber - b.questNumber);
         },
         globalVote: (state, action: PayloadAction<'yes' | 'no'>) => {},
         questVote: (state, action: PayloadAction<'yes' | 'no'>) => {},
-        assignRole: (state, action: PayloadAction<string>) => {
-            state.role = action.payload;
+        assignRole: (state, action: PayloadAction<{ role: string; secretInfo: string }>) => {
+            console.log(action.payload);
+
+            state.role = action.payload.role;
+            state.secretInfo = action.payload.secretInfo;
         },
         confirmParty: (state) => {
             state.votedPlayers = [];
@@ -138,6 +151,10 @@ export const avalonSlice = createSlice({
         },
         addPlayerToVotedList: (state, action: PayloadAction<string>) => {
             state.votedPlayers.push(action.payload);
+        },
+        gameOver: (state, action: PayloadAction<{ gameEnded: boolean; goodWon: boolean }>) => {
+            state.gameInProgress = false;
+            state.gameOverInfo = action.payload;
         },
     },
 });
@@ -156,6 +173,7 @@ export const {
     addPlayerToVotedList,
     globalVote,
     questVote,
+    gameOver,
 } = avalonSlice.actions;
 
 export const getAllPlayers = (state: RootState) => state.avalon.players;
@@ -171,6 +189,7 @@ export const isHost = (state: RootState) =>
 export const selectMissedVotes = (state: RootState) => state.avalon.missedTeamVotes;
 
 export const selectRole = (state: RootState) => state.avalon.role;
+export const selectSecretInfo = (state: RootState) => state.avalon.secretInfo;
 
 export const shouldShowVoteButtons = (state: RootState) =>
     state.avalon.globalVoteInProgress ||

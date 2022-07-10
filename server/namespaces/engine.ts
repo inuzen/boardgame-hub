@@ -1,5 +1,6 @@
+import { AvalonPlayerModel } from '../models/AvalonPlayer';
 import { shuffle } from '../utils/utils';
-import { ROLES, Player, Role, SIDES, ROLE_LIST } from './types';
+import { ROLES, Role, SIDES, ROLE_LIST } from './types';
 interface QuestDistribution {
     questPartySize: number[];
     good: number;
@@ -81,27 +82,33 @@ export const createRoleDistributionArray = (playerCount: number, extraRolesList:
     return shuffle(goodRoles.concat(evilRoles));
 };
 
-// export const createMessageByRole = (role: ROLE_LIST, assignedRoles: GeneratedRoles): string => {
-//     switch (role) {
-//         case ROLE_LIST.MERLIN:
-//             return `Evil players are: ${assignedRoles.evil
-//                 .reduce((acc: string[], evilPlayer) => {
-//                     if (evilPlayer.role?.key !== ROLE_LIST.MORDRED) {
-//                         acc.push(getPlayerRef(evilPlayer));
-//                     }
-//                     return acc;
-//                 }, [])
-//                 .join(', ')}`;
-//         case ROLE_LIST.PERCIVAL:
-//             const merlin = assignedRoles.good.find((pl) => pl.role.key === ROLE_LIST.MERLIN)!;
-//             const morgana = assignedRoles.evil.find((pl) => pl.role.key === ROLE_LIST.MORGANA)!;
-//             const concealed = shuffle([merlin, morgana]);
+export const createMessageByRole = (player: AvalonPlayerModel, allPlayers: AvalonPlayerModel[]): string => {
+    console.log('createMessageByRole', player.side);
+    console.log(player.role, 'player.role');
 
-//             return morgana
-//                 ? `Merlin is either ${concealed.map(getPlayerRef).join(' or ')}`
-//                 : `Merlin is ${getPlayerRef(merlin)}`;
+    // TODO do something with uppercase
+    switch (player.role?.toUpperCase()) {
+        case ROLE_LIST.MERLIN:
+            console.log('MERLIN');
 
-//         default:
-//             return '';
-//     }
-// };
+            return `Evil players are: ${allPlayers
+                .reduce((acc: string[], player) => {
+                    if (player.side === SIDES.EVIL && player.role !== ROLE_LIST.MORDRED) {
+                        acc.push(player.name);
+                    }
+                    return acc;
+                }, [])
+                .join(', ')}`;
+        case ROLE_LIST.PERCIVAL:
+            const merlin = allPlayers.find((pl) => pl.role === ROLE_LIST.MERLIN)!;
+            const morgana = allPlayers.find((pl) => pl.role === ROLE_LIST.MORGANA)!;
+            const concealed = shuffle([merlin, morgana]);
+
+            return morgana
+                ? `Merlin is either ${concealed.map((pl) => pl.name).join(' or ')}`
+                : `Merlin is ${merlin.name}`;
+
+        default:
+            return '';
+    }
+};

@@ -4,7 +4,7 @@ interface QuestModel extends Model<InferAttributes<QuestModel>, InferCreationAtt
     roomCode: string;
     questNumber: number;
     questPartySize: number;
-    questResult: 'success' | 'fail' | '';
+    questResult: 'success' | 'fail' | null;
     active: boolean;
 }
 
@@ -18,7 +18,8 @@ export default (sequelize: Sequelize, DataTypes: any) =>
         },
         questResult: {
             type: DataTypes.STRING,
-            defaultValue: '',
+            allowNull: true,
+            defaultValue: null,
         },
         active: {
             type: DataTypes.BOOLEAN,

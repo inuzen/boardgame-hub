@@ -14,6 +14,7 @@ export const PlayerItem = ({ name, selected, nominated, socketId, globalVote }: 
     const host = useAppSelector(selectHost);
 
     const onPlayerSelect = () => {
+        // TODO check for partySize
         if (isLeader) {
             dispatch(nominatePlayer(socketId));
         }

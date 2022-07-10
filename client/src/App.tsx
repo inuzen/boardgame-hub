@@ -10,7 +10,9 @@ function App() {
         <div className="App">
             <Routes>
                 <Route path="/" element={<Welcome />} />
-                <Route path="avalon/:roomCode" element={<AvalonGameContainer />} />
+                <Route path="avalon/" element={<AvalonGameContainer />}>
+                    <Route path=":roomCode" element={<AvalonGameContainer />} />
+                </Route>
                 <Route path="werewolf/:roomCode" element={<AvalonGameContainer />} />
             </Routes>
         </div>
