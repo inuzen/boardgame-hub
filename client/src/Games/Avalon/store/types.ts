@@ -2,7 +2,8 @@ export interface AvalonPlayerServer {
     socketId: string;
     roomCode: string;
     name: string;
-    role: ROLE_LIST;
+    roleKey: ROLE_LIST;
+    roleName: string;
     side: string;
     isHost: boolean;
     isCurrentLeader: boolean;
@@ -12,10 +13,19 @@ export interface AvalonPlayerServer {
     secretInformation: string;
 }
 
+export interface AvalonQuestServer {
+    roomCode: string;
+    questNumber: number;
+    questResult: string;
+    active: boolean;
+    questPartySize: number;
+}
+
 export interface AvalonRoomServer {
     roomCode: string;
     AvalonGameId: string | null;
     AvalonPlayers: AvalonPlayerServer[];
+    AvalonQuests: AvalonQuestServer[];
     currentQuest: number;
     votingArray: string[] | null;
     missedTeamVotes: number;
@@ -27,6 +37,9 @@ export interface AvalonRoomServer {
     revealVotes: boolean;
     currentQuestResults: string[];
     gameMessage: string;
+    assassinationInProgress: boolean;
+    revealRoles: boolean;
+    extraRoles: ROLE_LIST[];
 }
 
 export enum ROLE_LIST {
@@ -39,3 +52,5 @@ export enum ROLE_LIST {
     OBERON = 'OBERON',
     MORGANA = 'MORGANA',
 }
+
+export const DEFAULT_ROLES = [ROLE_LIST.MERLIN, ROLE_LIST.ASSASSIN, ROLE_LIST.MINION, ROLE_LIST.SERVANT];

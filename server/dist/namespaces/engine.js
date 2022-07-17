@@ -73,23 +73,25 @@ const createRoleDistributionArray = (playerCount, extraRolesList = []) => {
 };
 exports.createRoleDistributionArray = createRoleDistributionArray;
 const createMessageByRole = (player, allPlayers) => {
-    console.log('createMessageByRole', player.side);
-    console.log(player.role, 'player.role');
-    // TODO do something with uppercase
-    switch (player.role?.toUpperCase()) {
+    if (player.side === types_1.SIDES.EVIL && player.roleKey !== types_1.ROLE_LIST.OBERON) {
+        return `Other evil players are: ${allPlayers
+            .filter((p) => p.side === types_1.SIDES.EVIL && p.roleKey !== types_1.ROLE_LIST.OBERON && p.socketId !== player.socketId)
+            .map((p) => p.name)
+            .join(', ')}`;
+    }
+    switch (player.roleKey) {
         case types_1.ROLE_LIST.MERLIN:
-            console.log('MERLIN');
             return `Evil players are: ${allPlayers
                 .reduce((acc, player) => {
-                if (player.side === types_1.SIDES.EVIL && player.role !== types_1.ROLE_LIST.MORDRED) {
+                if (player.side === types_1.SIDES.EVIL && player.roleKey !== types_1.ROLE_LIST.MORDRED) {
                     acc.push(player.name);
                 }
                 return acc;
             }, [])
                 .join(', ')}`;
         case types_1.ROLE_LIST.PERCIVAL:
-            const merlin = allPlayers.find((pl) => pl.role === types_1.ROLE_LIST.MERLIN);
-            const morgana = allPlayers.find((pl) => pl.role === types_1.ROLE_LIST.MORGANA);
+            const merlin = allPlayers.find((pl) => pl.roleKey === types_1.ROLE_LIST.MERLIN);
+            const morgana = allPlayers.find((pl) => pl.roleKey === types_1.ROLE_LIST.MORGANA);
             const concealed = (0, utils_1.shuffle)([merlin, morgana]);
             return morgana
                 ? `Merlin is either ${concealed.map((pl) => pl.name).join(' or ')}`

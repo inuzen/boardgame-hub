@@ -18,6 +18,8 @@ import { QuestItem } from './Components/QuestItem';
 import { PlayerItem } from './Components/PlayerItem';
 import './avalon.scss';
 import classNames from 'classnames';
+import { DEFAULT_ROLES, ROLE_LIST } from './store/types';
+import { RoleCheckbox } from './Components/RoleCheckbox';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -29,10 +31,14 @@ const Avalon = ({ roomCode }: any) => {
     const role = useAppSelector(selectRole);
     const secretInfo = useAppSelector(selectSecretInfo);
     const isLeader = useAppSelector(isCurrentLeader);
+
+    const nickname = useAppSelector((state: any) => state.app.nickname);
+
     const gameMessage = useAppSelector((state) => state.avalon.gameMessage);
     const nominationInProgress = useAppSelector((state) => state.avalon.nominationInProgress);
     const globalVoteInProgress = useAppSelector((state) => state.avalon.globalVoteInProgress);
     const questVoteInProgress = useAppSelector((state) => state.avalon.questVoteInProgress);
+    const gameStarted = useAppSelector((state) => state.avalon.gameInProgress);
     const showVoteControls = useAppSelector(shouldShowVoteButtons);
     const gameOverInfo = useAppSelector((state) => state.avalon.gameOverInfo);
     const enoughPlayersNominated = useAppSelector(
@@ -72,13 +78,21 @@ const Avalon = ({ roomCode }: any) => {
 
     return (
         <div>
-            <h1>Avalon: Room id - {roomCode}</h1>
+            <h1>Avalon: Room id - {roomCode}.</h1>
+            <h3>Name: {nickname}</h3>
             <div className="mainContainer">
-                {host && (
+                {host && !gameStarted && (
                     <div className="adminActions">
                         <button onClick={onStartGame} disabled={players?.length < 2}>
                             Start game
                         </button>
+                        <div className="addRolesWrapper">
+                            {Object.values(ROLE_LIST)
+                                .filter((role) => !DEFAULT_ROLES.includes(role))
+                                .map((roleName) => (
+                                    <RoleCheckbox roleKey={roleName} />
+                                ))}
+                        </div>
                     </div>
                 )}
                 <div className="playerListContainer">
@@ -123,8 +137,10 @@ const Avalon = ({ roomCode }: any) => {
                             <button onClick={voteNo}>No</button>
                         </div>
                     )}
-                    {isLeader && nominationInProgress && enoughPlayersNominated && (
-                        <button onClick={onConfirmParty}>Confirm Party</button>
+                    {isLeader && nominationInProgress && (
+                        <button onClick={onConfirmParty} disabled={!enoughPlayersNominated}>
+                            Confirm Party
+                        </button>
                     )}
                     {/* {isLeader && <button onClick={onContinue}>Continue</button>} */}
                 </div>

@@ -1,18 +1,15 @@
 import { ROLE_LIST } from './types';
 import { Namespace, Server, Socket } from 'socket.io';
-import { sequelize } from '../config/db';
 import {
     createPlayer,
     createRoom,
     getPlayerList,
     assignRoles,
     getRoomWithPlayers,
-    updateRoom,
     initQuests,
     getQuests,
     nominatePlayer,
     updatePlayer,
-    switchToNextLeader,
     getRoom,
     countPlayers,
     findAndDeletePlayer,
@@ -42,6 +39,8 @@ class Connection {
         socket.on('quest vote', async (vote) => await this.vote(vote));
         socket.on('confirm party', async () => await this.confirmParty());
         socket.on('start new vote', async () => await this.startNewVote());
+        socket.on('assassinate', async (targetId: string) => await this.assassinate(targetId));
+        socket.on('toggle extra role', async (roleKey: ROLE_LIST) => await this.toggleExtraRole(roleKey));
 
         socket.on('room', async ({ roomCode, nickname }) => {
             const [_, created] = await createRoom(roomCode, socket.id);
@@ -54,7 +53,8 @@ class Connection {
                 socketId: socket.id,
                 name: nickname,
                 isHost: created,
-                role: '',
+                roleName: '',
+                roleKey: null,
                 order: playerCount + 1,
                 questVote: null,
                 globalVote: null,
@@ -85,7 +85,6 @@ class Connection {
     }
 
     async startGame() {
-        // TODO Support extra roles
         await assignRoles(this.roomCode);
         const players = await getPlayerList(this.roomCode);
         // random number
@@ -102,11 +101,11 @@ class Connection {
 
             this.ns.to(this.roomCode).emit('update room', roomInfo);
             players.forEach((player) => {
-                console.log(player.secretInformation, 'foo');
-
-                this.ns
-                    .to(player.socketId)
-                    .emit('assigned role', { role: player.role, secretInfo: player.secretInformation });
+                this.ns.to(player.socketId).emit('assigned role', {
+                    roleName: player.roleName,
+                    roleKey: player.roleKey,
+                    secretInfo: player.secretInformation,
+                });
             });
         }
     }
@@ -124,32 +123,27 @@ class Connection {
         this.ns.to(this.roomCode).emit('player voted', voterId);
         if (isGlobal) {
             await updatePlayer({ socketId: voterId, updatedProperties: { globalVote: vote } });
-            const gameRes = await handleGlobalVote(this.roomCode);
-            if (gameRes) {
-                this.ns.to(this.roomCode).emit('game over', gameRes);
-            }
+            await handleGlobalVote(this.roomCode);
         } else {
             await updatePlayer({ socketId: voterId, updatedProperties: { questVote: vote } });
-            const gameRes = await handleQuestVote(this.roomCode);
-            if (gameRes) {
-                this.ns.to(this.roomCode).emit('game over', gameRes);
-            }
+            await handleQuestVote(this.roomCode);
         }
         const roomInfo = await getRoomWithPlayers(this.roomCode);
         this.ns.to(this.roomCode).emit('update room', roomInfo);
     }
 
-    // TODO maybe refactor to use save
     async confirmParty() {
         const activeQuest = await getActiveQuest(this.roomCode);
         const nominatedPlayerCount = await countPlayers(this.roomCode, { nominated: true });
         if (nominatedPlayerCount === activeQuest?.questPartySize!) {
-            await updateRoom(this.roomCode, {
-                nominationInProgress: false,
-                globalVoteInProgress: true,
-                revealVotes: false,
-            });
             const roomInfo = await getRoomWithPlayers(this.roomCode);
+            if (roomInfo) {
+                roomInfo.nominationInProgress = false;
+                roomInfo.globalVoteInProgress = true;
+                roomInfo.revealVotes = false;
+                roomInfo.gameMessage = 'Everyone should vote for the selected party';
+                await roomInfo.save();
+            }
             await clearVotes(this.roomCode);
             this.ns.to(this.roomCode).emit('update room', roomInfo);
         } else {
@@ -158,11 +152,31 @@ class Connection {
     }
 
     async assassinate(targetId: string) {
-        const assassin = await findPlayer(this.roomCode, { role: ROLE_LIST.ASSASSIN });
+        const assassin = await findPlayer(this.roomCode, { roleKey: ROLE_LIST.ASSASSIN });
         const target = await findPlayer(this.roomCode, { socketId: targetId });
-        if (assassin?.socketId === this.socket.id) {
-            const merlinKilled = target?.role === ROLE_LIST.MERLIN;
-            this.ns.to(this.roomCode).emit('merlin killed', merlinKilled);
+        const room = await getRoom(this.roomCode);
+        if (room) {
+            if (assassin?.socketId === this.socket.id) {
+                this.ns.to(this.roomCode).emit('player killed', targetId);
+                const merlinKilled = target?.roleKey === ROLE_LIST.MERLIN;
+                room.gameMessage = merlinKilled
+                    ? 'Merlin was killed! Evil are now victorious'
+                    : 'Assassin has missed! The victory stays on the Good side';
+                room.revealRoles = true;
+            }
+            await room.save();
+            this.ns.to(this.roomCode).emit('update room', room);
+        }
+    }
+
+    async toggleExtraRole(roleKey: ROLE_LIST) {
+        const room = await getRoom(this.roomCode);
+        if (room && room.extraRoles) {
+            room.extraRoles = room.extraRoles.includes(roleKey)
+                ? room.extraRoles.filter((role) => role !== roleKey)
+                : [...room.extraRoles, roleKey];
+            await room.save();
+            this.ns.to(this.roomCode).emit('update room', room);
         }
     }
 

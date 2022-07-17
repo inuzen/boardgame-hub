@@ -8,6 +8,6 @@ export enum AvalonEvents {
     REVEAL_QUEST_RESULTS = 'avalon/revealQuestResults',
     CONFIRM_PARTY = 'avalon/confirmParty',
     QUEST_VOTE = 'avalon/questVote',
-    ASSASSINATE_PLAYER = 'avalon/assassinatePlayer',
-    ADD_EXTRA_ROLE = 'avalon/addExtraRole',
+    ASSASSINATE = 'avalon/assassinate',
+    TOGGLE_EXTRA_ROLE = 'avalon/toggleExtraRole',
 }

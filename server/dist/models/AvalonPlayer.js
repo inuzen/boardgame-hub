@@ -16,7 +16,12 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
         allowNull: false,
         defaultValue: 'Player',
     },
-    role: {
+    roleName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+    },
+    roleKey: {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,

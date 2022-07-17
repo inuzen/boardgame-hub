@@ -160,7 +160,7 @@ export const getRoomWithPlayers = async (roomCode: string) => {
             {
                 model: AvalonPlayer,
                 order: [['order', 'ASC']],
-                attributes: { exclude: ['role', 'side', 'secretInformation'] },
+                attributes: { exclude: ['roleName', 'roleKey', 'side', 'secretInformation'] },
             },
             { model: AvalonQuest, order: [['questNumber', 'ASC']] },
         ],
@@ -181,11 +181,12 @@ export const createRoom = async (roomCode: string, socketId: string) => {
     });
 };
 
-export const getRoom = async (roomCode: string) => {
+export const getRoom = async (roomCode: string, attr?: string[]) => {
     const room = await AvalonRoom.findOne({
         where: {
             roomCode,
         },
+        attributes: attr,
     });
     return room;
 };
@@ -322,20 +323,20 @@ export const updateQuestResult = async (
 
 export const assignRoles = async (roomCode: string) => {
     const players: AvalonPlayerModel[] = await getPlayerList(roomCode);
+    const room = await getRoom(roomCode, ['extraRoles']);
     const playerCount = players.length;
     const firstLeaderOrderNumber = Math.floor(Math.random() * playerCount);
-    const rolesForPlayers = createRoleDistributionArray(playerCount);
+    const rolesForPlayers = createRoleDistributionArray(playerCount, room?.extraRoles);
 
     players.forEach((player, i) => {
-        player.role = rolesForPlayers[i].roleName;
+        player.roleName = rolesForPlayers[i].roleName;
+        player.roleKey = rolesForPlayers[i].key;
         player.side = rolesForPlayers[i].side;
         player.isCurrentLeader = i === firstLeaderOrderNumber;
         player.order = i;
     });
 
     const addSecretInformation = players.map((player, i, arr) => {
-        console.log('secret information', i, arr.length);
-
         player.secretInformation = createMessageByRole(player, arr);
         return player.save();
     });
@@ -368,47 +369,47 @@ export const switchToNextLeader = async (roomCode: string) => {
     return '';
 };
 
-// TODO maybe return the game state
 export const handleGlobalVote = async (roomCode: string) => {
     const players = await getPlayerList(roomCode);
     const playerCount = players.length;
     const votedPlayers = players.filter((player) => !!player.globalVote);
-    const roomState = await getRoom(roomCode);
 
-    if (roomState && votedPlayers.length === playerCount) {
-        roomState.globalVoteInProgress = false;
-        roomState.revealVotes = true;
+    if (votedPlayers.length === playerCount) {
+        const roomState = await getRoom(roomCode);
+        if (roomState) {
+            roomState.globalVoteInProgress = false;
+            roomState.revealVotes = true;
 
-        const votedInFavor = players.filter((player) => player.globalVote === 'yes');
-        if (votedInFavor.length > votedPlayers.length / 2) {
-            roomState.questVoteInProgress = true;
-            roomState.missedTeamVotes = 1;
-        } else {
-            const newLeaderId = await switchToNextLeader(roomCode);
-            roomState.questVoteInProgress = false;
-            roomState.nominationInProgress = true;
-            roomState.missedTeamVotes = roomState?.missedTeamVotes! + 1;
-            roomState.currentLeaderId = newLeaderId;
-        }
-        await roomState.save();
-        if (roomState.missedTeamVotes === 5) {
-            return {
-                gameEnded: true,
-                goodWon: false,
-            };
+            const votedInFavor = players.filter((player) => player.globalVote === 'yes');
+            if (votedInFavor.length > votedPlayers.length / 2) {
+                roomState.questVoteInProgress = true;
+                roomState.missedTeamVotes = 1;
+                roomState.gameMessage = 'The vote passed!\n Selected players must now decide on the quest result';
+            } else {
+                const newLeaderId = await switchToNextLeader(roomCode);
+                roomState.questVoteInProgress = false;
+                roomState.nominationInProgress = true;
+                roomState.missedTeamVotes = roomState?.missedTeamVotes! + 1;
+                roomState.currentLeaderId = newLeaderId;
+                roomState.gameMessage = 'The vote has failed!\n Now new leader must nominate a new party';
+                await updateAllPlayers(roomCode, { nominated: false });
+            }
+            if (roomState.missedTeamVotes === 5) {
+                roomState.gameInProgress = false;
+                roomState.gameMessage = 'The EVIL has won!\n The party was not formed 5 times in a row.';
+                roomState.revealRoles = true;
+            }
+            await roomState.save();
         }
     }
-    return null;
 };
 
 export const clearVotes = async (roomCode: string) => {
     await updateAllPlayers(roomCode, { globalVote: null, questVote: null });
-    // await updateRoom(roomCode, { revealVotes: false });
 };
 
 export const startNewVoteCycle = async (roomCode: string) => {
-    await updateAllPlayers(roomCode, { globalVote: null, questVote: null });
-    // await switchToNextLeader(roomCode);
+    await updateAllPlayers(roomCode, { globalVote: null, questVote: null, nominated: false });
 };
 
 export const handleQuestVote = async (roomCode: string) => {
@@ -433,19 +434,30 @@ export const handleQuestVote = async (roomCode: string) => {
         } else {
             await updateQuestResult(roomCode, roomState?.currentQuest!, 'fail');
         }
+        roomState.gameMessage = `${votedInFavor.length} player(s) voted in favor of the quest.\n Now new leader must nominate a new party`;
         roomState.currentQuest = nextQuestNumber;
-        await roomState.save();
-        await clearVotes(roomCode);
+        await startNewVoteCycle(roomCode);
 
         const gameEnd = await checkForEndGame(roomCode);
         // Need this check in case the quest is selected manually
         if (gameEnd.gameEnded) {
-            return gameEnd;
+            if (gameEnd.goodWon) {
+                roomState.gameMessage =
+                    'Good has won. But evil still has a chance. Assassin must kill Merlin to snatch a victory.';
+                roomState.assassinationInProgress = true;
+                roomState.questVoteInProgress = false;
+                roomState.nominationInProgress = false;
+            } else {
+                roomState.revealRoles = true;
+                roomState.gameInProgress = false;
+                roomState.gameMessage = 'Evil has won!';
+            }
+            // return gameEnd;
         } else {
             await changeActiveQuest(roomCode, nextQuestNumber);
         }
+        await roomState.save();
     }
-    return null;
 };
 
 export const checkForEndGame = async (roomCode: string) => {

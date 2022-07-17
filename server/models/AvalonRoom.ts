@@ -13,8 +13,10 @@ export interface AvalonRoomType {
     nominationInProgress?: boolean;
     globalVoteInProgress?: boolean;
     questVoteInProgress?: boolean;
+    assassinationInProgress?: boolean;
     gameMessage?: string;
     revealVotes?: boolean;
+    revealRoles?: boolean;
 }
 interface AvalonRoomModel
     extends AvalonRoomType,
@@ -47,6 +49,10 @@ export default (sequelize: Sequelize, DataTypes: any) =>
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
+        assassinationInProgress: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
         globalVoteInProgress: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
@@ -63,6 +69,10 @@ export default (sequelize: Sequelize, DataTypes: any) =>
             type: DataTypes.BOOLEAN,
             defaultValue: false,
         },
+        revealRoles: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
+        },
         currentLeaderId: {
             type: DataTypes.STRING,
             defaultValue: '',
@@ -75,7 +85,10 @@ export default (sequelize: Sequelize, DataTypes: any) =>
             type: DataTypes.STRING,
             defaultValue: '',
         },
-
+        extraRoles: {
+            type: DataTypes.ARRAY(DataTypes.STRING),
+            defaultValue: [],
+        },
         // timestamps: false,
         // options
     });

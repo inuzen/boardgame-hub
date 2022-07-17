@@ -1,3 +1,4 @@
+import { ROLE_LIST } from './../namespaces/types';
 import { InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize/types';
 import { SIDES } from '../namespaces/types';
 
@@ -7,7 +8,8 @@ export interface AvalonPlayerType {
     roomCode: string;
     name: string;
     socketId: string;
-    role: string | null;
+    roleName: string | null;
+    roleKey: ROLE_LIST | null;
     isCurrentLeader?: boolean;
     isHost: boolean;
     globalVote: VoteType | null;
@@ -39,7 +41,12 @@ export default (sequelize: Sequelize, DataTypes: any) =>
             allowNull: false,
             defaultValue: 'Player',
         },
-        role: {
+        roleName: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: null,
+        },
+        roleKey: {
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: null,

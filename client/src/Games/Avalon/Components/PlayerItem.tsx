@@ -1,26 +1,40 @@
 import React from 'react';
 import classNames from 'classnames';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
-import { selectCurrentLeader, nominatePlayer, selectHost, isCurrentLeader } from '../store/avalonSlice';
+import {
+    selectCurrentLeader,
+    nominatePlayer,
+    selectHost,
+    canNominate,
+    canKill,
+    selectTarget,
+    assassinate,
+} from '../store/avalonSlice';
 
-export const PlayerItem = ({ name, selected, nominated, socketId, globalVote }: any) => {
+export const PlayerItem = ({ name, nominated, socketId, globalVote, role }: any) => {
     const dispatch = useAppDispatch();
     const currentLeader = useAppSelector(selectCurrentLeader);
 
-    const isLeader = useAppSelector(isCurrentLeader);
+    const nominationPossible = useAppSelector(canNominate);
+    const killLicense = useAppSelector(canKill);
+    const targetId = useAppSelector(selectTarget);
     // const globalVote = useAppSelector((state) => state.avalon.globalVote);
     const showVotes = useAppSelector((state) => state.avalon.revealVotes);
+    const showRoles = useAppSelector((state) => state.avalon.revealRoles);
     const votedArray = useAppSelector((state) => state.avalon.votedPlayers);
     const host = useAppSelector(selectHost);
 
     const onPlayerSelect = () => {
         // TODO check for partySize
-        if (isLeader) {
+        if (nominationPossible) {
             dispatch(nominatePlayer(socketId));
+        }
+        if (killLicense) {
+            dispatch(assassinate(socketId));
         }
     };
     return (
-        <div className={classNames('playerItemContainer', { selected })} onClick={onPlayerSelect}>
+        <div className={classNames('playerItemContainer', { target: targetId === socketId })} onClick={onPlayerSelect}>
             <div className="infoBar">
                 <div className={classNames('infoItem admin', { show: host === socketId })}></div>
                 <div className={classNames('infoItem leader', { show: currentLeader === socketId })}></div>
@@ -32,6 +46,7 @@ export const PlayerItem = ({ name, selected, nominated, socketId, globalVote }: 
             <div className="name">{name}</div>
             {votedArray.includes(socketId) && <div className="voteResult">{'Ready'}</div>}
             {showVotes && <div className="voteResult">{globalVote}</div>}
+            {showRoles && <div className="voteResult">{role}</div>}
         </div>
     );
 };

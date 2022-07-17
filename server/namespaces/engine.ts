@@ -55,14 +55,6 @@ export const DISTRIBUTION: Record<number, QuestDistribution> = {
     },
 };
 
-export const getQuestsForPlayerCount = (playerCount: number): any[] =>
-    DISTRIBUTION[playerCount].questPartySize.map((questPartySize, i) => {
-        return {
-            partySize: questPartySize,
-            result: i > 1 && Math.random() < 0.5 ? 'success' : 'fail',
-        };
-    });
-
 export const createRoleDistributionArray = (playerCount: number, extraRolesList: ROLE_LIST[] = []) => {
     const defaultRoles = [ROLES.MERLIN, ROLES.ASSASSIN];
     const extraRoles = extraRolesList.map((el) => ROLES[el]);
@@ -83,25 +75,26 @@ export const createRoleDistributionArray = (playerCount: number, extraRolesList:
 };
 
 export const createMessageByRole = (player: AvalonPlayerModel, allPlayers: AvalonPlayerModel[]): string => {
-    console.log('createMessageByRole', player.side);
-    console.log(player.role, 'player.role');
+    if (player.side === SIDES.EVIL && player.roleKey !== ROLE_LIST.OBERON) {
+        const otherEvilPlayers = allPlayers.filter(
+            (p) => p.side === SIDES.EVIL && p.roleKey !== ROLE_LIST.OBERON && p.socketId !== player.socketId,
+        );
+        return otherEvilPlayers.length ? `Other evil players are: ${allPlayers.map((p) => p.name).join(', ')}` : '';
+    }
 
-    // TODO do something with uppercase
-    switch (player.role?.toUpperCase()) {
+    switch (player.roleKey) {
         case ROLE_LIST.MERLIN:
-            console.log('MERLIN');
-
             return `Evil players are: ${allPlayers
                 .reduce((acc: string[], player) => {
-                    if (player.side === SIDES.EVIL && player.role !== ROLE_LIST.MORDRED) {
+                    if (player.side === SIDES.EVIL && player.roleKey !== ROLE_LIST.MORDRED) {
                         acc.push(player.name);
                     }
                     return acc;
                 }, [])
                 .join(', ')}`;
         case ROLE_LIST.PERCIVAL:
-            const merlin = allPlayers.find((pl) => pl.role === ROLE_LIST.MERLIN)!;
-            const morgana = allPlayers.find((pl) => pl.role === ROLE_LIST.MORGANA)!;
+            const merlin = allPlayers.find((pl) => pl.roleKey === ROLE_LIST.MERLIN)!;
+            const morgana = allPlayers.find((pl) => pl.roleKey === ROLE_LIST.MORGANA)!;
             const concealed = shuffle([merlin, morgana]);
 
             return morgana

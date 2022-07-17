@@ -19,6 +19,8 @@ class Connection {
         socket.on('quest vote', async (vote) => await this.vote(vote));
         socket.on('confirm party', async () => await this.confirmParty());
         socket.on('start new vote', async () => await this.startNewVote());
+        socket.on('assassinate', async (targetId) => await this.assassinate(targetId));
+        socket.on('toggle extra role', async (roleKey) => await this.toggleExtraRole(roleKey));
         socket.on('room', async ({ roomCode, nickname }) => {
             const [_, created] = await (0, dbActions_1.createRoom)(roomCode, socket.id);
             socket.join(roomCode);
@@ -29,7 +31,8 @@ class Connection {
                 socketId: socket.id,
                 name: nickname,
                 isHost: created,
-                role: '',
+                roleName: '',
+                roleKey: null,
                 order: playerCount + 1,
                 questVote: null,
                 globalVote: null,
@@ -69,9 +72,11 @@ class Connection {
             this.ns.to(this.roomCode).emit('update room', roomInfo);
             players.forEach((player) => {
                 console.log(player.secretInformation, 'foo');
-                this.ns
-                    .to(player.socketId)
-                    .emit('assigned role', { role: player.role, secretInfo: player.secretInformation });
+                this.ns.to(player.socketId).emit('assigned role', {
+                    roleName: player.roleName,
+                    roleKey: player.roleKey,
+                    secretInfo: player.secretInformation,
+                });
             });
         }
     }
@@ -87,17 +92,11 @@ class Connection {
         this.ns.to(this.roomCode).emit('player voted', voterId);
         if (isGlobal) {
             await (0, dbActions_1.updatePlayer)({ socketId: voterId, updatedProperties: { globalVote: vote } });
-            const gameRes = await (0, dbActions_1.handleGlobalVote)(this.roomCode);
-            if (gameRes) {
-                this.ns.to(this.roomCode).emit('game over', gameRes);
-            }
+            await (0, dbActions_1.handleGlobalVote)(this.roomCode);
         }
         else {
             await (0, dbActions_1.updatePlayer)({ socketId: voterId, updatedProperties: { questVote: vote } });
-            const gameRes = await (0, dbActions_1.handleQuestVote)(this.roomCode);
-            if (gameRes) {
-                this.ns.to(this.roomCode).emit('game over', gameRes);
-            }
+            await (0, dbActions_1.handleQuestVote)(this.roomCode);
         }
         const roomInfo = await (0, dbActions_1.getRoomWithPlayers)(this.roomCode);
         this.ns.to(this.roomCode).emit('update room', roomInfo);
@@ -107,12 +106,13 @@ class Connection {
         const activeQuest = await (0, dbActions_1.getActiveQuest)(this.roomCode);
         const nominatedPlayerCount = await (0, dbActions_1.countPlayers)(this.roomCode, { nominated: true });
         if (nominatedPlayerCount === activeQuest?.questPartySize) {
-            await (0, dbActions_1.updateRoom)(this.roomCode, {
-                nominationInProgress: false,
-                globalVoteInProgress: true,
-                revealVotes: false,
-            });
             const roomInfo = await (0, dbActions_1.getRoomWithPlayers)(this.roomCode);
+            if (roomInfo) {
+                roomInfo.nominationInProgress = false;
+                roomInfo.globalVoteInProgress = true;
+                roomInfo.revealVotes = false;
+                await roomInfo.save();
+            }
             await (0, dbActions_1.clearVotes)(this.roomCode);
             this.ns.to(this.roomCode).emit('update room', roomInfo);
         }
@@ -121,11 +121,30 @@ class Connection {
         }
     }
     async assassinate(targetId) {
-        const assassin = await (0, dbActions_1.findPlayer)(this.roomCode, { role: types_1.ROLE_LIST.ASSASSIN });
+        const assassin = await (0, dbActions_1.findPlayer)(this.roomCode, { roleKey: types_1.ROLE_LIST.ASSASSIN });
         const target = await (0, dbActions_1.findPlayer)(this.roomCode, { socketId: targetId });
-        if (assassin?.socketId === this.socket.id) {
-            const merlinKilled = target?.role === types_1.ROLE_LIST.MERLIN;
-            this.ns.to(this.roomCode).emit('merlin killed', merlinKilled);
+        const room = await (0, dbActions_1.getRoom)(this.roomCode);
+        if (room) {
+            if (assassin?.socketId === this.socket.id) {
+                this.ns.to(this.roomCode).emit('player killed', targetId);
+                const merlinKilled = target?.roleKey === types_1.ROLE_LIST.MERLIN;
+                room.gameMessage = merlinKilled
+                    ? 'Merlin was killed! Evil are now victorious'
+                    : 'Assassin has missed! The victory stays on the Good side';
+                room.revealRoles = true;
+            }
+            await room.save();
+            this.ns.to(this.roomCode).emit('update room', room);
+        }
+    }
+    async toggleExtraRole(roleKey) {
+        const room = await (0, dbActions_1.getRoom)(this.roomCode);
+        if (room && room.extraRoles) {
+            room.extraRoles = room.extraRoles.includes(roleKey)
+                ? room.extraRoles.filter((role) => role !== roleKey)
+                : [...room.extraRoles, roleKey];
+            await room.save();
+            this.ns.to(this.roomCode).emit('update room', room);
         }
     }
     async startNewVote() {

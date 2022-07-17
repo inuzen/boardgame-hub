@@ -27,6 +27,10 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonRoom', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
     },
+    assassinationInProgress: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     globalVoteInProgress: {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
@@ -43,6 +47,10 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonRoom', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
     },
+    revealRoles: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
+    },
     currentLeaderId: {
         type: DataTypes.STRING,
         defaultValue: '',
@@ -54,6 +62,10 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonRoom', {
     gameMessage: {
         type: DataTypes.STRING,
         defaultValue: '',
+    },
+    extraRoles: {
+        type: DataTypes.ARRAY(DataTypes.STRING),
+        defaultValue: [],
     },
     // timestamps: false,
     // options

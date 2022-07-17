@@ -9,9 +9,10 @@ import {
     assignRole,
     addPlayerToVotedList,
     gameOver,
+    playerKilled,
 } from './avalonSlice';
 import { AvalonEvents } from './AvalonEvents';
-import { AvalonRoomServer } from './types';
+import { AvalonRoomServer, ROLE_LIST } from './types';
 const avalonMiddleware: Middleware = (store) => {
     let socket: Socket;
     let roomCode: string = '';
@@ -50,7 +51,7 @@ const avalonMiddleware: Middleware = (store) => {
             });
 
             // TODO add side?
-            socket.on('assigned role', (secret: { role: string; secretInfo: string }) => {
+            socket.on('assigned role', (secret: { roleName: string; roleKey: ROLE_LIST; secretInfo: string }) => {
                 store.dispatch(assignRole(secret));
             });
 
@@ -60,6 +61,10 @@ const avalonMiddleware: Middleware = (store) => {
 
             socket.on('game over', (gameRes: any) => {
                 store.dispatch(gameOver(gameRes));
+            });
+
+            socket.on('player killed', (playerId: string) => {
+                store.dispatch(playerKilled(playerId));
             });
 
             socket.on('disconnect', () => {
@@ -86,6 +91,12 @@ const avalonMiddleware: Middleware = (store) => {
                     break;
                 case AvalonEvents.CONFIRM_PARTY:
                     socket.emit('confirm party');
+                    break;
+                case AvalonEvents.TOGGLE_EXTRA_ROLE:
+                    socket.emit('toggle extra role', action.payload);
+                    break;
+                case AvalonEvents.ASSASSINATE:
+                    socket.emit('assassinate', action.payload);
                     break;
                 default:
                     break;
