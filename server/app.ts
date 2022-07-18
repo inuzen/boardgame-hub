@@ -19,7 +19,7 @@ const io = new Server(httpServer, {
         origin: '*',
         methods: ['GET', 'POST'],
         allowedHeaders: ['my-custom-header'],
-        credentials: true,
+        credentials: false,
     },
 });
 
