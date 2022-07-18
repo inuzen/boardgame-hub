@@ -16,15 +16,12 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
     cors: {
-        origin: 'https://boardgame-hub-client.herokuapp.com/',
+        origin: '*',
         methods: ['GET', 'POST'],
         allowedHeaders: ['my-custom-header'],
         credentials: true,
     },
 });
-
-// import indexRouter from './routes/index';
-// import usersRouter from './routes/users';
 
 app.use(cors());
 app.use(logger('dev'));
@@ -32,9 +29,6 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
-
-// app.use('/', indexRouter);
-// app.use('/users', usersRouter);
 
 io.on('connection', (socket) => {
     console.log(`New connection: ${socket.id}`);
