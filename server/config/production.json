@@ -1,4 +1,3 @@
 {
-    "mongoURI": "mongodb+srv://inuzen123:inuzen123@contactkeeper-0pgnu.mongodb.net/test?retryWrites=true",
-    "jwtSecret": "secret"
+    "postgresURI": "postgres://wkztbqwqmhdefo:91fe26cec8342f090182135df3705da7a159504f303fce7774ea79cd60831f16@ec2-3-219-52-220.compute-1.amazonaws.com:5432/d8col2mlqrmilq"
 }
