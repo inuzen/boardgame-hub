@@ -16,7 +16,10 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
     cors: {
-        origin: '*',
+        origin: 'https://boardgame-hub-client.herokuapp.com/',
+        methods: ['GET', 'POST'],
+        allowedHeaders: ['my-custom-header'],
+        credentials: true,
     },
 });
 

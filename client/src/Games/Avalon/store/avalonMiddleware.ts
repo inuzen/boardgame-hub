@@ -27,7 +27,12 @@ const avalonMiddleware: Middleware = (store) => {
 
         if (!socket && action.type === AvalonEvents.START_CONNECTING) {
             roomCode = action.payload;
-            socket = io(`https://boardgame-hub-server.herokuapp.com/avalon`);
+            socket = io(`https://boardgame-hub-server.herokuapp.com/avalon`, {
+                withCredentials: true,
+                extraHeaders: {
+                    'my-custom-header': 'abcd',
+                },
+            });
 
             socket.on('connect', () => {
                 store.dispatch(connectionEstablished(socket.id));

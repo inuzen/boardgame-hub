@@ -6,7 +6,7 @@ import AvalonQuestModel from '../models/AvalonQuest';
 import AvalonGameModel from '../models/AvalonGame';
 import RoomModel from '../models/AvalonRoom';
 
-const db: string = config.get('postgresURI');
+const db: string = process.env.DATABASE_URL || config.get('postgresURI');
 const sequelize = new Sequelize(db);
 const queryInterface = sequelize.getQueryInterface();
 
