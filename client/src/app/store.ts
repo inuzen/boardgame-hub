@@ -1,5 +1,4 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
-import counterReducer from '../features/counter/counterSlice';
 import avalonMiddleware from '../Games/Avalon/store/avalonMiddleware';
 import avalonReducer from '../Games/Avalon/store/avalonSlice';
 import appReducer from './appSlice';
@@ -7,7 +6,6 @@ import appReducer from './appSlice';
 export const store = configureStore({
     reducer: {
         app: appReducer,
-        counter: counterReducer,
         avalon: avalonReducer,
     },
     middleware(getDefaultMiddleware) {
