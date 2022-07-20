@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 
 import './App.css';
+import 'antd/dist/antd.css';
 import { Route, Routes } from 'react-router-dom';
 import Welcome from './WelcomePage/Welcome';
 import AvalonGameContainer from './Games/Avalon/AvalonGameContainer';

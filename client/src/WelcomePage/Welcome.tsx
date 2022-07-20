@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
-import { setNickname, selectNickname } from '../app/appSlice';
+import { setNickname, selectNickname, setAction } from '../app/appSlice';
 
 import './welcome.scss';
 
@@ -23,11 +23,12 @@ const Welcome = () => {
 
     const onJoinRoom = () => {
         if (roomId) {
+            dispatch(setAction('join'));
             navigate(`/avalon/${roomId}`);
         }
     };
 
-    const avaliableGames = ['avalon', 'werewolf'];
+    const availableGames = ['avalon', 'werewolf'];
 
     const onCreateRoom = () => {
         setShowGames(true);
@@ -35,6 +36,7 @@ const Welcome = () => {
 
     const onGameSelect = (e: any) => {
         const newRoomId = Math.random().toString(36).substring(2, 6);
+        dispatch(setAction('create'));
         navigate(`/${e.target.name}/${newRoomId}`);
     };
 
@@ -65,7 +67,7 @@ const Welcome = () => {
                 {showGames && (
                     <div className="gameList">
                         <p>Please select a game</p>
-                        {avaliableGames.map((game) => (
+                        {availableGames.map((game) => (
                             <button name={game} key={game} onClick={onGameSelect}>
                                 {game}
                             </button>

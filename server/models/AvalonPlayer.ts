@@ -4,6 +4,7 @@ import { SIDES } from '../namespaces/types';
 
 type VoteType = 'yes' | 'no';
 export interface AvalonPlayerType {
+    playerUUID?: string;
     order: number;
     roomCode: string;
     name: string;
@@ -17,7 +18,7 @@ export interface AvalonPlayerType {
     nominated?: boolean;
     side?: SIDES | null;
     secretInformation?: string | null;
-    // hasVoted?: boolean;
+    connected?: boolean;
 }
 
 export interface AvalonPlayerModel
@@ -26,6 +27,10 @@ export interface AvalonPlayerModel
 
 export default (sequelize: Sequelize, DataTypes: any) =>
     sequelize.define<AvalonPlayerModel>('AvalonPlayer', {
+        playerUUID: {
+            type: DataTypes.UUID,
+            defaultValue: DataTypes.UUIDV4,
+        },
         socketId: {
             type: DataTypes.STRING,
             allowNull: false,
@@ -86,6 +91,10 @@ export default (sequelize: Sequelize, DataTypes: any) =>
             type: DataTypes.STRING,
             allowNull: true,
             defaultValue: null,
+        },
+        connected: {
+            type: DataTypes.BOOLEAN,
+            defaultValue: false,
         },
         // hasVoted: {
         //     type: DataTypes.BOOLEAN,

@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { Modal } from 'antd';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import {
     getQuests,
@@ -20,6 +21,8 @@ import './avalon.scss';
 import classNames from 'classnames';
 import { DEFAULT_ROLES, ROLE_LIST } from './store/types';
 import { RoleCheckbox } from './Components/RoleCheckbox';
+import { QrcodeOutlined } from '@ant-design/icons';
+import QRCode from 'react-qr-code';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -47,6 +50,20 @@ const Avalon = ({ roomCode }: any) => {
             // @ts-ignore
             state.avalon.quests.find((q) => q.active)?.questPartySize,
     );
+
+    const [isModalVisible, setIsModalVisible] = useState(false);
+
+    const showModal = () => {
+        setIsModalVisible(true);
+    };
+
+    const handleOk = () => {
+        setIsModalVisible(false);
+    };
+
+    // const handleCancel = () => {
+    //     setIsModalVisible(false);
+    // };
 
     // TODO add additional rules where quest could be selected by leader
 
@@ -79,6 +96,9 @@ const Avalon = ({ roomCode }: any) => {
     return (
         <div>
             <h1>Avalon: Room id - {roomCode}.</h1>
+            <span className="qr">
+                <QrcodeOutlined onClick={showModal} />
+            </span>
             <h3>Name: {nickname}</h3>
             <div className="mainContainer">
                 {host && !gameStarted && (
@@ -142,11 +162,13 @@ const Avalon = ({ roomCode }: any) => {
                             Confirm Party
                         </button>
                     )}
-                    {/* {isLeader && <button onClick={onContinue}>Continue</button>} */}
                 </div>
                 {role && <p>Your role is: {role}</p>}
                 {secretInfo && <p>{secretInfo}</p>}
             </div>
+            <Modal title="QR CODE" visible={isModalVisible} onCancel={handleOk} footer={null}>
+                <QRCode value={window.location.href} />
+            </Modal>
         </div>
     );
 };

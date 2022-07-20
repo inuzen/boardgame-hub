@@ -5,7 +5,6 @@ import {
     receiveQuests,
     connectionEstablished,
     updateRoom,
-    disconnect,
     assignRole,
     addPlayerToVotedList,
     gameOver,
@@ -13,10 +12,11 @@ import {
 } from './avalonSlice';
 import { AvalonEvents } from './AvalonEvents';
 import { AvalonRoomServer, ROLE_LIST } from './types';
+import { setAction } from '../../../app/appSlice';
 const avalonMiddleware: Middleware = (store) => {
     let socket: Socket;
     let roomCode: string = '';
-    // TODO: check if the action is related to avalon, otherwise skip
+
     // TODO make reconnection possible
     // TODO make a waiting list or something for when someone tries to join a game that is already in progress
     return (next) => (action) => {
@@ -33,14 +33,44 @@ const avalonMiddleware: Middleware = (store) => {
                     'my-custom-header': 'abcd',
                 },
             });
+            // socket = io(`http://${window.location.hostname}:3001/avalon`);
 
             socket.on('connect', () => {
                 store.dispatch(connectionEstablished(socket.id));
 
-                socket.emit('room', {
-                    roomCode,
-                    nickname: store.getState().app.nickname,
-                });
+                const playerUUID = localStorage.getItem('playerUUID');
+
+                if (playerUUID) {
+                    console.log('playerUUID', playerUUID);
+
+                    socket.emit('get existing player', {
+                        playerUUID,
+                        roomCode,
+                        nickname: store.getState().app.nickname,
+                    });
+                } else {
+                    const action = store.getState().app.action;
+                    console.log(action);
+
+                    const params = {
+                        roomCode,
+                        nickname: store.getState().app.nickname,
+                    };
+                    if (action === 'create') {
+                        socket.emit('init room', params);
+                    } else if (action === 'join') {
+                        socket.emit('join room', params);
+                    }
+                    store.dispatch(setAction(null));
+                }
+            });
+
+            socket.on('register', (playerUUID: string) => {
+                localStorage.setItem('playerUUID', playerUUID);
+            });
+
+            socket.on('unregister', () => {
+                localStorage.removeItem('playerUUID');
             });
 
             socket.on('players', (players: any[]) => {

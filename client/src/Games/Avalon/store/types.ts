@@ -1,4 +1,5 @@
 export interface AvalonPlayerServer {
+    playerUUID: string;
     socketId: string;
     roomCode: string;
     name: string;

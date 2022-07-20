@@ -21,34 +21,70 @@ class Connection {
         socket.on('start new vote', async () => await this.startNewVote());
         socket.on('assassinate', async (targetId) => await this.assassinate(targetId));
         socket.on('toggle extra role', async (roleKey) => await this.toggleExtraRole(roleKey));
-        socket.on('room', async ({ roomCode, nickname }) => {
-            const [_, created] = await (0, dbActions_1.createRoom)(roomCode, socket.id);
-            socket.join(roomCode);
-            this.roomCode = roomCode;
-            const playerCount = await (0, dbActions_1.countPlayers)(roomCode);
-            await (0, dbActions_1.createPlayer)({
-                roomCode,
-                socketId: socket.id,
-                name: nickname,
-                isHost: created,
-                roleName: '',
-                roleKey: null,
-                order: playerCount + 1,
-                questVote: null,
-                globalVote: null,
-            });
-            const players = await (0, dbActions_1.getPlayerList)(roomCode);
-            ns.to(roomCode).emit('players', players);
-            if (players.length > 1) {
-                this.initAndSendQuests(players.length);
-            }
+        socket.on('get existing player', async (params) => await this.getExistingPlayer(params));
+        socket.on('init room', async (params) => await this.initRoom(params));
+        socket.on('join room', async ({ roomCode, nickname }) => await this.addPlayerToRoom({ roomCode, nickname }));
+    }
+    async initRoom(params) {
+        const { roomCode, nickname } = params;
+        const [_, created] = await (0, dbActions_1.createRoom)(roomCode, this.socket.id);
+        this.socket.join(roomCode);
+        this.roomCode = roomCode;
+        await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+    }
+    async addPlayerToRoom({ nickname, roomCode, isHost = false, }) {
+        this.roomCode = roomCode;
+        this.socket.join(roomCode);
+        const playerCount = await (0, dbActions_1.countPlayers)(roomCode);
+        const newPlayer = await (0, dbActions_1.createPlayer)({
+            roomCode,
+            socketId: this.socket.id,
+            name: nickname,
+            isHost,
+            roleName: '',
+            roleKey: null,
+            order: playerCount + 1,
+            questVote: null,
+            globalVote: null,
+            connected: true,
         });
+        this.ns.to(this.socket.id).emit('register', newPlayer.playerUUID);
+        const players = await (0, dbActions_1.getPlayerList)(roomCode);
+        this.ns.to(roomCode).emit('players', players);
+        if (players.length > 1) {
+            this.initAndSendQuests(players.length);
+        }
+    }
+    async getExistingPlayer(params) {
+        const { playerUUID, roomCode, nickname } = params;
+        const room = await (0, dbActions_1.getRoom)(roomCode);
+        if (!!room) {
+            const playerExist = await (0, dbActions_1.findPlayer)(roomCode, { playerUUID });
+            if (playerExist) {
+                this.roomCode = roomCode;
+                this.socket.join(roomCode);
+                playerExist.connected = true;
+                playerExist.socketId = this.socket.id;
+                await playerExist.save();
+                const roomInfo = await (0, dbActions_1.getRoomWithPlayers)(roomCode);
+                this.ns.to(roomCode).emit('update room', roomInfo);
+            }
+            else {
+                await this.addPlayerToRoom({ nickname, roomCode });
+            }
+        }
+        else {
+            await this.initRoom({ roomCode, nickname });
+        }
+    }
+    async disconnect() {
+        await (0, dbActions_1.deleteRoomIfNoPlayers)(this.roomCode);
     }
     async disconnecting() {
         const { id } = this.socket;
-        await (0, dbActions_1.findAndDeletePlayer)(id);
-        const players = await (0, dbActions_1.getPlayerList)(this.roomCode);
-        this.ns.to(this.roomCode).emit('players', players);
+        await (0, dbActions_1.updatePlayer)({ socketId: id, updatedProperties: { connected: false } });
+        const roomInfo = await (0, dbActions_1.getRoomWithPlayers)(this.roomCode);
+        this.ns.to(this.roomCode).emit('update room', roomInfo);
     }
     async initAndSendQuests(playerCount) {
         await (0, dbActions_1.initQuests)(this.roomCode, playerCount);
@@ -56,7 +92,6 @@ class Connection {
         this.ns.to(this.roomCode).emit('quests', quests.sort((a, b) => a.questNumber - b.questNumber));
     }
     async startGame() {
-        // TODO Support extra roles
         await (0, dbActions_1.assignRoles)(this.roomCode);
         const players = await (0, dbActions_1.getPlayerList)(this.roomCode);
         // random number
@@ -71,7 +106,6 @@ class Connection {
             await roomInfo.save();
             this.ns.to(this.roomCode).emit('update room', roomInfo);
             players.forEach((player) => {
-                console.log(player.secretInformation, 'foo');
                 this.ns.to(player.socketId).emit('assigned role', {
                     roleName: player.roleName,
                     roleKey: player.roleKey,
@@ -101,7 +135,6 @@ class Connection {
         const roomInfo = await (0, dbActions_1.getRoomWithPlayers)(this.roomCode);
         this.ns.to(this.roomCode).emit('update room', roomInfo);
     }
-    // TODO maybe refactor to use save
     async confirmParty() {
         const activeQuest = await (0, dbActions_1.getActiveQuest)(this.roomCode);
         const nominatedPlayerCount = await (0, dbActions_1.countPlayers)(this.roomCode, { nominated: true });
@@ -111,6 +144,7 @@ class Connection {
                 roomInfo.nominationInProgress = false;
                 roomInfo.globalVoteInProgress = true;
                 roomInfo.revealVotes = false;
+                roomInfo.gameMessage = 'Everyone should vote for the selected party';
                 await roomInfo.save();
             }
             await (0, dbActions_1.clearVotes)(this.roomCode);
@@ -150,7 +184,6 @@ class Connection {
     async startNewVote() {
         await (0, dbActions_1.startNewVoteCycle)(this.roomCode);
     }
-    disconnect() { }
 }
 const initNameSpace = (io) => {
     const avalonNameSpace = io.of('/avalon');

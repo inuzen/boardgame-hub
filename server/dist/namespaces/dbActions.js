@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restoreDefaults = exports.checkForEndGame = exports.handleQuestVote = exports.startNewVoteCycle = exports.clearVotes = exports.handleGlobalVote = exports.switchToNextLeader = exports.assignRoles = exports.updateQuestResult = exports.changeActiveQuest = exports.initQuests = exports.getActiveQuest = exports.getQuests = exports.updateRoom = exports.getRoom = exports.createRoom = exports.getRoomWithPlayers = exports.removeRoomAndPlayers = exports.nominatePlayer = exports.countPlayers = exports.getPlayerBySocketId = exports.findAndDeletePlayer = exports.updateAllPlayers = exports.updatePlayer = exports.createPlayer = exports.findPlayer = exports.getPlayerList = void 0;
+exports.restoreDefaults = exports.checkForEndGame = exports.handleQuestVote = exports.startNewVoteCycle = exports.clearVotes = exports.handleGlobalVote = exports.switchToNextLeader = exports.assignRoles = exports.updateQuestResult = exports.changeActiveQuest = exports.initQuests = exports.getActiveQuest = exports.getQuests = exports.updateRoom = exports.getRoom = exports.createRoom = exports.getRoomWithPlayers = exports.removeRoomAndPlayers = exports.nominatePlayer = exports.countPlayers = exports.getPlayerBySocketId = exports.deleteRoomIfNoPlayers = exports.findAndDeletePlayer = exports.updateAllPlayers = exports.updatePlayer = exports.createPlayer = exports.findPlayer = exports.getPlayerList = void 0;
 const sequelize_1 = require("sequelize");
 const db_1 = require("../config/db");
 const engine_1 = require("./engine");
@@ -25,7 +25,8 @@ const findPlayer = async (roomCode, where) => {
 };
 exports.findPlayer = findPlayer;
 const createPlayer = async (player) => {
-    await db_1.AvalonPlayer.create(player);
+    const newPlayer = await db_1.AvalonPlayer.create(player);
+    return newPlayer;
 };
 exports.createPlayer = createPlayer;
 const updatePlayer = async ({ socketId, updatedProperties, }) => {
@@ -65,6 +66,20 @@ const findAndDeletePlayer = async (socketId) => {
     }
 };
 exports.findAndDeletePlayer = findAndDeletePlayer;
+const deleteRoomIfNoPlayers = async (roomCode) => {
+    try {
+        const room = await (0, exports.getRoomWithPlayers)(roomCode);
+        if (room && room.AvalonPlayers?.length === 0) {
+            await db_1.AvalonRoom.destroy({
+                where: {
+                    roomCode,
+                },
+            });
+        }
+    }
+    catch (error) { }
+};
+exports.deleteRoomIfNoPlayers = deleteRoomIfNoPlayers;
 // export const getPlayerRole = async (roomCode: string, socketId: string) => {
 //     const player = await AvalonPlayer.findOne({
 //         where: {
@@ -341,6 +356,7 @@ const handleGlobalVote = async (roomCode) => {
             if (votedInFavor.length > votedPlayers.length / 2) {
                 roomState.questVoteInProgress = true;
                 roomState.missedTeamVotes = 1;
+                roomState.gameMessage = 'The vote passed!\n Selected players must now decide on the quest result';
             }
             else {
                 const newLeaderId = await (0, exports.switchToNextLeader)(roomCode);
@@ -348,10 +364,12 @@ const handleGlobalVote = async (roomCode) => {
                 roomState.nominationInProgress = true;
                 roomState.missedTeamVotes = roomState?.missedTeamVotes + 1;
                 roomState.currentLeaderId = newLeaderId;
+                roomState.gameMessage = 'The vote has failed!\n Now new leader must nominate a new party';
+                await (0, exports.updateAllPlayers)(roomCode, { nominated: false });
             }
             if (roomState.missedTeamVotes === 5) {
                 roomState.gameInProgress = false;
-                roomState.gameMessage = 'The EVIL has won! The party was not formed 5 times in a row.';
+                roomState.gameMessage = 'The EVIL has won!\n The party was not formed 5 times in a row.';
                 roomState.revealRoles = true;
             }
             await roomState.save();
@@ -388,7 +406,7 @@ const handleQuestVote = async (roomCode) => {
         else {
             await (0, exports.updateQuestResult)(roomCode, roomState?.currentQuest, 'fail');
         }
-        roomState.gameMessage = `${votedInFavor.length} player(s) voted in favor of the quest.`;
+        roomState.gameMessage = `${votedInFavor.length} player(s) voted in favor of the quest.\n Now new leader must nominate a new party`;
         roomState.currentQuest = nextQuestNumber;
         await (0, exports.startNewVoteCycle)(roomCode);
         const gameEnd = await (0, exports.checkForEndGame)(roomCode);

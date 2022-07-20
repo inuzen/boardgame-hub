@@ -1,5 +1,6 @@
 import { InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize/types';
 import { ROLE_LIST } from '../namespaces/types';
+import { AvalonPlayerType } from './AvalonPlayer';
 export interface AvalonRoomType {
     roomCode: string;
     currentQuest?: number;
@@ -17,6 +18,7 @@ export interface AvalonRoomType {
     gameMessage?: string;
     revealVotes?: boolean;
     revealRoles?: boolean;
+    AvalonPlayers?: AvalonPlayerType[];
 }
 interface AvalonRoomModel
     extends AvalonRoomType,

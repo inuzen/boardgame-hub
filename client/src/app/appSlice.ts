@@ -5,11 +5,13 @@ import { RootState } from './store';
 export interface AppState {
     nickname: string;
     roomCode: string;
+    action: 'create' | 'join' | null;
 }
 
 const initialState: AppState = {
     nickname: '',
     roomCode: '',
+    action: null,
 };
 
 export const appSlice = createSlice({
@@ -18,18 +20,21 @@ export const appSlice = createSlice({
 
     reducers: {
         setNickname: (state, action: PayloadAction<string>) => {
-            // @ts-ignore
+            localStorage.setItem('nickname', action.payload);
             state.nickname = action.payload;
         },
         setRoomCode: (state, action: PayloadAction<string>) => {
-            // @ts-ignore
             state.roomCode = action.payload;
+        },
+        setAction: (state, action: PayloadAction<'create' | 'join' | null>) => {
+            state.action = action.payload;
         },
     },
 });
 
-export const { setNickname, setRoomCode } = appSlice.actions;
+export const { setNickname, setRoomCode, setAction } = appSlice.actions;
 
-export const selectNickname = (state: RootState) => state.app.nickname;
+export const selectNickname = (state: RootState) => state.app.nickname || localStorage.getItem('nickname') || '';
+export const selectAction = (state: RootState) => state.app.action;
 
 export default appSlice.reducer;

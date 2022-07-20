@@ -25,7 +25,8 @@ export const findPlayer = async (roomCode: string, where: Record<string, any>) =
 };
 
 export const createPlayer = async (player: AvalonPlayerType) => {
-    await AvalonPlayer.create(player);
+    const newPlayer = await AvalonPlayer.create(player);
+    return newPlayer;
 };
 
 export const updatePlayer = async ({
@@ -67,6 +68,19 @@ export const findAndDeletePlayer = async (socketId: string) => {
     } catch (e) {
         console.log(e);
     }
+};
+
+export const deleteRoomIfNoPlayers = async (roomCode: string) => {
+    try {
+        const room = await getRoomWithPlayers(roomCode);
+        if (room && room.AvalonPlayers?.length === 0) {
+            await AvalonRoom.destroy({
+                where: {
+                    roomCode,
+                },
+            });
+        }
+    } catch (error) {}
 };
 
 // export const getPlayerRole = async (roomCode: string, socketId: string) => {

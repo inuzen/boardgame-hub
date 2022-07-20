@@ -12,7 +12,7 @@ import {
     updatePlayer,
     getRoom,
     countPlayers,
-    findAndDeletePlayer,
+    deleteRoomIfNoPlayers,
     handleGlobalVote,
     startNewVoteCycle,
     handleQuestVote,
@@ -41,38 +41,95 @@ class Connection {
         socket.on('start new vote', async () => await this.startNewVote());
         socket.on('assassinate', async (targetId: string) => await this.assassinate(targetId));
         socket.on('toggle extra role', async (roleKey: ROLE_LIST) => await this.toggleExtraRole(roleKey));
+        socket.on(
+            'get existing player',
+            async (params: { playerUUID: string; roomCode: string; nickname: string }) =>
+                await this.getExistingPlayer(params),
+        );
 
-        socket.on('room', async ({ roomCode, nickname }) => {
-            const [_, created] = await createRoom(roomCode, socket.id);
+        socket.on('init room', async (params: { roomCode: string; nickname: string }) => await this.initRoom(params));
 
-            socket.join(roomCode);
-            this.roomCode = roomCode;
-            const playerCount = await countPlayers(roomCode);
-            await createPlayer({
-                roomCode,
-                socketId: socket.id,
-                name: nickname,
-                isHost: created,
-                roleName: '',
-                roleKey: null,
-                order: playerCount + 1,
-                questVote: null,
-                globalVote: null,
-            });
-
-            const players = await getPlayerList(roomCode);
-            ns.to(roomCode).emit('players', players);
-            if (players.length > 1) {
-                this.initAndSendQuests(players.length);
-            }
-        });
+        socket.on(
+            'join room',
+            async ({ roomCode, nickname }: { roomCode: string; nickname: string }) =>
+                await this.addPlayerToRoom({ roomCode, nickname }),
+        );
     }
 
+    async initRoom(params: { roomCode: string; nickname: string }) {
+        const { roomCode, nickname } = params;
+        const [_, created] = await createRoom(roomCode, this.socket.id);
+        this.socket.join(roomCode);
+        this.roomCode = roomCode;
+        await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+    }
+
+    async addPlayerToRoom({
+        nickname,
+        roomCode,
+        isHost = false,
+    }: {
+        nickname: string;
+        roomCode: string;
+        isHost?: boolean;
+    }) {
+        this.roomCode = roomCode;
+        this.socket.join(roomCode);
+
+        const playerCount = await countPlayers(roomCode);
+
+        const newPlayer = await createPlayer({
+            roomCode,
+            socketId: this.socket.id,
+            name: nickname,
+            isHost,
+            roleName: '',
+            roleKey: null,
+            order: playerCount + 1,
+            questVote: null,
+            globalVote: null,
+            connected: true,
+        });
+
+        this.ns.to(this.socket.id).emit('register', newPlayer.playerUUID);
+        const players = await getPlayerList(roomCode);
+        this.ns.to(roomCode).emit('players', players);
+        if (players.length > 1) {
+            this.initAndSendQuests(players.length);
+        }
+    }
+
+    async getExistingPlayer(params: { playerUUID: string; roomCode: string; nickname: string }) {
+        const { playerUUID, roomCode, nickname } = params;
+        const room = await getRoom(roomCode);
+
+        if (!!room) {
+            const playerExist = await findPlayer(roomCode, { playerUUID });
+
+            if (playerExist) {
+                this.roomCode = roomCode;
+                this.socket.join(roomCode);
+                playerExist.connected = true;
+                playerExist.socketId = this.socket.id;
+                await playerExist.save();
+                const roomInfo = await getRoomWithPlayers(roomCode);
+                this.ns.to(roomCode).emit('update room', roomInfo);
+            } else {
+                await this.addPlayerToRoom({ nickname, roomCode });
+            }
+        } else {
+            await this.initRoom({ roomCode, nickname });
+        }
+    }
+
+    async disconnect() {
+        await deleteRoomIfNoPlayers(this.roomCode);
+    }
     async disconnecting() {
         const { id } = this.socket;
-        await findAndDeletePlayer(id);
-        const players = await getPlayerList(this.roomCode);
-        this.ns.to(this.roomCode).emit('players', players);
+        await updatePlayer({ socketId: id, updatedProperties: { connected: false } });
+        const roomInfo = await getRoomWithPlayers(this.roomCode);
+        this.ns.to(this.roomCode).emit('update room', roomInfo);
     }
 
     async initAndSendQuests(playerCount: number) {
@@ -183,8 +240,6 @@ class Connection {
     async startNewVote() {
         await startNewVoteCycle(this.roomCode);
     }
-
-    disconnect() {}
 }
 
 const initNameSpace = (io: Server) => {

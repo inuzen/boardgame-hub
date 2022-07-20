@@ -11,7 +11,7 @@ import {
     assassinate,
 } from '../store/avalonSlice';
 
-export const PlayerItem = ({ name, nominated, socketId, globalVote, role }: any) => {
+export const PlayerItem = ({ name, nominated, socketId, globalVote, role, connected }: any) => {
     const dispatch = useAppDispatch();
     const currentLeader = useAppSelector(selectCurrentLeader);
 
@@ -34,7 +34,10 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, role }: any)
         }
     };
     return (
-        <div className={classNames('playerItemContainer', { target: targetId === socketId })} onClick={onPlayerSelect}>
+        <div
+            className={classNames('playerItemContainer', { target: targetId === socketId, disconnected: !connected })}
+            onClick={onPlayerSelect}
+        >
             <div className="infoBar">
                 <div className={classNames('infoItem admin', { show: host === socketId })}></div>
                 <div className={classNames('infoItem leader', { show: currentLeader === socketId })}></div>

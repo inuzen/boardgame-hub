@@ -111,6 +111,10 @@
         border-color: red;
     }
 
+    &.disconnected {
+        opacity: 0.5;
+    }
+
     .infoBar {
         display: flex;
         flex-direction: row;

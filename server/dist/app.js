@@ -19,29 +19,27 @@ const io = new socket_io_1.Server(httpServer, {
     cors: {
         origin: '*',
         methods: ['GET', 'POST'],
+        allowedHeaders: ['my-custom-header'],
+        credentials: false,
     },
 });
-// import indexRouter from './routes/index';
-// import usersRouter from './routes/users';
 app.use((0, cors_1.default)());
 app.use((0, morgan_1.default)('dev'));
 app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.static(path_1.default.join(__dirname, 'public')));
-// app.use('/', indexRouter);
-// app.use('/users', usersRouter);
 io.on('connection', (socket) => {
     console.log(`New connection: ${socket.id}`);
 });
 // TODO move this to avalon namespace file
 (0, avalonNameSpace_js_1.initNameSpace)(io);
 //Serve static assets in production
-if (process.env.NODE_ENV === 'production') {
-    //set static folder
-    app.use(express_1.default.static('client/build'));
-    app.get('*', (req, res) => res.sendFile(path_1.default.resolve(__dirname, 'client', 'build', 'index.html')));
-}
+// if (process.env.NODE_ENV === 'production') {
+//     //set static folder
+//     app.use(express.static('client/build'));
+//     app.get('*', (req, res) => res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html')));
+// }
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);

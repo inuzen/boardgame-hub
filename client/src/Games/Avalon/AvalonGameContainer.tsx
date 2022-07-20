@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Avalon from './Avalon';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { startConnecting, disconnect } from './store/avalonSlice';
-import { selectNickname, setNickname } from '../../app/appSlice';
+import { selectNickname, setNickname, setAction } from '../../app/appSlice';
 
 const AvalonGameContainer = () => {
     const { roomCode } = useParams();
@@ -21,6 +21,7 @@ const AvalonGameContainer = () => {
         }
 
         if (nickname) {
+            dispatch(setAction('join'));
             dispatch(startConnecting(roomCode || ''));
         }
 
@@ -30,7 +31,8 @@ const AvalonGameContainer = () => {
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [nickname]);
 
-    if (!nickname) {
+    // TODO add logic to handle when uuid is present but the player is not
+    if (!nickname && !localStorage.getItem('playerUUID')) {
         const handleNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
             setName(e.target.value);
         };

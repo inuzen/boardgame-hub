@@ -1,6 +1,10 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
+    playerUUID: {
+        type: DataTypes.UUID,
+        defaultValue: DataTypes.UUIDV4,
+    },
     socketId: {
         type: DataTypes.STRING,
         allowNull: false,
@@ -61,6 +65,10 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
         type: DataTypes.STRING,
         allowNull: true,
         defaultValue: null,
+    },
+    connected: {
+        type: DataTypes.BOOLEAN,
+        defaultValue: false,
     },
     // hasVoted: {
     //     type: DataTypes.BOOLEAN,

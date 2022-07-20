@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.createMessageByRole = exports.createRoleDistributionArray = exports.getQuestsForPlayerCount = exports.DISTRIBUTION = void 0;
+exports.createMessageByRole = exports.createRoleDistributionArray = exports.DISTRIBUTION = void 0;
 const utils_1 = require("../utils/utils");
 const types_1 = require("./types");
 // in a format of "player_count": {questPartySize: [2, 3, ...], good: 1, evil: 1}
@@ -51,13 +51,6 @@ exports.DISTRIBUTION = {
         evil: 4,
     },
 };
-const getQuestsForPlayerCount = (playerCount) => exports.DISTRIBUTION[playerCount].questPartySize.map((questPartySize, i) => {
-    return {
-        partySize: questPartySize,
-        result: i > 1 && Math.random() < 0.5 ? 'success' : 'fail',
-    };
-});
-exports.getQuestsForPlayerCount = getQuestsForPlayerCount;
 const createRoleDistributionArray = (playerCount, extraRolesList = []) => {
     const defaultRoles = [types_1.ROLES.MERLIN, types_1.ROLES.ASSASSIN];
     const extraRoles = extraRolesList.map((el) => types_1.ROLES[el]);
@@ -74,10 +67,8 @@ const createRoleDistributionArray = (playerCount, extraRolesList = []) => {
 exports.createRoleDistributionArray = createRoleDistributionArray;
 const createMessageByRole = (player, allPlayers) => {
     if (player.side === types_1.SIDES.EVIL && player.roleKey !== types_1.ROLE_LIST.OBERON) {
-        return `Other evil players are: ${allPlayers
-            .filter((p) => p.side === types_1.SIDES.EVIL && p.roleKey !== types_1.ROLE_LIST.OBERON && p.socketId !== player.socketId)
-            .map((p) => p.name)
-            .join(', ')}`;
+        const otherEvilPlayers = allPlayers.filter((p) => p.side === types_1.SIDES.EVIL && p.roleKey !== types_1.ROLE_LIST.OBERON && p.socketId !== player.socketId);
+        return otherEvilPlayers.length ? `Other evil players are: ${allPlayers.map((p) => p.name).join(', ')}` : '';
     }
     switch (player.roleKey) {
         case types_1.ROLE_LIST.MERLIN:
