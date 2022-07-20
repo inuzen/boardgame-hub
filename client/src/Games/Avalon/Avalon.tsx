@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Modal } from 'antd';
+import Modal from 'react-modal';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import {
     getQuests,
@@ -57,7 +57,7 @@ const Avalon = ({ roomCode }: any) => {
         setIsModalVisible(true);
     };
 
-    const handleOk = () => {
+    const handleClose = () => {
         setIsModalVisible(false);
     };
 
@@ -166,7 +166,22 @@ const Avalon = ({ roomCode }: any) => {
                 {role && <p>Your role is: {role}</p>}
                 {secretInfo && <p>{secretInfo}</p>}
             </div>
-            <Modal title="QR CODE" visible={isModalVisible} onCancel={handleOk} footer={null}>
+            <Modal
+                isOpen={isModalVisible}
+                onRequestClose={handleClose}
+                contentLabel="qr link"
+                style={{
+                    content: {
+                        width: '250px',
+                        height: '250px',
+                        transform: 'translate(-50%, -50%)',
+                        top: '50%',
+                        left: '50%',
+                        right: 'auto',
+                        bottom: 'auto',
+                    },
+                }}
+            >
                 <QRCode value={window.location.href} />
             </Modal>
         </div>
