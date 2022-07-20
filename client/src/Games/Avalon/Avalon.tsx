@@ -21,7 +21,7 @@ import './avalon.scss';
 import classNames from 'classnames';
 import { DEFAULT_ROLES, ROLE_LIST } from './store/types';
 import { RoleCheckbox } from './Components/RoleCheckbox';
-import { QrcodeOutlined } from '@ant-design/icons';
+// import { QrcodeOutlined } from '@ant-design/icons';
 import QRCode from 'react-qr-code';
 
 const Avalon = ({ roomCode }: any) => {
@@ -97,7 +97,7 @@ const Avalon = ({ roomCode }: any) => {
         <div>
             <h1>Avalon: Room id - {roomCode}.</h1>
             <span className="qr">
-                <QrcodeOutlined onClick={showModal} />
+                <button onClick={showModal}>open qr</button>
             </span>
             <h3>Name: {nickname}</h3>
             <div className="mainContainer">
