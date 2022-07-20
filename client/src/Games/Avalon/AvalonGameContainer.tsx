@@ -21,7 +21,6 @@ const AvalonGameContainer = () => {
         }
 
         if (nickname) {
-            dispatch(setAction('join'));
             dispatch(startConnecting(roomCode || ''));
         }
 
@@ -32,7 +31,7 @@ const AvalonGameContainer = () => {
     }, [nickname]);
 
     // TODO add logic to handle when uuid is present but the player is not
-    if (!nickname && !localStorage.getItem('playerUUID')) {
+    if (!nickname && !localStorage.getItem('nickname')) {
         const handleNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
             setName(e.target.value);
         };
