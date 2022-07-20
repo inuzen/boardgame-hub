@@ -152,9 +152,13 @@ const Avalon = ({ roomCode }: any) => {
                 </div>
                 <div>
                     {showVoteControls && (
-                        <div>
-                            <button onClick={voteYes}>Yes</button>
-                            <button onClick={voteNo}>No</button>
+                        <div className="votingControls">
+                            <button className="voteButton" onClick={voteYes}>
+                                Yes
+                            </button>
+                            <button className="voteButton" onClick={voteNo}>
+                                No
+                            </button>
                         </div>
                     )}
                     {isLeader && nominationInProgress && (

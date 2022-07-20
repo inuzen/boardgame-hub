@@ -132,7 +132,7 @@ export const avalonSlice = createSlice({
                     (player) => player.nominated && player.socketId === state.socketId,
                 );
             }
-
+            state.gameInProgress = action.payload.gameInProgress;
             state.currentQuest = action.payload.currentQuest;
             state.missedTeamVotes = action.payload.missedTeamVotes;
             state.nominationInProgress = action.payload.nominationInProgress;

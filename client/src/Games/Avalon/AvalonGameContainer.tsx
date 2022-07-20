@@ -5,12 +5,13 @@ import { useNavigate } from 'react-router-dom';
 import Avalon from './Avalon';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { startConnecting, disconnect } from './store/avalonSlice';
-import { selectNickname, setNickname, setAction } from '../../app/appSlice';
+import { selectNickname, setNickname, setAction, selectAction } from '../../app/appSlice';
 
 const AvalonGameContainer = () => {
     const { roomCode } = useParams();
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
+    const action = useAppSelector(selectAction);
     const nickname = useAppSelector(selectNickname);
 
     const [name, setName] = useState('');
@@ -21,6 +22,9 @@ const AvalonGameContainer = () => {
         }
 
         if (nickname) {
+            if (!action) {
+                dispatch(setAction('join'));
+            }
             dispatch(startConnecting(roomCode || ''));
         }
 

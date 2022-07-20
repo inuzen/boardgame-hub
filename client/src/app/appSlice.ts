@@ -9,7 +9,7 @@ export interface AppState {
 }
 
 const initialState: AppState = {
-    nickname: '',
+    nickname: localStorage.getItem('nickname') || '',
     roomCode: '',
     action: null,
 };

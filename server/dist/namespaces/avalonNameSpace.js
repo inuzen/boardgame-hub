@@ -26,11 +26,16 @@ class Connection {
         socket.on('join room', async ({ roomCode, nickname }) => await this.addPlayerToRoom({ roomCode, nickname }));
     }
     async initRoom(params) {
-        const { roomCode, nickname } = params;
-        const [_, created] = await (0, dbActions_1.createRoom)(roomCode, this.socket.id);
-        this.socket.join(roomCode);
-        this.roomCode = roomCode;
-        await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+        try {
+            const { roomCode, nickname } = params;
+            const [_, created] = await (0, dbActions_1.createRoom)(roomCode, this.socket.id);
+            this.socket.join(roomCode);
+            this.roomCode = roomCode;
+            await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+        }
+        catch (error) {
+            console.log(error);
+        }
     }
     async addPlayerToRoom({ nickname, roomCode, isHost = false, }) {
         this.roomCode = roomCode;
@@ -74,6 +79,7 @@ class Connection {
             }
         }
         else {
+            console.log('Room does not exist');
             await this.initRoom({ roomCode, nickname });
         }
     }

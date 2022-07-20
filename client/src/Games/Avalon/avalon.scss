@@ -18,7 +18,8 @@
         }
     }
     .gameFieldContainer {
-        width: 50%;
+        width: 100%;
+        max-width: 500px;
         height: 300px;
         display: flex;
         flex-flow: column;
@@ -54,6 +55,16 @@
                     background-color: red;
                 }
             }
+        }
+    }
+
+    .votingControls {
+        width: 200px;
+        margin-top: 10px;
+        .voteButton {
+            width: 40px;
+            height: 40px;
+            margin: 0 10px;
         }
     }
 }

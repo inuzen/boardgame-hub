@@ -115,6 +115,10 @@ class Connection {
                 this.socket.join(roomCode);
                 playerExist.connected = true;
                 playerExist.socketId = this.socket.id;
+                if (playerExist.isCurrentLeader) {
+                    room.currentLeaderId = this.socket.id;
+                    await room.save();
+                }
                 await playerExist.save();
                 const roomInfo = await getRoomWithPlayers(roomCode);
                 this.ns.to(roomCode).emit('update room', roomInfo);
