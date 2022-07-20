@@ -57,11 +57,15 @@ class Connection {
     }
 
     async initRoom(params: { roomCode: string; nickname: string }) {
-        const { roomCode, nickname } = params;
-        const [_, created] = await createRoom(roomCode, this.socket.id);
-        this.socket.join(roomCode);
-        this.roomCode = roomCode;
-        await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+        try {
+            const { roomCode, nickname } = params;
+            const [_, created] = await createRoom(roomCode, this.socket.id);
+            this.socket.join(roomCode);
+            this.roomCode = roomCode;
+            await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+        } catch (error) {
+            console.log(error);
+        }
     }
 
     async addPlayerToRoom({
