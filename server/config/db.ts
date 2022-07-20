@@ -9,9 +9,9 @@ import RoomModel from '../models/AvalonRoom';
 const db: string = process.env.DATABASE_URL || config.get('postgresURI');
 const sequelize = new Sequelize(db, {
     dialectOptions: {
-        // ssl: {
-        //     rejectUnauthorized: false,
-        // },
+        ssl: {
+            rejectUnauthorized: false,
+        },
     },
 });
 const queryInterface = sequelize.getQueryInterface();
