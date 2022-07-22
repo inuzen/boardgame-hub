@@ -6,23 +6,23 @@ import {
     getAllPlayers,
     startGame,
     isHost,
-    globalVote,
-    selectMissedVotes,
     selectRole,
     confirmParty,
     isCurrentLeader,
-    questVote,
     shouldShowVoteButtons,
     selectSecretInfo,
 } from './store/avalonSlice';
 import { QuestItem } from './Components/QuestItem';
 import { PlayerItem } from './Components/PlayerItem';
 import './avalon.scss';
-import classNames from 'classnames';
 import { DEFAULT_ROLES, ROLE_LIST } from './store/types';
 import { RoleCheckbox } from './Components/RoleCheckbox';
-// import { QrcodeOutlined } from '@ant-design/icons';
+
 import QRCode from 'react-qr-code';
+import VoteComponent from './Components/VoteComponent';
+import { VoteTrack } from './Components/VoteTrack';
+
+import { IoQrCodeSharp } from 'react-icons/io5';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -30,7 +30,7 @@ const Avalon = ({ roomCode }: any) => {
     const players = useAppSelector(getAllPlayers);
     const quests = useAppSelector(getQuests);
     const host = useAppSelector(isHost);
-    const missedVotes = useAppSelector(selectMissedVotes);
+
     const role = useAppSelector(selectRole);
     const secretInfo = useAppSelector(selectSecretInfo);
     const isLeader = useAppSelector(isCurrentLeader);
@@ -71,35 +71,30 @@ const Avalon = ({ roomCode }: any) => {
         dispatch(startGame());
     };
 
-    const voteYes = () => {
-        if (globalVoteInProgress) {
-            dispatch(globalVote('yes'));
-        }
-        if (questVoteInProgress) {
-            dispatch(questVote('yes'));
-        }
-    };
-
-    const voteNo = () => {
-        if (globalVoteInProgress) {
-            dispatch(globalVote('no'));
-        }
-        if (questVoteInProgress) {
-            dispatch(questVote('no'));
-        }
-    };
-
     const onConfirmParty = () => {
         dispatch(confirmParty());
     };
 
     return (
-        <div>
-            <h1>Avalon: Room id - {roomCode}.</h1>
-            <span className="qr">
-                <button onClick={showModal}>open qr</button>
-            </span>
-            <h3>Name: {nickname}</h3>
+        <div className="avalonWrapper">
+            <div>
+                <h2>Avalon</h2>
+                <div className="roomInfo">
+                    <div className="roomInfoItem">
+                        <p>Room code:</p>
+                        <p>
+                            <span>{roomCode}</span>
+                            <span className="qr" onClick={showModal}>
+                                <IoQrCodeSharp />
+                            </span>
+                        </p>
+                    </div>
+                    <div className="roomInfoItem">
+                        <p>Name:</p>
+                        <p>{nickname}</p>
+                    </div>
+                </div>
+            </div>
             <div className="mainContainer">
                 {host && !gameStarted && (
                     <div className="adminActions">
@@ -115,14 +110,6 @@ const Avalon = ({ roomCode }: any) => {
                         </div>
                     </div>
                 )}
-                <div className="playerListContainer">
-                    <h2>Players:</h2>
-                    <div className="playerList">
-                        {players?.map((player: any) => (
-                            <PlayerItem key={player.socketId} {...player} />
-                        ))}
-                    </div>
-                </div>
                 {gameOverInfo && <div>{`Game is over and ${gameOverInfo.goodWon ? 'Good' : 'Evil'} won!`}</div>}
                 <div className="gameFieldContainer">
                     <div>Current Leader: {players.find((player) => player.isCurrentLeader)?.name}</div>
@@ -138,55 +125,45 @@ const Avalon = ({ roomCode }: any) => {
                             />
                         ))}
                     </div>
-                    <p>Vote Track:</p>
-                    <div className="voteTrack">
-                        {[1, 2, 3, 4, 5].map((i: number) => (
-                            <div
-                                className={classNames('voteTrackItem', { danger: i === 5, active: i === missedVotes })}
-                                key={i}
-                            >
-                                {i}
-                            </div>
+                    <VoteTrack />
+                </div>
+                {showVoteControls && (
+                    <VoteComponent isGlobalVote={globalVoteInProgress} isQuestVote={questVoteInProgress} />
+                )}
+                {isLeader && nominationInProgress && (
+                    <button onClick={onConfirmParty} disabled={!enoughPlayersNominated}>
+                        Confirm Party
+                    </button>
+                )}
+
+                {role && <p>Your role is: {role}</p>}
+                {secretInfo && <p>{secretInfo}</p>}
+                <div className="playerListContainer">
+                    <h3>Player List:</h3>
+                    <div className="playerList">
+                        {players?.map((player: any) => (
+                            <PlayerItem key={player.socketId} {...player} />
                         ))}
                     </div>
                 </div>
-                <div>
-                    {showVoteControls && (
-                        <div className="votingControls">
-                            <button className="voteButton" onClick={voteYes}>
-                                Yes
-                            </button>
-                            <button className="voteButton" onClick={voteNo}>
-                                No
-                            </button>
-                        </div>
-                    )}
-                    {isLeader && nominationInProgress && (
-                        <button onClick={onConfirmParty} disabled={!enoughPlayersNominated}>
-                            Confirm Party
-                        </button>
-                    )}
-                </div>
-                {role && <p>Your role is: {role}</p>}
-                {secretInfo && <p>{secretInfo}</p>}
             </div>
             <Modal
                 isOpen={isModalVisible}
                 onRequestClose={handleClose}
                 contentLabel="qr link"
+                closeTimeoutMS={200}
                 style={{
                     content: {
-                        width: '250px',
-                        height: '250px',
-                        transform: 'translate(-50%, -50%)',
-                        top: '50%',
+                        bottom: '50%',
                         left: '50%',
                         right: 'auto',
-                        bottom: 'auto',
+                        top: 'auto',
+                        marginRight: '-50%',
+                        transform: 'translate(-50%, -50%)',
                     },
                 }}
             >
-                <QRCode value={window.location.href} />
+                <QRCode value={window.location.href} size={200} />
             </Modal>
         </div>
     );

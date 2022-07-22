@@ -19,6 +19,7 @@ export interface AvalonPlayerType {
     side?: SIDES | null;
     secretInformation?: string | null;
     connected?: boolean;
+    imageName?: string;
 }
 
 export interface AvalonPlayerModel
@@ -95,6 +96,11 @@ export default (sequelize: Sequelize, DataTypes: any) =>
         connected: {
             type: DataTypes.BOOLEAN,
             defaultValue: false,
+        },
+        imageName: {
+            type: DataTypes.STRING,
+            allowNull: true,
+            defaultValue: null,
         },
         // hasVoted: {
         //     type: DataTypes.BOOLEAN,

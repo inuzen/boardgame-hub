@@ -229,6 +229,7 @@ class Connection {
                     : 'Assassin has missed! The victory stays on the Good side';
                 room.revealRoles = true;
             }
+            room.gameInProgress = false;
             await room.save();
             this.ns.to(this.roomCode).emit('update room', room);
         }

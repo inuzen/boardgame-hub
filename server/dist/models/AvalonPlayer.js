@@ -70,6 +70,11 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
         type: DataTypes.BOOLEAN,
         defaultValue: false,
     },
+    imageName: {
+        type: DataTypes.STRING,
+        allowNull: true,
+        defaultValue: null,
+    },
     // hasVoted: {
     //     type: DataTypes.BOOLEAN,
     //     defaultValue: false,

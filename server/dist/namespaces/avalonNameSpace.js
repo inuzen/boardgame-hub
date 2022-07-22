@@ -70,6 +70,10 @@ class Connection {
                 this.socket.join(roomCode);
                 playerExist.connected = true;
                 playerExist.socketId = this.socket.id;
+                if (playerExist.isCurrentLeader) {
+                    room.currentLeaderId = this.socket.id;
+                    await room.save();
+                }
                 await playerExist.save();
                 const roomInfo = await (0, dbActions_1.getRoomWithPlayers)(roomCode);
                 this.ns.to(roomCode).emit('update room', roomInfo);
@@ -79,7 +83,6 @@ class Connection {
             }
         }
         else {
-            console.log('Room does not exist');
             await this.initRoom({ roomCode, nickname });
         }
     }
@@ -173,6 +176,7 @@ class Connection {
                     : 'Assassin has missed! The victory stays on the Good side';
                 room.revealRoles = true;
             }
+            room.gameInProgress = false;
             await room.save();
             this.ns.to(this.roomCode).emit('update room', room);
         }

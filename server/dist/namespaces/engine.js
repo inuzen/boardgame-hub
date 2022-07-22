@@ -68,7 +68,9 @@ exports.createRoleDistributionArray = createRoleDistributionArray;
 const createMessageByRole = (player, allPlayers) => {
     if (player.side === types_1.SIDES.EVIL && player.roleKey !== types_1.ROLE_LIST.OBERON) {
         const otherEvilPlayers = allPlayers.filter((p) => p.side === types_1.SIDES.EVIL && p.roleKey !== types_1.ROLE_LIST.OBERON && p.socketId !== player.socketId);
-        return otherEvilPlayers.length ? `Other evil players are: ${allPlayers.map((p) => p.name).join(', ')}` : '';
+        return otherEvilPlayers.length
+            ? `Other evil players are: ${otherEvilPlayers.map((p) => p.name).join(', ')}`
+            : '';
     }
     switch (player.roleKey) {
         case types_1.ROLE_LIST.MERLIN:

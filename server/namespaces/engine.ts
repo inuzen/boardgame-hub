@@ -79,7 +79,9 @@ export const createMessageByRole = (player: AvalonPlayerModel, allPlayers: Avalo
         const otherEvilPlayers = allPlayers.filter(
             (p) => p.side === SIDES.EVIL && p.roleKey !== ROLE_LIST.OBERON && p.socketId !== player.socketId,
         );
-        return otherEvilPlayers.length ? `Other evil players are: ${allPlayers.map((p) => p.name).join(', ')}` : '';
+        return otherEvilPlayers.length
+            ? `Other evil players are: ${otherEvilPlayers.map((p) => p.name).join(', ')}`
+            : '';
     }
 
     switch (player.roleKey) {

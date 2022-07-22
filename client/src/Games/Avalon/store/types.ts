@@ -12,6 +12,7 @@ export interface AvalonPlayerServer {
     nominated: boolean;
     globalVote: 'yes' | 'no' | null;
     secretInformation: string;
+    imageName: string;
 }
 
 export interface AvalonQuestServer {
