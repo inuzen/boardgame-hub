@@ -16,6 +16,7 @@ h5 {
 .App {
     text-align: center;
     width: 100%;
+    min-height: 100vh;
     max-width: 700px;
     margin: 0 auto;
     background-color: $backgroundColor;
@@ -23,7 +24,7 @@ h5 {
 }
 
 .app-header {
-    padding: 10px;
+    // padding: 10px;
     background-color: #282c34;
     color: white;
 }

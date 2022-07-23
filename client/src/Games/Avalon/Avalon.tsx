@@ -152,12 +152,13 @@ const Avalon = ({ roomCode }: any) => {
                 onRequestClose={handleClose}
                 contentLabel="qr link"
                 closeTimeoutMS={200}
+                ariaHideApp={false}
                 style={{
                     content: {
-                        bottom: '50%',
+                        top: '50%',
                         left: '50%',
                         right: 'auto',
-                        top: 'auto',
+                        bottom: 'auto',
                         marginRight: '-50%',
                         transform: 'translate(-50%, -50%)',
                     },
