@@ -244,6 +244,7 @@ class Connection {
                 room.revealRoles = true;
             }
             room.gameInProgress = false;
+            room.revealVotes = false;
             await room.save();
             this.ns.to(this.roomCode).emit('update room', room);
         }

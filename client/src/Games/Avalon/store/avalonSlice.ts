@@ -226,6 +226,6 @@ export const shouldShowVoteButtons = (state: RootState) =>
 // export const isAssassin = (state: RootState) => state.avalon.role === 'Assassin';
 export const selectTarget = (state: RootState) => state.avalon.assassinTargetId;
 export const canKill = (state: RootState) =>
-    state.avalon.roleKey === ROLE_LIST.ASSASSIN && state.avalon.assassinationInProgress;
+    state.avalon.roleKey === ROLE_LIST.ASSASSIN && state.avalon.assassinationInProgress && state.avalon.gameInProgress;
 
 export default avalonSlice.reducer;

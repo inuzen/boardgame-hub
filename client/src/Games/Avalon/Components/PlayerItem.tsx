@@ -63,6 +63,7 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
                 target: targetId === socketId,
                 disconnected: !connected,
                 nominated,
+                selectForKill: killLicense,
             })}
             onClick={onPlayerSelect}
         >
@@ -86,11 +87,10 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
             <div className="imageContainer">
                 <img className="avatar" src={`${process.env.PUBLIC_URL}/avalonAvatars/${imageName}.png`} alt="" />
             </div>
-            <div className="name">{name}</div>
-            {votedArray.includes(socketId) && <VoteResult text="Ready" ready />}
+            {votedArray.includes(socketId) ? <VoteResult text="Ready" ready /> : <div className="name">{name}</div>}
             {showVotes && <VoteResult text={globalVote} good={globalVote === 'yes'} danger={globalVote === 'no'} />}
             {showRoles && <VoteResult text={roleKey} />}
-            {targetId === socketId && <VoteResult text="Killed" danger />}
+            {targetId === socketId && <VoteResult text="killed" danger />}
         </div>
     );
 };
