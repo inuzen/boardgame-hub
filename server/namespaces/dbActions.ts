@@ -178,6 +178,7 @@ export const getRoomWithPlayers = async (roomCode: string) => {
             },
             { model: AvalonQuest, order: [['questNumber', 'ASC']] },
         ],
+        attributes: { exclude: ['takenImages'] },
     });
 
     return room;

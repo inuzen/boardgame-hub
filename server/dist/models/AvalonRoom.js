@@ -1,5 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
+const types_1 = require("../namespaces/types");
 exports.default = (sequelize, DataTypes) => sequelize.define('AvalonRoom', {
     roomCode: {
         type: DataTypes.STRING,
@@ -66,6 +67,21 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonRoom', {
     extraRoles: {
         type: DataTypes.ARRAY(DataTypes.STRING),
         defaultValue: [],
+    },
+    takenImages: {
+        type: DataTypes.JSONB,
+        defaultValue: {
+            [types_1.AVATARS.BARBARIAN]: { key: types_1.AVATARS.BARBARIAN, taken: false },
+            [types_1.AVATARS.BOW]: { key: types_1.AVATARS.BOW, taken: false },
+            [types_1.AVATARS.CROSSBOW]: { key: types_1.AVATARS.CROSSBOW, taken: false },
+            [types_1.AVATARS.DRAGON]: { key: types_1.AVATARS.DRAGON, taken: false },
+            [types_1.AVATARS.DRUID]: { key: types_1.AVATARS.DRUID, taken: false },
+            [types_1.AVATARS.KNIGHT]: { key: types_1.AVATARS.KNIGHT, taken: false },
+            [types_1.AVATARS.MAGICIAN]: { key: types_1.AVATARS.MAGICIAN, taken: false },
+            [types_1.AVATARS.MARTIAL]: { key: types_1.AVATARS.MARTIAL, taken: false },
+            [types_1.AVATARS.PRIEST]: { key: types_1.AVATARS.PRIEST, taken: false },
+            [types_1.AVATARS.SWORDSMAN]: { key: types_1.AVATARS.SWORDSMAN, taken: false },
+        },
     },
     // timestamps: false,
     // options

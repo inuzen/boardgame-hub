@@ -180,6 +180,7 @@ const createRoom = async (roomCode, socketId) => {
         where: {
             roomCode,
         },
+        // @ts-expect-error
         defaults: {
             roomCode,
             hostSocketId: socketId,

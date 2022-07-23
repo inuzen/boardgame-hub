@@ -3,6 +3,7 @@ Object.defineProperty(exports, "__esModule", { value: true });
 exports.initNameSpace = void 0;
 const types_1 = require("./types");
 const dbActions_1 = require("./dbActions");
+const utils_1 = require("../utils/utils");
 class Connection {
     socket;
     ns;
@@ -41,23 +42,37 @@ class Connection {
         this.roomCode = roomCode;
         this.socket.join(roomCode);
         const playerCount = await (0, dbActions_1.countPlayers)(roomCode);
-        const newPlayer = await (0, dbActions_1.createPlayer)({
-            roomCode,
-            socketId: this.socket.id,
-            name: nickname,
-            isHost,
-            roleName: '',
-            roleKey: null,
-            order: playerCount + 1,
-            questVote: null,
-            globalVote: null,
-            connected: true,
-        });
-        this.ns.to(this.socket.id).emit('register', newPlayer.playerUUID);
-        const players = await (0, dbActions_1.getPlayerList)(roomCode);
-        this.ns.to(roomCode).emit('players', players);
-        if (players.length > 1) {
-            this.initAndSendQuests(players.length);
+        const room = await (0, dbActions_1.getRoom)(roomCode);
+        if (room) {
+            const avatars = Object.values(room.takenImages);
+            const availableAvatars = avatars.filter((avatar) => !avatar.taken);
+            console.log(availableAvatars, 'avatars');
+            const suggestedAvatar = !!availableAvatars.length
+                ? (0, utils_1.shuffle)(availableAvatars)[0]
+                : avatars[Math.floor(Math.random() * avatars.length)];
+            console.log(suggestedAvatar, 'avatars');
+            room.takenImages[suggestedAvatar.key].taken = true;
+            room.changed('takenImages', true);
+            await room.save();
+            const newPlayer = await (0, dbActions_1.createPlayer)({
+                roomCode,
+                socketId: this.socket.id,
+                name: nickname,
+                isHost,
+                roleName: '',
+                roleKey: null,
+                order: playerCount + 1,
+                questVote: null,
+                globalVote: null,
+                connected: true,
+                imageName: suggestedAvatar.key,
+            });
+            this.ns.to(this.socket.id).emit('register', newPlayer.playerUUID);
+            const players = await (0, dbActions_1.getPlayerList)(roomCode);
+            this.ns.to(roomCode).emit('players', players);
+            if (players.length > 1) {
+                this.initAndSendQuests(players.length);
+            }
         }
     }
     async getExistingPlayer(params) {

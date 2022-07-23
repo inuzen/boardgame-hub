@@ -85,8 +85,12 @@ class Connection {
         const room = await getRoom(roomCode);
         if (room) {
             const avatars = Object.values(room.takenImages);
-            const availableAvatars = avatars.filter((avatar) => avatar.taken);
-            const suggestedAvatar = shuffle(availableAvatars)[0];
+            const availableAvatars = avatars.filter((avatar) => !avatar.taken);
+
+            const suggestedAvatar = !!availableAvatars.length
+                ? shuffle(availableAvatars)[0]
+                : avatars[Math.floor(Math.random() * avatars.length)];
+
             room.takenImages[suggestedAvatar.key].taken = true;
             await room.save();
 

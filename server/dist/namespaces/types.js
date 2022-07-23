@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ROLES = exports.DEFAULT_ROLES = exports.ROLE_LIST = exports.SIDES = void 0;
+exports.AVATARS = exports.ROLES = exports.DEFAULT_ROLES = exports.ROLE_LIST = exports.SIDES = void 0;
 var SIDES;
 (function (SIDES) {
     SIDES["GOOD"] = "GOOD";
@@ -63,3 +63,16 @@ exports.ROLES = {
         key: ROLE_LIST.MORGANA,
     },
 };
+var AVATARS;
+(function (AVATARS) {
+    AVATARS["BARBARIAN"] = "barbarian";
+    AVATARS["BOW"] = "bow";
+    AVATARS["CROSSBOW"] = "crossbow";
+    AVATARS["DRAGON"] = "dragon";
+    AVATARS["DRUID"] = "druid";
+    AVATARS["KNIGHT"] = "knight";
+    AVATARS["MAGICIAN"] = "magician";
+    AVATARS["MARTIAL"] = "martial";
+    AVATARS["PRIEST"] = "priest";
+    AVATARS["SWORDSMAN"] = "swordsman";
+})(AVATARS = exports.AVATARS || (exports.AVATARS = {}));
