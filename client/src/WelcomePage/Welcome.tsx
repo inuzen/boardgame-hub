@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../app/hooks';
 import { setNickname, selectNickname, setAction } from '../app/appSlice';
@@ -9,9 +9,35 @@ const Welcome = () => {
     const navigate = useNavigate();
     const [roomId, setRoomId] = useState('');
     const [showGames, setShowGames] = useState(false);
+    const [showCode, setShowCode] = useState(false);
     const nickname = useAppSelector(selectNickname);
 
     const dispatch = useAppDispatch();
+
+    const joinRoom = () => {
+        if (showCode && roomId && roomId.length === 4) {
+            dispatch(setAction('join'));
+            navigate(`/avalon/${roomId}`);
+        }
+    };
+
+    useEffect(() => {
+        const keyDownHandler = (event: KeyboardEvent) => {
+            console.log('User pressed: ', event.key);
+
+            if (event.key === 'Enter') {
+                event.preventDefault();
+
+                joinRoom();
+            }
+        };
+
+        document.addEventListener('keydown', keyDownHandler);
+
+        return () => {
+            document.removeEventListener('keydown', keyDownHandler);
+        };
+    }, []);
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
         setRoomId(e.target.value);
@@ -22,47 +48,58 @@ const Welcome = () => {
     };
 
     const onJoinRoom = () => {
-        if (roomId) {
-            dispatch(setAction('join'));
-            navigate(`/avalon/${roomId}`);
-        }
+        joinRoom();
     };
 
     const availableGames = ['avalon', 'werewolf'];
 
     const onCreateRoom = () => {
+        setShowCode(false);
         setShowGames(true);
     };
 
+    const onSelectJoin = () => {
+        setShowGames(false);
+        setShowCode(true);
+    };
+
     const onGameSelect = (e: any) => {
-        const newRoomId = Math.random().toString(36).substring(2, 6);
+        const newRoomId = Math.random().toString(36).substring(2, 6).toUpperCase();
         dispatch(setAction('create'));
         navigate(`/${e.target.name}/${newRoomId}`);
     };
 
     return (
         <div>
-            <h1>Welcome to Boardgame Hub!</h1>
+            <h2>welcome to boardgame hub!</h2>
 
             <div className="welcomeContainer">
                 <div className="inputWrapper">
-                    <p>Enter your name </p>
+                    <p>please, enter your name: </p>
                     <input type="text" onChange={handleNameInput} value={nickname} />
                 </div>
 
-                <p>What would you like to do?</p>
-                <div className="actionContainer">
-                    <button onClick={onCreateRoom} disabled={!nickname}>
-                        Create a room
-                    </button>
-                    <span>OR</span>
-                    <div>
-                        <input type="text" onChange={handleInput} />
-                        <button disabled={!nickname} onClick={onJoinRoom}>
-                            Join room
+                <div className="choiceContainer">
+                    <p className="choiceText">what would you like to do?</p>
+                    <div className="choiceActions">
+                        <button className="choiceButton" onClick={onCreateRoom} disabled={!nickname}>
+                            create a room
+                        </button>
+                        <span>OR</span>
+                        <button className="choiceButton" disabled={!nickname} onClick={onSelectJoin}>
+                            join one
                         </button>
                     </div>
                 </div>
+                {showCode && (
+                    <div>
+                        <p>enter room code</p>
+                        <input type="text" onChange={handleInput} />
+                        <button onClick={onJoinRoom} disabled={roomId.length !== 4}>
+                            join
+                        </button>
+                    </div>
+                )}
 
                 {showGames && (
                     <div className="gameList">

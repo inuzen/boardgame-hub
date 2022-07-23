@@ -1,5 +1,5 @@
 import { InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize/types';
-import { ROLE_LIST } from '../namespaces/types';
+import { AVATARS, ROLE_LIST } from '../namespaces/types';
 import { AvalonPlayerType } from './AvalonPlayer';
 export interface AvalonRoomType {
     roomCode: string;
@@ -19,6 +19,7 @@ export interface AvalonRoomType {
     revealVotes?: boolean;
     revealRoles?: boolean;
     AvalonPlayers?: AvalonPlayerType[];
+    takenImages: Record<AVATARS, { key: AVATARS; taken: boolean }>;
 }
 interface AvalonRoomModel
     extends AvalonRoomType,
@@ -90,6 +91,21 @@ export default (sequelize: Sequelize, DataTypes: any) =>
         extraRoles: {
             type: DataTypes.ARRAY(DataTypes.STRING),
             defaultValue: [],
+        },
+        takenImages: {
+            type: DataTypes.JSONB,
+            defaultValue: {
+                [AVATARS.BARBARIAN]: { key: AVATARS.BARBARIAN, taken: false },
+                [AVATARS.BOW]: { key: AVATARS.BOW, taken: false },
+                [AVATARS.CROSSBOW]: { key: AVATARS.CROSSBOW, taken: false },
+                [AVATARS.DRAGON]: { key: AVATARS.DRAGON, taken: false },
+                [AVATARS.DRUID]: { key: AVATARS.DRUID, taken: false },
+                [AVATARS.KNIGHT]: { key: AVATARS.KNIGHT, taken: false },
+                [AVATARS.MAGICIAN]: { key: AVATARS.MAGICIAN, taken: false },
+                [AVATARS.MARTIAL]: { key: AVATARS.MARTIAL, taken: false },
+                [AVATARS.PRIEST]: { key: AVATARS.PRIEST, taken: false },
+                [AVATARS.SWORDSMAN]: { key: AVATARS.SWORDSMAN, taken: false },
+            },
         },
         // timestamps: false,
         // options

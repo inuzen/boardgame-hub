@@ -69,3 +69,16 @@ export const ROLES: Record<ROLE_LIST, Role> = {
         key: ROLE_LIST.MORGANA,
     },
 };
+
+export enum AVATARS {
+    BARBARIAN = 'barbarian',
+    BOW = 'bow',
+    CROSSBOW = 'crossbow',
+    DRAGON = 'dragon',
+    DRUID = 'druid',
+    KNIGHT = 'knight',
+    MAGICIAN = 'magician',
+    MARTIAL = 'martial',
+    PRIEST = 'priest',
+    SWORDSMAN = 'swordsman',
+}

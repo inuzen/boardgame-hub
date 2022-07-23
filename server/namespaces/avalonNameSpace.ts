@@ -1,4 +1,4 @@
-import { ROLE_LIST } from './types';
+import { AVATARS, ROLE_LIST } from './types';
 import { Namespace, Server, Socket } from 'socket.io';
 import {
     createPlayer,
@@ -20,6 +20,7 @@ import {
     getActiveQuest,
     findPlayer,
 } from './dbActions';
+import { shuffle } from '../utils/utils';
 
 class Connection {
     socket: Socket;
@@ -81,25 +82,34 @@ class Connection {
         this.socket.join(roomCode);
 
         const playerCount = await countPlayers(roomCode);
+        const room = await getRoom(roomCode);
+        if (room) {
+            const avatars = Object.values(room.takenImages);
+            const availableAvatars = avatars.filter((avatar) => avatar.taken);
+            const suggestedAvatar = shuffle(availableAvatars)[0];
+            room.takenImages[suggestedAvatar.key].taken = true;
+            await room.save();
 
-        const newPlayer = await createPlayer({
-            roomCode,
-            socketId: this.socket.id,
-            name: nickname,
-            isHost,
-            roleName: '',
-            roleKey: null,
-            order: playerCount + 1,
-            questVote: null,
-            globalVote: null,
-            connected: true,
-        });
+            const newPlayer = await createPlayer({
+                roomCode,
+                socketId: this.socket.id,
+                name: nickname,
+                isHost,
+                roleName: '',
+                roleKey: null,
+                order: playerCount + 1,
+                questVote: null,
+                globalVote: null,
+                connected: true,
+                imageName: suggestedAvatar.key,
+            });
 
-        this.ns.to(this.socket.id).emit('register', newPlayer.playerUUID);
-        const players = await getPlayerList(roomCode);
-        this.ns.to(roomCode).emit('players', players);
-        if (players.length > 1) {
-            this.initAndSendQuests(players.length);
+            this.ns.to(this.socket.id).emit('register', newPlayer.playerUUID);
+            const players = await getPlayerList(roomCode);
+            this.ns.to(roomCode).emit('players', players);
+            if (players.length > 1) {
+                this.initAndSendQuests(players.length);
+            }
         }
     }
 

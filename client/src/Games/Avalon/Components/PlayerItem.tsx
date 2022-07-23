@@ -15,7 +15,7 @@ import { RiVipCrownFill } from 'react-icons/ri';
 import { BsFillBookmarkStarFill } from 'react-icons/bs';
 import './styles/playerItem.scss';
 import { IconContext } from 'react-icons';
-import knight from '../avatars/knight.png';
+// import knight from '../avatars/knight.png';
 
 const VoteResult: React.FC<{ good?: boolean; danger?: boolean; ready?: boolean; text: string }> = ({
     good,
@@ -30,7 +30,7 @@ const VoteResult: React.FC<{ good?: boolean; danger?: boolean; ready?: boolean; 
     );
 };
 
-export const PlayerItem = ({ name, nominated, socketId, globalVote, role, connected }: any) => {
+export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, roleKey, connected }: any) => {
     const dispatch = useAppDispatch();
     const currentLeader = useAppSelector(selectCurrentLeader);
 
@@ -52,35 +52,44 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, role, connec
             dispatch(assassinate(socketId));
         }
     };
+    const admin = host === socketId;
+    const leader = currentLeader === socketId;
+
+    // TODO adjust colors of icons
+
     return (
         <div
-            className={classNames('playerItemContainer', { target: targetId === socketId, disconnected: !connected })}
+            className={classNames('playerItemContainer', {
+                target: targetId === socketId,
+                disconnected: !connected,
+                nominated,
+            })}
             onClick={onPlayerSelect}
         >
             <div className="infoBar">
-                <div className={classNames('infoItem admin', { show: host === socketId })}>
+                <div className={classNames('infoItem ', { show: admin })}>
                     <IconContext.Provider value={{ color: 'blue', className: 'global-class-name' }}>
                         <TbKey />
                     </IconContext.Provider>
                 </div>
-                <div className={classNames('infoItem leader', { show: currentLeader === socketId })}>
+                <div className={classNames('infoItem ', { show: leader })}>
                     <IconContext.Provider value={{ color: 'gold', className: 'global-class-name' }}>
                         <RiVipCrownFill />
                     </IconContext.Provider>
                 </div>
-                <div className={classNames('infoItem nominated', { show: nominated })}>
+                <div className={classNames('infoItem ', { show: nominated })}>
                     <IconContext.Provider value={{ color: 'orange', className: 'global-class-name' }}>
                         <BsFillBookmarkStarFill />
                     </IconContext.Provider>
                 </div>
             </div>
             <div className="imageContainer">
-                <img className="avatar" src={knight} alt="" />
+                <img className="avatar" src={`${process.env.PUBLIC_URL}/avalonAvatars/${imageName}.png`} alt="" />
             </div>
             <div className="name">{name}</div>
             {votedArray.includes(socketId) && <VoteResult text="Ready" ready />}
             {showVotes && <VoteResult text={globalVote} good={globalVote === 'yes'} danger={globalVote === 'no'} />}
-            {showRoles && <VoteResult text={role} />}
+            {showRoles && <VoteResult text={roleKey} />}
             {targetId === socketId && <VoteResult text="Killed" danger />}
         </div>
     );

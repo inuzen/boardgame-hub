@@ -1,0 +1,40 @@
+@import '../../../../_variables';
+
+.questItemWrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    // overflow: hidden;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    position: relative;
+    border: 2px $textColor solid;
+    // z-index: 10;
+    &.success {
+        border-color: $goodColor;
+    }
+    &.fail {
+        border-color: $dangerColor;
+    }
+    &.active::after {
+        content: '';
+        position: absolute;
+        // transform: translate(100%, -100%);
+        bottom: 0;
+        right: -5px;
+        width: 10px;
+        height: 10px;
+        background-color: $readyColor;
+        border-radius: 50%;
+        z-index: 1;
+    }
+
+    .questNumber {
+        font-size: 10px;
+    }
+    .questPlayerCount {
+        font-size: 18px;
+    }
+}
