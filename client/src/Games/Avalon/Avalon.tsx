@@ -163,7 +163,7 @@ const Avalon = ({ roomCode }: any) => {
                     },
                 }}
             >
-                <QRCode value={window.location.href} size={200} />
+                <QRCode value={window.location.href} size={200} style={{ zIndex: 100 }} />
             </Modal>
         </div>
     );

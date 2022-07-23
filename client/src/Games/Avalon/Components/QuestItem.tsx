@@ -11,9 +11,9 @@ type QuestItemType = {
 
 export const QuestItem: React.FC<QuestItemType> = ({ number, isActive, playerCount, result }) => {
     return (
-        <div className={classnames('questItemWrapper active', result, { active: isActive })}>
-            <span className="questNumber">Quest 5{number}</span>
-            <span className="questPlayerCount">4{playerCount}</span>
+        <div className={classnames('questItemWrapper', result, { active: isActive })}>
+            <span className="questNumber">{number}</span>
+            <span className="questPlayerCount">{playerCount}</span>
         </div>
     );
 };
