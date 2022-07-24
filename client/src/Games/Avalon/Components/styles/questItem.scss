@@ -13,10 +13,12 @@
     border: 2px $textColor solid;
     // z-index: 10;
     &.success {
-        border-color: $goodColor;
+        border-color: #04f17a;
+        background-color: #028d47;
     }
     &.fail {
-        border-color: $dangerColor;
+        background-color: #cc2836;
+        border-color: #ff0015;
     }
     &.active::after {
         content: '';
