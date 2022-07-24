@@ -164,9 +164,10 @@ class Connection {
     }
 
     async startGame() {
+        await startNewVoteCycle(this.roomCode);
         await assignRoles(this.roomCode);
         const players = await getPlayerList(this.roomCode);
-        // random number
+
         const roomInfo = await getRoomWithPlayers(this.roomCode);
 
         if (roomInfo) {
@@ -174,6 +175,8 @@ class Connection {
             roomInfo.nominationInProgress = true;
             roomInfo.globalVoteInProgress = false;
             roomInfo.questVoteInProgress = false;
+            roomInfo.revealVotes = false;
+            roomInfo.revealRoles = false;
             roomInfo.currentLeaderId = players.find((player) => player.isCurrentLeader)?.socketId || '';
             roomInfo.gameMessage = `Leader must nominate players for the quest.`;
             await roomInfo.save();
@@ -183,6 +186,7 @@ class Connection {
                 this.ns.to(player.socketId).emit('assigned role', {
                     roleName: player.roleName,
                     roleKey: player.roleKey,
+                    side: player.side,
                     secretInfo: player.secretInformation,
                 });
             });

@@ -82,3 +82,10 @@
     margin-left: 10px;
     cursor: pointer;
 }
+
+.side {
+    color: $goodColor;
+    &.evilSide {
+        color: $dangerColor;
+    }
+}

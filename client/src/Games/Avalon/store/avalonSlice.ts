@@ -46,6 +46,7 @@ export interface AvalonState extends ConnectionState {
     quests: number[];
     roleName: string;
     roleKey: ROLE_LIST | null;
+    side: string;
     nominated: boolean;
     votedPlayers: string[];
     gameOverInfo: { gameEnded: boolean; goodWon: boolean } | null;
@@ -72,6 +73,7 @@ const initialState: AvalonState = {
     hostSocketId: '',
     socketId: '',
     roleName: '',
+    side: '',
     roleKey: null,
     nominated: false,
     nominationInProgress: false,
@@ -141,8 +143,7 @@ export const avalonSlice = createSlice({
             state.assassinationInProgress = action.payload.assassinationInProgress;
             state.revealRoles = action.payload.revealRoles;
             state.extraRoles = action.payload.extraRoles;
-
-            state.currentLeader = action.payload.currentLeaderId;
+            state.side = state.currentLeader = action.payload.currentLeaderId;
             if (state.revealVotes !== action.payload.revealVotes) {
                 state.votedPlayers = [];
                 state.revealVotes = action.payload.revealVotes;
@@ -156,10 +157,14 @@ export const avalonSlice = createSlice({
         },
         globalVote: (state, action: PayloadAction<'yes' | 'no'>) => {},
         questVote: (state, action: PayloadAction<'yes' | 'no'>) => {},
-        assignRole: (state, action: PayloadAction<{ roleName: string; roleKey: ROLE_LIST; secretInfo: string }>) => {
+        assignRole: (
+            state,
+            action: PayloadAction<{ roleName: string; roleKey: ROLE_LIST; side: string; secretInfo: string }>,
+        ) => {
             state.roleKey = action.payload.roleKey;
             state.roleName = action.payload.roleName;
             state.secretInfo = action.payload.secretInfo;
+            state.side = action.payload.side;
         },
         confirmParty: (state) => {
             state.votedPlayers = [];
@@ -214,7 +219,7 @@ export const isHost = (state: RootState) =>
 
 export const selectMissedVotes = (state: RootState) => state.avalon.missedTeamVotes;
 
-export const selectRole = (state: RootState) => state.avalon.roleName;
+export const selectRoleInfo = (state: RootState) => ({ role: state.avalon.roleName, side: state.avalon.side });
 export const selectSecretInfo = (state: RootState) => state.avalon.secretInfo;
 
 export const shouldShowVoteButtons = (state: RootState) =>

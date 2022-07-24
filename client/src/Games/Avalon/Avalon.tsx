@@ -6,7 +6,7 @@ import {
     getAllPlayers,
     startGame,
     isHost,
-    selectRole,
+    selectRoleInfo,
     confirmParty,
     isCurrentLeader,
     shouldShowVoteButtons,
@@ -23,6 +23,7 @@ import VoteComponent from './Components/VoteComponent';
 import { VoteTrack } from './Components/VoteTrack';
 
 import { IoQrCodeSharp } from 'react-icons/io5';
+import classNames from 'classnames';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -31,7 +32,7 @@ const Avalon = ({ roomCode }: any) => {
     const quests = useAppSelector(getQuests);
     const host = useAppSelector(isHost);
 
-    const role = useAppSelector(selectRole);
+    const roleInfo = useAppSelector(selectRoleInfo);
     const secretInfo = useAppSelector(selectSecretInfo);
     const isLeader = useAppSelector(isCurrentLeader);
 
@@ -136,7 +137,14 @@ const Avalon = ({ roomCode }: any) => {
                     </button>
                 )}
 
-                {role && <p>Your role is: {role}</p>}
+                {roleInfo.role && (
+                    <p>
+                        Your role is {roleInfo.role} (Side:
+                        <span className={classNames('side', { evilSide: roleInfo.side === 'EVIL' })}>
+                            {roleInfo.side})
+                        </span>
+                    </p>
+                )}
                 {secretInfo && <p>{secretInfo}</p>}
                 <div className="playerListContainer">
                     <h3>Player List:</h3>
