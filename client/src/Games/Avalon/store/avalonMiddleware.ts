@@ -88,7 +88,13 @@ const avalonMiddleware: Middleware = (store) => {
             // TODO add side?
             socket.on(
                 'assigned role',
-                (secret: { roleName: string; roleKey: ROLE_LIST; side: string; secretInfo: string }) => {
+                (secret: {
+                    roleName: string;
+                    roleKey: ROLE_LIST;
+                    side: string;
+                    secretInfo: string;
+                    description: string;
+                }) => {
                     store.dispatch(assignRole(secret));
                 },
             );

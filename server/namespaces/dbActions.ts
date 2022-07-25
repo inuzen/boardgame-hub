@@ -350,6 +350,7 @@ export const assignRoles = async (roomCode: string) => {
         player.side = rolesForPlayers[i].side;
         player.isCurrentLeader = i === firstLeaderOrderNumber;
         player.order = i;
+        player.roleDescription = rolesForPlayers[i].ability;
     });
 
     const addSecretInformation = players.map((player, i, arr) => {
@@ -453,7 +454,7 @@ export const handleQuestVote = async (roomCode: string) => {
         roomState.gameMessage = `${
             votedPlayers.length - votedAgainst.length
         } player(s) voted in favor of the quest.\nNow new leader must nominate a new party.\n${
-            nextQuestNumber === 4 ? 'Note: This quest requires 2 votes to fail.' : ''
+            nextQuestNumber === 4 && players.length > 6 ? 'Note: This quest requires 2 votes to fail.' : ''
         }`;
         roomState.currentQuest = nextQuestNumber;
         await startNewVoteCycle(roomCode);

@@ -5,6 +5,7 @@ export interface AvalonPlayerServer {
     name: string;
     roleKey: ROLE_LIST;
     roleName: string;
+    roleDescription: string;
     side: string;
     isHost: boolean;
     isCurrentLeader: boolean;

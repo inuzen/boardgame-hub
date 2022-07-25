@@ -188,6 +188,7 @@ class Connection {
                     roleKey: player.roleKey,
                     side: player.side,
                     secretInfo: player.secretInformation,
+                    description: player.roleDescription,
                 });
             });
         }

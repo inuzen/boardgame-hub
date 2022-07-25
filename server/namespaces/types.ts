@@ -39,17 +39,23 @@ export const ROLES: Record<ROLE_LIST, Role> = {
     [ROLE_LIST.ASSASSIN]: {
         roleName: 'Assassin',
         side: SIDES.EVIL,
-        ability: 'If Evil side looses then Assassin get to decided who to kill. If Merlin is chosen then Evil wins.',
+        ability:
+            'If Evil side looses then Assassin gets to kill one of the players. If he kills Merlin the Evil side wins',
         key: ROLE_LIST.ASSASSIN,
     },
     [ROLE_LIST.MERLIN]: {
         roleName: 'Merlin',
         side: SIDES.GOOD,
         ability:
-            'Knows who plays on the side of evil. But be careful - if the forces of Good win but you are killed by an Assassin then the Evil will triumph',
+            'You know the names of Evil players. Be careful on how you share this knowledge! If the forces of Good win but you are later killed by an Assassin then the Evil will triumph',
         key: ROLE_LIST.MERLIN,
     },
-    [ROLE_LIST.PERCIVAL]: { roleName: 'Percival', side: SIDES.GOOD, ability: 'Knows Merlin', key: ROLE_LIST.PERCIVAL },
+    [ROLE_LIST.PERCIVAL]: {
+        roleName: 'Percival',
+        side: SIDES.GOOD,
+        ability: 'Knows who is Merlin',
+        key: ROLE_LIST.PERCIVAL,
+    },
     [ROLE_LIST.MORDRED]: {
         roleName: 'Mordred',
         side: SIDES.EVIL,

@@ -21,6 +21,8 @@ import { RoleCheckbox } from './Components/RoleCheckbox';
 import QRCode from 'react-qr-code';
 import VoteComponent from './Components/VoteComponent';
 import { VoteTrack } from './Components/VoteTrack';
+import { IconContext } from 'react-icons';
+import { RiVipCrownFill, RiInformationFill, RiCloseFill } from 'react-icons/ri';
 
 import { IoQrCodeSharp } from 'react-icons/io5';
 import classNames from 'classnames';
@@ -53,6 +55,7 @@ const Avalon = ({ roomCode }: any) => {
     );
 
     const [isModalVisible, setIsModalVisible] = useState(false);
+    const [showRoleInfo, setShowRoleInfo] = useState(false);
 
     const showModal = () => {
         setIsModalVisible(true);
@@ -61,10 +64,6 @@ const Avalon = ({ roomCode }: any) => {
     const handleClose = () => {
         setIsModalVisible(false);
     };
-
-    // const handleCancel = () => {
-    //     setIsModalVisible(false);
-    // };
 
     // TODO add additional rules where quest could be selected by leader
 
@@ -75,6 +74,8 @@ const Avalon = ({ roomCode }: any) => {
     const onConfirmParty = () => {
         dispatch(confirmParty());
     };
+
+    const onToggleRoleInfo = () => {};
 
     return (
         <div className="avalonWrapper">
@@ -113,8 +114,17 @@ const Avalon = ({ roomCode }: any) => {
                 )}
                 {gameOverInfo && <div>{`Game is over and ${gameOverInfo.goodWon ? 'Good' : 'Evil'} won!`}</div>}
                 <div className="gameFieldContainer">
-                    <div>Current Leader: {players.find((player) => player.isCurrentLeader)?.name}</div>
-                    <div>{gameMessage}</div>
+                    <div>
+                        <span className="leaderIconWrapper">
+                            <IconContext.Provider value={{ className: 'leaderIcon' }}>
+                                <RiVipCrownFill />
+                            </IconContext.Provider>
+                        </span>
+                        <span>Leader: {players.find((player) => player.isCurrentLeader)?.name}</span>
+                    </div>
+                    <div className="gameMessageContainer">
+                        <span className="gameMessageText">{gameMessage}</span>
+                    </div>
                     <div className="questContainer">
                         {quests.map(({ active, questNumber, questPartySize, questResult }: any, i) => (
                             <QuestItem
@@ -137,13 +147,19 @@ const Avalon = ({ roomCode }: any) => {
                     </button>
                 )}
 
-                {roleInfo.role && (
-                    <p>
-                        Your role is {roleInfo.role} (Side:
-                        <span className={classNames('side', { evilSide: roleInfo.side === 'EVIL' })}>
-                            {roleInfo.side})
-                        </span>
-                    </p>
+                {roleInfo.roleName && (
+                    <div>
+                        <p>
+                            Your role is {roleInfo.roleName} (Side:
+                            <span className={classNames('side', { evilSide: roleInfo.side === 'EVIL' })}>
+                                {roleInfo.side})
+                            </span>
+                            <span className="roleInfoButton" onClick={onToggleRoleInfo}>
+                                {showRoleInfo ? <RiCloseFill /> : <RiInformationFill />}
+                            </span>
+                        </p>
+                        {showRoleInfo && <p>{roleInfo.description}</p>}
+                    </div>
                 )}
                 {secretInfo && <p>{secretInfo}</p>}
                 <div className="playerListContainer">

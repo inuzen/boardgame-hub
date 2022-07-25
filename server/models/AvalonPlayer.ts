@@ -10,6 +10,7 @@ export interface AvalonPlayerType {
     name: string;
     socketId: string;
     roleName: string | null;
+    roleDescription?: string | null;
     roleKey: ROLE_LIST | null;
     isCurrentLeader?: boolean;
     isHost: boolean;
@@ -62,6 +63,7 @@ export default (sequelize: Sequelize, DataTypes: any) =>
             allowNull: true,
             defaultValue: null,
         },
+        roleDescription: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
         isHost: {
             type: DataTypes.BOOLEAN,
             // allowNull: false,

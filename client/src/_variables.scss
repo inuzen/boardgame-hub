@@ -4,3 +4,7 @@ $textColor: #f2e5d7;
 $dangerColor: #cc2936;
 $goodColor: #03c966;
 $readyColor: #ff890a;
+
+@mixin buttonBase {
+    border: none;
+}

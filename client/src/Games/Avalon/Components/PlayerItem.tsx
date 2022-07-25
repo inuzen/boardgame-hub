@@ -10,7 +10,6 @@ import {
     selectTarget,
     assassinate,
 } from '../store/avalonSlice';
-import { TbKey } from 'react-icons/tb';
 import { RiVipCrownFill } from 'react-icons/ri';
 import { BsFillBookmarkStarFill } from 'react-icons/bs';
 import './styles/playerItem.scss';
@@ -75,7 +74,7 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
                     </IconContext.Provider> */}
                 </div>
                 <div className={classNames('infoItem ', { show: leader })}>
-                    <IconContext.Provider value={{ color: 'gold', className: 'global-class-name' }}>
+                    <IconContext.Provider value={{ className: 'leaderIcon' }}>
                         <RiVipCrownFill />
                     </IconContext.Provider>
                 </div>
@@ -88,16 +87,10 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
             <div className="imageContainer">
                 <img className="avatar" src={`${process.env.PUBLIC_URL}/avalonAvatars/${imageName}.png`} alt="" />
             </div>
-            {votedArray.includes(socketId) ? (
-                <VoteResult text="Ready" ready />
-            ) : targetId === socketId ? (
-                <VoteResult text="killed" danger />
-            ) : (
-                <div className="name">{name}</div>
-            )}
+            {targetId === socketId ? <VoteResult text="killed" danger /> : <div className="name">{name}</div>}
+            {votedArray.includes(socketId) && <VoteResult text="Ready" ready />}
             {showVotes && <VoteResult text={globalVote} good={globalVote === 'yes'} danger={globalVote === 'no'} />}
             {showRoles && <VoteResult text={roleKey} />}
-            {}
         </div>
     );
 };
