@@ -14,6 +14,7 @@ const Welcome = () => {
 
     const dispatch = useAppDispatch();
 
+    // TODO Fix join button
     const joinRoom = () => {
         if (showCode && roomId && roomId.length === 4) {
             dispatch(setAction('join'));
@@ -23,11 +24,8 @@ const Welcome = () => {
 
     useEffect(() => {
         const keyDownHandler = (event: KeyboardEvent) => {
-            console.log('User pressed: ', event.key);
-
             if (event.key === 'Enter') {
                 event.preventDefault();
-
                 joinRoom();
             }
         };
@@ -37,10 +35,10 @@ const Welcome = () => {
         return () => {
             document.removeEventListener('keydown', keyDownHandler);
         };
-    }, []);
+    }, [roomId]);
 
     const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setRoomId(e.target.value);
+        setRoomId(e.target.value.toUpperCase());
     };
 
     const handleNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -80,21 +78,21 @@ const Welcome = () => {
                 </div>
 
                 <div className="choiceContainer">
-                    <p className="choiceText">what would you like to do?</p>
+                    {/* <p className="choiceText">what would you like to do?</p> */}
                     <div className="choiceActions">
                         <button className="choiceButton" onClick={onCreateRoom} disabled={!nickname}>
-                            create a room
+                            create
                         </button>
                         <span>OR</span>
                         <button className="choiceButton" disabled={!nickname} onClick={onSelectJoin}>
-                            join one
+                            join
                         </button>
                     </div>
                 </div>
                 {showCode && (
                     <div>
                         <p>enter room code</p>
-                        <input type="text" onChange={handleInput} />
+                        <input type="text" onChange={handleInput} value={roomId} />
                         <button onClick={onJoinRoom} disabled={roomId.length !== 4}>
                             join
                         </button>

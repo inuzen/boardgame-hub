@@ -19,6 +19,7 @@ import {
     clearVotes,
     getActiveQuest,
     findPlayer,
+    getCompleteRoom,
 } from './dbActions';
 import { shuffle } from '../utils/utils';
 
@@ -47,6 +48,7 @@ class Connection {
             async (params: { playerUUID: string; roomCode: string; nickname: string }) =>
                 await this.getExistingPlayer(params),
         );
+        socket.on('change player name', async (newName: string) => await this.changePlayerName(newName));
 
         socket.on('init room', async (params: { roomCode: string; nickname: string }) => await this.initRoom(params));
 
@@ -111,9 +113,6 @@ class Connection {
             this.ns.to(this.socket.id).emit('register', newPlayer.playerUUID);
             const players = await getPlayerList(roomCode);
             this.ns.to(roomCode).emit('players', players);
-            if (players.length > 1) {
-                this.initAndSendQuests(players.length);
-            }
         }
     }
 
@@ -136,6 +135,13 @@ class Connection {
                 await playerExist.save();
                 const roomInfo = await getRoomWithPlayers(roomCode);
                 this.ns.to(roomCode).emit('update room', roomInfo);
+                this.ns.to(this.socket.id).emit('assigned role', {
+                    roleName: playerExist.roleName,
+                    roleKey: playerExist.roleKey,
+                    side: playerExist.side,
+                    secretInfo: playerExist.secretInformation,
+                    description: playerExist.roleDescription,
+                });
             } else {
                 await this.addPlayerToRoom({ nickname, roomCode });
             }
@@ -175,12 +181,14 @@ class Connection {
             roomInfo.nominationInProgress = true;
             roomInfo.globalVoteInProgress = false;
             roomInfo.questVoteInProgress = false;
+            roomInfo.assassinationInProgress = false;
             roomInfo.revealVotes = false;
             roomInfo.revealRoles = false;
+            roomInfo.missedTeamVotes = 0;
             roomInfo.currentLeaderId = players.find((player) => player.isCurrentLeader)?.socketId || '';
             roomInfo.gameMessage = `Leader must nominate players for the quest.`;
             await roomInfo.save();
-
+            // TODO check that at least 5 players joined
             this.ns.to(this.roomCode).emit('update room', roomInfo);
             players.forEach((player) => {
                 this.ns.to(player.socketId).emit('assigned role', {
@@ -191,11 +199,11 @@ class Connection {
                     description: player.roleDescription,
                 });
             });
+            this.initAndSendQuests(players.length);
         }
     }
 
     async nominatePlayer(playerId: string) {
-        // Check nomination limit
         await nominatePlayer(this.roomCode, playerId);
         const playerList = await getPlayerList(this.roomCode);
         this.ns.to(this.roomCode).emit('players', playerList);
@@ -213,7 +221,11 @@ class Connection {
             await handleQuestVote(this.roomCode);
         }
         const roomInfo = await getRoomWithPlayers(this.roomCode);
-        this.ns.to(this.roomCode).emit('update room', roomInfo);
+        if (roomInfo?.gameInProgress === false) {
+            this.ns.to(this.roomCode).emit('update room', await getCompleteRoom(this.roomCode));
+        } else {
+            this.ns.to(this.roomCode).emit('update room', roomInfo);
+        }
     }
 
     async confirmParty() {
@@ -238,7 +250,7 @@ class Connection {
     async assassinate(targetId: string) {
         const assassin = await findPlayer(this.roomCode, { roleKey: ROLE_LIST.ASSASSIN });
         const target = await findPlayer(this.roomCode, { socketId: targetId });
-        const room = await getRoom(this.roomCode);
+        const room = await getCompleteRoom(this.roomCode);
         if (room) {
             if (assassin?.socketId === this.socket.id) {
                 this.ns.to(this.roomCode).emit('player killed', targetId);
@@ -268,6 +280,18 @@ class Connection {
 
     async startNewVote() {
         await startNewVoteCycle(this.roomCode);
+    }
+
+    async changePlayerName(newName: string) {
+        const player = await findPlayer(this.roomCode, { socketId: this.socket.id });
+        console.log('here', newName);
+
+        if (player) {
+            console.log('here2');
+            player.name = newName;
+            await player.save();
+            this.ns.to(this.roomCode).emit('update room', await getRoomWithPlayers(this.roomCode));
+        }
     }
 }
 

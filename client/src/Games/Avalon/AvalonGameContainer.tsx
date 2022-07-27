@@ -6,6 +6,7 @@ import Avalon from './Avalon';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { startConnecting, disconnect } from './store/avalonSlice';
 import { selectNickname, setNickname, setAction, selectAction } from '../../app/appSlice';
+import { NameInput } from './NameInput';
 
 const AvalonGameContainer = () => {
     const { roomCode } = useParams();
@@ -36,19 +37,7 @@ const AvalonGameContainer = () => {
 
     // TODO add logic to handle when uuid is present but the player is not
     if (!nickname && !localStorage.getItem('nickname')) {
-        const handleNameInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-            setName(e.target.value);
-        };
-        const onSetName = () => {
-            dispatch(setNickname(name));
-        };
-        return (
-            <div className="inputWrapper">
-                <p>Enter your name </p>
-                <input type="text" onChange={handleNameInput} value={name} />
-                <button onClick={onSetName}>Set name</button>
-            </div>
-        );
+        return <NameInput />;
     }
 
     return <Avalon roomCode={roomCode} />;

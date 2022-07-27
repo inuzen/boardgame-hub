@@ -171,6 +171,7 @@ const getRoomWithPlayers = async (roomCode) => {
             },
             { model: db_1.AvalonQuest, order: [['questNumber', 'ASC']] },
         ],
+        attributes: { exclude: ['takenImages'] },
     });
     return room;
 };
@@ -312,6 +313,7 @@ const assignRoles = async (roomCode) => {
         player.side = rolesForPlayers[i].side;
         player.isCurrentLeader = i === firstLeaderOrderNumber;
         player.order = i;
+        player.roleDescription = rolesForPlayers[i].ability;
     });
     const addSecretInformation = players.map((player, i, arr) => {
         player.secretInformation = (0, engine_1.createMessageByRole)(player, arr);
@@ -394,20 +396,21 @@ const handleQuestVote = async (roomCode) => {
     const roomState = await (0, exports.getRoom)(roomCode);
     const nextQuestNumber = roomState?.currentQuest + 1;
     if (roomState && votedPlayers.length === nominatedPlayersCount) {
-        const votedInFavor = players.filter((player) => player.questVote === 'yes');
+        const votedAgainst = players.filter((player) => player.questVote === 'no');
         const newLeaderId = await (0, exports.switchToNextLeader)(roomCode);
         roomState.questVoteInProgress = false;
         roomState.nominationInProgress = true;
         roomState.revealVotes = false;
         roomState.currentLeaderId = newLeaderId;
         roomState.currentQuestResults = votedPlayers.map((player) => !!player.questVote);
-        if (votedInFavor.length > votedPlayers.length / 2) {
-            await (0, exports.updateQuestResult)(roomCode, roomState?.currentQuest, 'success');
-        }
-        else {
+        const requiredVotesToFail = roomState.currentQuest === 4 ? 2 : 1;
+        if (votedAgainst.length >= requiredVotesToFail) {
             await (0, exports.updateQuestResult)(roomCode, roomState?.currentQuest, 'fail');
         }
-        roomState.gameMessage = `${votedInFavor.length} player(s) voted in favor of the quest.\n Now new leader must nominate a new party`;
+        else {
+            await (0, exports.updateQuestResult)(roomCode, roomState?.currentQuest, 'success');
+        }
+        roomState.gameMessage = `${votedPlayers.length - votedAgainst.length} player(s) voted in favor of the quest.\nNow new leader must nominate a new party.\n${nextQuestNumber === 4 && players.length > 6 ? 'Note: This quest requires 2 votes to fail.' : ''}`;
         roomState.currentQuest = nextQuestNumber;
         await (0, exports.startNewVoteCycle)(roomCode);
         const gameEnd = await (0, exports.checkForEndGame)(roomCode);

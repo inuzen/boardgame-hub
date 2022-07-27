@@ -10,4 +10,5 @@ export enum AvalonEvents {
     QUEST_VOTE = 'avalon/questVote',
     ASSASSINATE = 'avalon/assassinate',
     TOGGLE_EXTRA_ROLE = 'avalon/toggleExtraRole',
+    CHANGE_PLAYER_NAME = 'avalon/changePlayerName',
 }

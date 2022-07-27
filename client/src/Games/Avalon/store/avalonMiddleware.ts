@@ -41,8 +41,6 @@ const avalonMiddleware: Middleware = (store) => {
                 const playerUUID = localStorage.getItem('playerUUID');
 
                 if (playerUUID) {
-                    console.log('playerUUID', playerUUID);
-
                     socket.emit('get existing player', {
                         playerUUID,
                         roomCode,
@@ -141,6 +139,9 @@ const avalonMiddleware: Middleware = (store) => {
                     break;
                 case AvalonEvents.ASSASSINATE:
                     socket.emit('assassinate', action.payload);
+                    break;
+                case AvalonEvents.CHANGE_PLAYER_NAME:
+                    socket.emit('change player name', action.payload);
                     break;
                 default:
                     break;

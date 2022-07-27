@@ -10,7 +10,7 @@ import {
     confirmParty,
     isCurrentLeader,
     shouldShowVoteButtons,
-    selectSecretInfo,
+    changePlayerName,
 } from './store/avalonSlice';
 import { QuestItem } from './Components/QuestItem';
 import { PlayerItem } from './Components/PlayerItem';
@@ -22,10 +22,13 @@ import QRCode from 'react-qr-code';
 import VoteComponent from './Components/VoteComponent';
 import { VoteTrack } from './Components/VoteTrack';
 import { IconContext } from 'react-icons';
-import { RiVipCrownFill, RiInformationFill, RiCloseFill } from 'react-icons/ri';
+import { RiVipCrownFill } from 'react-icons/ri';
+import { AiFillEyeInvisible, AiFillEye } from 'react-icons/ai';
+import { BiEditAlt } from 'react-icons/bi';
 
 import { IoQrCodeSharp } from 'react-icons/io5';
 import classNames from 'classnames';
+import { NameInput } from './NameInput';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -35,7 +38,7 @@ const Avalon = ({ roomCode }: any) => {
     const host = useAppSelector(isHost);
 
     const roleInfo = useAppSelector(selectRoleInfo);
-    const secretInfo = useAppSelector(selectSecretInfo);
+
     const isLeader = useAppSelector(isCurrentLeader);
 
     const nickname = useAppSelector((state: any) => state.app.nickname);
@@ -54,15 +57,23 @@ const Avalon = ({ roomCode }: any) => {
             state.avalon.quests.find((q) => q.active)?.questPartySize,
     );
 
-    const [isModalVisible, setIsModalVisible] = useState(false);
-    const [showRoleInfo, setShowRoleInfo] = useState(false);
+    const [isQRModalVisible, setIsQRModalVisible] = useState(false);
+    const [changeNameModal, setChangeNameModal] = useState(false);
+    const [showRoleInfo, setShowRoleInfo] = useState(true);
 
-    const showModal = () => {
-        setIsModalVisible(true);
+    const showQRModal = () => {
+        setIsQRModalVisible(true);
     };
 
     const handleClose = () => {
-        setIsModalVisible(false);
+        setIsQRModalVisible(false);
+    };
+
+    const openChangeName = () => {
+        setChangeNameModal(true);
+    };
+    const handleChangeNameClose = () => {
+        setChangeNameModal(false);
     };
 
     // TODO add additional rules where quest could be selected by leader
@@ -75,7 +86,14 @@ const Avalon = ({ roomCode }: any) => {
         dispatch(confirmParty());
     };
 
-    const onToggleRoleInfo = () => {};
+    const onToggleRoleInfo = () => {
+        setShowRoleInfo(!showRoleInfo);
+    };
+
+    const onSetName = (newName: string) => {
+        dispatch(changePlayerName(newName));
+        setChangeNameModal(false);
+    };
 
     return (
         <div className="avalonWrapper">
@@ -86,14 +104,19 @@ const Avalon = ({ roomCode }: any) => {
                         <p>Room code:</p>
                         <p>
                             <span>{roomCode}</span>
-                            <span className="qr" onClick={showModal}>
+                            <span className="qr" onClick={showQRModal}>
                                 <IoQrCodeSharp />
                             </span>
                         </p>
                     </div>
                     <div className="roomInfoItem">
                         <p>Name:</p>
-                        <p>{nickname}</p>
+                        <p>
+                            {`${nickname} `}
+                            <span onClick={openChangeName}>
+                                <BiEditAlt />
+                            </span>
+                        </p>
                     </div>
                 </div>
             </div>
@@ -114,13 +137,15 @@ const Avalon = ({ roomCode }: any) => {
                 )}
                 {gameOverInfo && <div>{`Game is over and ${gameOverInfo.goodWon ? 'Good' : 'Evil'} won!`}</div>}
                 <div className="gameFieldContainer">
-                    <div>
+                    <div className="leaderTextContainer">
                         <span className="leaderIconWrapper">
                             <IconContext.Provider value={{ className: 'leaderIcon' }}>
                                 <RiVipCrownFill />
                             </IconContext.Provider>
                         </span>
-                        <span>Leader: {players.find((player) => player.isCurrentLeader)?.name}</span>
+                        <span className="leaderText">
+                            Leader: {players.find((player) => player.isCurrentLeader)?.name}
+                        </span>
                     </div>
                     <div className="gameMessageContainer">
                         <span className="gameMessageText">{gameMessage}</span>
@@ -148,20 +173,27 @@ const Avalon = ({ roomCode }: any) => {
                 )}
 
                 {roleInfo.roleName && (
-                    <div>
-                        <p>
-                            Your role is {roleInfo.roleName} (Side:
-                            <span className={classNames('side', { evilSide: roleInfo.side === 'EVIL' })}>
-                                {roleInfo.side})
+                    <div className={classNames('secretContainer', { open: showRoleInfo })}>
+                        <p className="secretTitleWrapper">
+                            <span className="showInfoButton" onClick={onToggleRoleInfo}>
+                                {showRoleInfo ? <AiFillEyeInvisible /> : <AiFillEye />}
                             </span>
-                            <span className="roleInfoButton" onClick={onToggleRoleInfo}>
-                                {showRoleInfo ? <RiCloseFill /> : <RiInformationFill />}
-                            </span>
+                            <span className="roleInfoTitle">role info</span>
                         </p>
-                        {showRoleInfo && <p>{roleInfo.description}</p>}
+
+                        <div className={classNames('privateInfoWrapper', { open: showRoleInfo })}>
+                            <p className="secretInfoItem">role: {roleInfo.roleName}</p>
+                            <p className="secretInfoItem">
+                                {'side: '}
+                                <span className={classNames('side', { evilSide: roleInfo.side === 'EVIL' })}>
+                                    {roleInfo.side}
+                                </span>
+                            </p>
+                            <p className="secretInfoItem">ability: {roleInfo.description}</p>
+                            {roleInfo.secretInfo && <p className="secretInfoItem">{roleInfo.secretInfo}</p>}
+                        </div>
                     </div>
                 )}
-                {secretInfo && <p>{secretInfo}</p>}
                 <div className="playerListContainer">
                     <h3>Player List:</h3>
                     <div className="playerList">
@@ -172,7 +204,7 @@ const Avalon = ({ roomCode }: any) => {
                 </div>
             </div>
             <Modal
-                isOpen={isModalVisible}
+                isOpen={isQRModalVisible}
                 onRequestClose={handleClose}
                 contentLabel="qr link"
                 closeTimeoutMS={200}
@@ -189,6 +221,15 @@ const Avalon = ({ roomCode }: any) => {
                 }}
             >
                 <QRCode value={window.location.href} size={200} style={{ zIndex: 100 }} />
+            </Modal>
+            <Modal
+                isOpen={changeNameModal}
+                onRequestClose={handleChangeNameClose}
+                contentLabel="qr link"
+                closeTimeoutMS={200}
+                ariaHideApp={false}
+            >
+                <NameInput onSetName={onSetName} />
             </Modal>
         </div>
     );

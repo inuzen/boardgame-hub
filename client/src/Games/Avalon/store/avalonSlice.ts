@@ -49,12 +49,12 @@ export interface AvalonState extends ConnectionState {
         roleKey: ROLE_LIST | null;
         side: string;
         description: string;
+        secretInfo: string;
     };
     nominated: boolean;
     votedPlayers: string[];
     gameOverInfo: { gameEnded: boolean; goodWon: boolean } | null;
     gameMessage: string;
-    secretInfo: string;
     revealRoles: boolean;
     assassinTargetId: string | null;
 }
@@ -80,6 +80,7 @@ const initialState: AvalonState = {
         roleKey: null,
         side: '',
         description: '',
+        secretInfo: '',
     },
     nominated: false,
     nominationInProgress: false,
@@ -90,7 +91,6 @@ const initialState: AvalonState = {
     revealVotes: false,
     votedPlayers: [],
     gameMessage: '',
-    secretInfo: '',
     revealRoles: false,
     assassinTargetId: '',
     assassinationInProgress: false,
@@ -129,6 +129,7 @@ export const avalonSlice = createSlice({
             state.gameInProgress = true;
             state.gameOverInfo = null;
             state.votedPlayers = [];
+            state.assassinTargetId = null;
         },
         // TODO prevent nomination if quest in progress
         nominatePlayer: (state, action: PayloadAction<string>) => {},
@@ -149,6 +150,7 @@ export const avalonSlice = createSlice({
             state.assassinationInProgress = action.payload.assassinationInProgress;
             state.revealRoles = action.payload.revealRoles;
             state.extraRoles = action.payload.extraRoles;
+            state.currentLeader = action.payload.currentLeaderId;
 
             if (state.revealVotes !== action.payload.revealVotes) {
                 state.votedPlayers = [];
@@ -174,10 +176,6 @@ export const avalonSlice = createSlice({
             }>,
         ) => {
             state.roleInfo = action.payload;
-            // state.roleKey = action.payload.roleKey;
-            // state.roleName = action.payload.roleName;
-            // state.secretInfo = action.payload.secretInfo;
-            // state.side = action.payload.side;
         },
         confirmParty: (state) => {
             state.votedPlayers = [];
@@ -195,6 +193,7 @@ export const avalonSlice = createSlice({
         playerKilled: (state, action: PayloadAction<string>) => {
             state.assassinTargetId = action.payload;
         },
+        changePlayerName: (state, action: PayloadAction<string>) => {},
     },
 });
 
@@ -216,6 +215,7 @@ export const {
     toggleExtraRole,
     assassinate,
     playerKilled,
+    changePlayerName,
 } = avalonSlice.actions;
 
 export const getAllPlayers = (state: RootState) => state.avalon.players;
@@ -233,15 +233,11 @@ export const isHost = (state: RootState) =>
 export const selectMissedVotes = (state: RootState) => state.avalon.missedTeamVotes;
 
 export const selectRoleInfo = (state: RootState) => state.avalon.roleInfo;
-export const selectSecretInfo = (state: RootState) => state.avalon.secretInfo;
 
 export const shouldShowVoteButtons = (state: RootState) =>
-    state.avalon.globalVoteInProgress ||
-    (state.avalon.questVoteInProgress &&
-        state.avalon.nominated &&
-        !state.avalon.votedPlayers.includes(state.avalon.socketId));
+    (state.avalon.globalVoteInProgress || (state.avalon.questVoteInProgress && state.avalon.nominated)) &&
+    !state.avalon.votedPlayers.includes(state.avalon.socketId);
 
-// export const isAssassin = (state: RootState) => state.avalon.role === 'Assassin';
 export const selectTarget = (state: RootState) => state.avalon.assassinTargetId;
 export const canKill = (state: RootState) =>
     state.avalon.roleInfo.roleKey === ROLE_LIST.ASSASSIN &&

@@ -35,6 +35,7 @@ exports.default = (sequelize, DataTypes) => sequelize.define('AvalonPlayer', {
         allowNull: true,
         defaultValue: null,
     },
+    roleDescription: { type: DataTypes.STRING, allowNull: true, defaultValue: null },
     isHost: {
         type: DataTypes.BOOLEAN,
         // allowNull: false,

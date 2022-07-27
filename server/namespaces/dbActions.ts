@@ -183,6 +183,23 @@ export const getRoomWithPlayers = async (roomCode: string) => {
 
     return room;
 };
+export const getCompleteRoom = async (roomCode: string) => {
+    const room = await AvalonRoom.findOne({
+        where: {
+            roomCode,
+        },
+        include: [
+            {
+                model: AvalonPlayer,
+                order: [['order', 'ASC']],
+            },
+            { model: AvalonQuest, order: [['questNumber', 'ASC']] },
+        ],
+        attributes: { exclude: ['takenImages'] },
+    });
+
+    return room;
+};
 
 export const createRoom = async (roomCode: string, socketId: string) => {
     return await AvalonRoom.findOrCreate({

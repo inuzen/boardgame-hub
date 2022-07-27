@@ -1,87 +1,108 @@
 @import '../../../../_variables';
-// TODO create avalon variables
 .playerItemContainer {
-    // flex-basis: 30%;
-    display: flex;
-    flex-direction: column;
-    justify-content: flex-start;
-    align-items: center;
-    width: 90px;
-    height: 90px;
-    padding: 2px;
-    margin: 10px;
-    border-radius: 8px;
-    overflow: hidden;
-    position: relative;
-    background-color: #4f6869;
-    border: 1px solid white;
-    cursor: pointer;
-    &.selectForKill {
-        -webkit-box-shadow: 0px 0px 5px 2px #ffffff;
-        box-shadow: 0px 0px 5px 2px #ffffff;
-    }
-    &.nominated {
-        border-color: gold;
-    }
-
-    &.target {
-        border-color: $dangerColor;
-    }
-
-    &.disconnected {
-        opacity: 0.5;
-    }
-
-    .infoBar {
+    margin: 8px;
+    .playerItemCard {
+        // flex-basis: 30%;
         display: flex;
-        flex-direction: row;
-        flex-wrap: nowrap;
-        justify-content: space-between;
+        flex-direction: column;
+        justify-content: flex-start;
         align-items: center;
-        width: 100%;
-        height: 18px;
-        .infoItem {
-            width: 20px;
-            height: 100%;
-            visibility: hidden;
+        width: 90px;
+        height: 90px;
+        padding: 2px;
+        border-radius: 8px;
+        overflow: hidden;
+        position: relative;
+        background-color: #4f6869;
+        border: 2px solid white;
+        cursor: pointer;
+        &.selectForKill {
+            -webkit-box-shadow: 0px 0px 15px -2px $dangerColor;
+            box-shadow: 0px 0px 15px -2px $dangerColor;
+        }
+        &.nominated {
+            border-color: orange;
+            -webkit-box-shadow: 0px 0px 15px -2px orange;
+            box-shadow: 0px 0px 15px -2px orange;
         }
 
-        .show {
-            visibility: visible;
+        &.leader {
+            border-color: gold;
+            -webkit-box-shadow: 0px 0px 5px 0px gold;
+            box-shadow: 0px 0px 5px 0px gold;
         }
-    }
-    .imageContainer {
-        width: 35px;
-        height: 35px;
-        .avatar {
-            max-width: 100%;
-            max-height: 100%;
+
+        &.target {
+            border-color: $dangerColor;
+        }
+
+        &.disconnected {
+            opacity: 0.5;
+        }
+
+        .infoBar {
+            display: flex;
+            flex-direction: row;
+            flex-wrap: nowrap;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            height: 18px;
+            .infoItem {
+                width: 20px;
+                height: 100%;
+                visibility: hidden;
+            }
+
+            .show {
+                visibility: visible;
+            }
+        }
+        .imageContainer {
+            width: 35px;
+            height: 35px;
+            .avatar {
+                max-width: 100%;
+                max-height: 100%;
+            }
+        }
+        .name {
+            width: 100%;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+            height: 15px;
+            font-size: 14px;
+        }
+        .pillItemWrapper {
+            width: 75%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-evenly;
+            align-items: center;
+            .playerPill {
+                font-size: 14px;
+                height: 16px;
+                width: 100%;
+                border-radius: 8px;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                &.ready {
+                    background-color: $readyColor;
+                }
+                &.good {
+                    background-color: $goodColor;
+                }
+                &.danger {
+                    background-color: $dangerColor;
+                }
+            }
         }
     }
     .name {
-        width: 100%;
-        text-overflow: ellipsis;
-        overflow: hidden;
-        white-space: nowrap;
-        height: 15px;
+        margin-top: 4px;
         font-size: 14px;
-    }
-    .voteResult {
-        font-size: 14px;
-        height: 16px;
-        width: 75%;
-        border-radius: 8px;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        &.ready {
-            background-color: $readyColor;
-        }
-        &.good {
-            background-color: $goodColor;
-        }
-        &.danger {
-            background-color: $dangerColor;
-        }
     }
 }
