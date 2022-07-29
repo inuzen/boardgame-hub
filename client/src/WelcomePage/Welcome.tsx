@@ -67,6 +67,8 @@ const Welcome = () => {
         navigate(`/${e.target.name}/${newRoomId}`);
     };
 
+    // TODO Prevent joining ongoing game. Part of the server restructure
+
     return (
         <div>
             <h2>welcome to boardgame hub!</h2>

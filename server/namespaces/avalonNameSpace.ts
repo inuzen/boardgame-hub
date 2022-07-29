@@ -185,6 +185,7 @@ class Connection {
             roomInfo.revealVotes = false;
             roomInfo.revealRoles = false;
             roomInfo.missedTeamVotes = 0;
+            roomInfo.currentQuest = 1;
             roomInfo.currentLeaderId = players.find((player) => player.isCurrentLeader)?.socketId || '';
             roomInfo.gameMessage = `Leader must nominate players for the quest.`;
             await roomInfo.save();
@@ -200,6 +201,7 @@ class Connection {
                 });
             });
             this.initAndSendQuests(players.length);
+            this.ns.to(this.roomCode).emit('player killed', null);
         }
     }
 

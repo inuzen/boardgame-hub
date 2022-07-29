@@ -12,7 +12,7 @@ import {
 } from '../store/avalonSlice';
 import { RiVipCrownFill } from 'react-icons/ri';
 import { BsFillBookmarkStarFill } from 'react-icons/bs';
-import { GiEvilFork } from 'react-icons/gi';
+import { FaRegCalendarCheck, FaRegCalendarTimes } from 'react-icons/fa';
 
 import './styles/playerItem.scss';
 import { IconContext } from 'react-icons';
@@ -46,6 +46,7 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
 
     const onPlayerSelect = () => {
         // TODO check for partySize
+        // TODO check for nominated players and don't send server req if party full
         if (nominationPossible) {
             dispatch(nominatePlayer(socketId));
         }
@@ -56,26 +57,36 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
     const admin = host === socketId;
     const leader = currentLeader === socketId;
 
+    const votedForGood = showVotes && globalVote === 'yes';
+    const votedForBad = showVotes && globalVote === 'no';
+
     // TODO adjust colors of icons
     // TODO move vote result to the corner instead of pill. Maybe use pill as a prompt for action like nominate/kill
     return (
         <div className="playerItemContainer">
             <div
                 className={classNames('playerItemCard', {
-                    target: targetId === socketId,
+                    // target: targetId === socketId,
                     disconnected: !connected,
                     nominated,
                     leader: leader && !nominated,
                     selectForKill: killLicense,
+                    dangerBorder: votedForBad || targetId === socketId,
+                    goodBorder: votedForGood,
                 })}
                 onClick={onPlayerSelect}
             >
                 <div className="infoBar">
-                    <div className={classNames('infoItem', { show: admin })}>
-                        {/* <span>{order}</span> */}
-                        {/* <IconContext.Provider value={{ color: '#cc2936', className: 'global-class-name' }}>
-                            <GiEvilFork />
-                        </IconContext.Provider> */}
+                    <div className={classNames('infoItem', { show: showVotes })}>
+                        <IconContext.Provider
+                            value={{
+                                className: classNames('voteIcon', {
+                                    good: votedForGood,
+                                }),
+                            }}
+                        >
+                            {globalVote === 'yes' ? <FaRegCalendarCheck /> : <FaRegCalendarTimes />}
+                        </IconContext.Provider>
                     </div>
                     <div className={classNames('infoItem', { show: leader })}>
                         <IconContext.Provider value={{ className: 'leaderIcon' }}>
@@ -94,10 +105,6 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
                 <div className="pillItemWrapper">
                     {targetId === socketId && <PlayerItemPill text="killed" danger />}
                     {votedArray.includes(socketId) && <PlayerItemPill text="Ready" ready />}
-                    {/* <PlayerItemPill text="Ready" ready /> */}
-                    {showVotes && (
-                        <PlayerItemPill text={globalVote} good={globalVote === 'yes'} danger={globalVote === 'no'} />
-                    )}
                     {showRoles && <PlayerItemPill text={roleKey} />}
                 </div>
             </div>

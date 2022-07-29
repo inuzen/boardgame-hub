@@ -167,7 +167,7 @@ const Avalon = ({ roomCode }: any) => {
                     <VoteComponent isGlobalVote={globalVoteInProgress} isQuestVote={questVoteInProgress} />
                 )}
                 {isLeader && nominationInProgress && (
-                    <button onClick={onConfirmParty} disabled={!enoughPlayersNominated}>
+                    <button className="confirmPartyButton" onClick={onConfirmParty} disabled={!enoughPlayersNominated}>
                         Confirm Party
                     </button>
                 )}

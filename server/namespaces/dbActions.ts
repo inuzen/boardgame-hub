@@ -485,6 +485,7 @@ export const handleQuestVote = async (roomCode: string) => {
                 roomState.assassinationInProgress = true;
                 roomState.questVoteInProgress = false;
                 roomState.nominationInProgress = false;
+                roomState.currentLeaderId = null;
             } else {
                 roomState.revealRoles = true;
                 roomState.gameInProgress = false;

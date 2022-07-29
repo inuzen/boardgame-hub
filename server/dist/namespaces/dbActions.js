@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.restoreDefaults = exports.checkForEndGame = exports.handleQuestVote = exports.startNewVoteCycle = exports.clearVotes = exports.handleGlobalVote = exports.switchToNextLeader = exports.assignRoles = exports.updateQuestResult = exports.changeActiveQuest = exports.initQuests = exports.getActiveQuest = exports.getQuests = exports.updateRoom = exports.getRoom = exports.createRoom = exports.getRoomWithPlayers = exports.removeRoomAndPlayers = exports.nominatePlayer = exports.countPlayers = exports.getPlayerBySocketId = exports.deleteRoomIfNoPlayers = exports.findAndDeletePlayer = exports.updateAllPlayers = exports.updatePlayer = exports.createPlayer = exports.findPlayer = exports.getPlayerList = void 0;
+exports.restoreDefaults = exports.checkForEndGame = exports.handleQuestVote = exports.startNewVoteCycle = exports.clearVotes = exports.handleGlobalVote = exports.switchToNextLeader = exports.assignRoles = exports.updateQuestResult = exports.changeActiveQuest = exports.initQuests = exports.getActiveQuest = exports.getQuests = exports.updateRoom = exports.getRoom = exports.createRoom = exports.getCompleteRoom = exports.getRoomWithPlayers = exports.removeRoomAndPlayers = exports.nominatePlayer = exports.countPlayers = exports.getPlayerBySocketId = exports.deleteRoomIfNoPlayers = exports.findAndDeletePlayer = exports.updateAllPlayers = exports.updatePlayer = exports.createPlayer = exports.findPlayer = exports.getPlayerList = void 0;
 const sequelize_1 = require("sequelize");
 const db_1 = require("../config/db");
 const engine_1 = require("./engine");
@@ -176,6 +176,23 @@ const getRoomWithPlayers = async (roomCode) => {
     return room;
 };
 exports.getRoomWithPlayers = getRoomWithPlayers;
+const getCompleteRoom = async (roomCode) => {
+    const room = await db_1.AvalonRoom.findOne({
+        where: {
+            roomCode,
+        },
+        include: [
+            {
+                model: db_1.AvalonPlayer,
+                order: [['order', 'ASC']],
+            },
+            { model: db_1.AvalonQuest, order: [['questNumber', 'ASC']] },
+        ],
+        attributes: { exclude: ['takenImages'] },
+    });
+    return room;
+};
+exports.getCompleteRoom = getCompleteRoom;
 const createRoom = async (roomCode, socketId) => {
     return await db_1.AvalonRoom.findOrCreate({
         where: {
@@ -422,6 +439,7 @@ const handleQuestVote = async (roomCode) => {
                 roomState.assassinationInProgress = true;
                 roomState.questVoteInProgress = false;
                 roomState.nominationInProgress = false;
+                roomState.currentLeaderId = null;
             }
             else {
                 roomState.revealRoles = true;

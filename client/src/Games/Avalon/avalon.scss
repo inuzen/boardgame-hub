@@ -167,3 +167,11 @@
         }
     }
 }
+
+.confirmPartyButton {
+    border: 1px $textColor solid;
+    background-color: transparent;
+    padding: 5px;
+    color: $textColor;
+    margin: 5px 0;
+}

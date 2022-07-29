@@ -131,6 +131,7 @@ class Connection {
             roomInfo.revealVotes = false;
             roomInfo.revealRoles = false;
             roomInfo.missedTeamVotes = 0;
+            roomInfo.currentQuest = 1;
             roomInfo.currentLeaderId = players.find((player) => player.isCurrentLeader)?.socketId || '';
             roomInfo.gameMessage = `Leader must nominate players for the quest.`;
             await roomInfo.save();
@@ -146,6 +147,7 @@ class Connection {
                 });
             });
             this.initAndSendQuests(players.length);
+            this.ns.to(this.roomCode).emit('player killed', null);
         }
     }
     async nominatePlayer(playerId) {
@@ -166,7 +168,12 @@ class Connection {
             await (0, dbActions_1.handleQuestVote)(this.roomCode);
         }
         const roomInfo = await (0, dbActions_1.getRoomWithPlayers)(this.roomCode);
-        this.ns.to(this.roomCode).emit('update room', roomInfo);
+        if (roomInfo?.gameInProgress === false) {
+            this.ns.to(this.roomCode).emit('update room', await (0, dbActions_1.getCompleteRoom)(this.roomCode));
+        }
+        else {
+            this.ns.to(this.roomCode).emit('update room', roomInfo);
+        }
     }
     async confirmParty() {
         const activeQuest = await (0, dbActions_1.getActiveQuest)(this.roomCode);
@@ -190,7 +197,7 @@ class Connection {
     async assassinate(targetId) {
         const assassin = await (0, dbActions_1.findPlayer)(this.roomCode, { roleKey: types_1.ROLE_LIST.ASSASSIN });
         const target = await (0, dbActions_1.findPlayer)(this.roomCode, { socketId: targetId });
-        const room = await (0, dbActions_1.getRoom)(this.roomCode);
+        const room = await (0, dbActions_1.getCompleteRoom)(this.roomCode);
         if (room) {
             if (assassin?.socketId === this.socket.id) {
                 this.ns.to(this.roomCode).emit('player killed', targetId);
