@@ -152,9 +152,9 @@ const Avalon = ({ roomCode }: any) => {
                 </div>
 
                 {roleInfo.roleName && (
-                    <div className={classNames('secretContainer', { open: showRoleInfo })}>
+                    <div className={classNames('secretContainer', { open: showRoleInfo })} onClick={onToggleRoleInfo}>
                         <p className="secretTitleWrapper">
-                            <span className="showInfoButton" onClick={onToggleRoleInfo}>
+                            <span className="showInfoButton">
                                 {showRoleInfo ? <AiFillEyeInvisible /> : <AiFillEye />}
                             </span>
                             <span className="roleInfoTitle">role info</span>

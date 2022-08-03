@@ -184,7 +184,7 @@ class Connection {
             roomInfo.assassinationInProgress = false;
             roomInfo.revealVotes = false;
             roomInfo.revealRoles = false;
-            roomInfo.missedTeamVotes = 0;
+            roomInfo.missedTeamVotes = 1;
             roomInfo.currentQuest = 1;
             roomInfo.currentLeaderId = players.find((player) => player.isCurrentLeader)?.socketId || '';
             roomInfo.gameMessage = `Leader must nominate players for the quest.`;
