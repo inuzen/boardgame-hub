@@ -1,0 +1,40 @@
+@import '../../variables';
+
+.btnBase {
+    border: 1px $btnBaseColor solid;
+    outline: none;
+    background-color: $btnBaseColor;
+    color: $darkText;
+    font-size: 12px;
+    margin: 10px 0;
+    padding: 10px 15px;
+    width: 100%;
+    min-width: 50px;
+
+    &:hover {
+        border-color: $btnHoverColor;
+        background-color: $btnHoverColor;
+    }
+    &:active {
+        border-color: $btnFocusColor;
+        background-color: $btnFocusColor;
+    }
+    &:disabled {
+        border-color: $btnDisabledColor;
+        background-color: $btnDisabledColor;
+    }
+
+    &.secondary {
+        background-color: $mainDarkColor;
+        color: $lightText;
+        &:hover {
+            color: $btnHoverColor;
+        }
+        &:active {
+            color: $btnFocusColor;
+        }
+        &:disabled {
+            color: $btnDisabledColor;
+        }
+    }
+}

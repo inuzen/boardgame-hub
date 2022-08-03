@@ -1,10 +1,13 @@
 // Colors
-$backgroundColor: #262322;
-$textColor: #f2e5d7;
-$dangerColor: #cc2936;
-$goodColor: #03c966;
-$readyColor: #ff890a;
+$mainDarkColor: #262322;
+$mainLightColor: #f2e5d7;
 
-@mixin buttonBase {
-    border: none;
-}
+// button colors
+$btnBaseColor: #f2e5d7;
+$btnHoverColor: #efc597;
+$btnFocusColor: #b997ef;
+$btnDisabledColor: #8b8b8b;
+
+// text colors
+$lightText: #f2e5d7;
+$darkText: #262322;

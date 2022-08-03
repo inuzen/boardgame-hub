@@ -31,10 +31,10 @@ const VoteComponent: React.FC<VoteComponentProps> = ({ isGlobalVote, isQuestVote
     return (
         <div className="votingControls">
             <button className="voteButton good" onClick={voteYes}>
-                {isGlobalVote ? 'Agree' : 'Success'}
+                {isGlobalVote ? 'agree' : 'success'}
             </button>
             <button className="voteButton danger" onClick={voteNo}>
-                {isGlobalVote ? 'Disagree' : 'Fail'}
+                {isGlobalVote ? 'disagree' : 'fail'}
             </button>
         </div>
     );

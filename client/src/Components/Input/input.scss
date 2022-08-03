@@ -1,0 +1,32 @@
+@import '../../variables';
+
+.inputWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    width: 100%;
+    font-size: 12px;
+    .inputLabel {
+        color: $lightText;
+        margin-bottom: 5px;
+        order: 0;
+    }
+    .inputField {
+        order: 1;
+        color: $lightText;
+        width: 100%;
+        border: 1px $btnBaseColor solid;
+        padding: 10px 25px;
+        height: 32px;
+        background-color: $mainDarkColor;
+        &:focus,
+        &:focus-visible {
+            outline: none;
+            border-color: $btnFocusColor;
+        }
+        &:focus-visible + .inputLabel {
+            color: $btnFocusColor;
+        }
+    }
+}

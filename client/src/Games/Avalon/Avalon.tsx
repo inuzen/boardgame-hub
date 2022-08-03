@@ -14,21 +14,20 @@ import {
 } from './store/avalonSlice';
 import { QuestItem } from './Components/QuestItem';
 import { PlayerItem } from './Components/PlayerItem';
-import './avalon.scss';
+import './styles/avalon.scss';
 import { DEFAULT_ROLES, ROLE_LIST } from './store/types';
 import { RoleCheckbox } from './Components/RoleCheckbox';
 
 import QRCode from 'react-qr-code';
 import VoteComponent from './Components/VoteComponent';
 import { VoteTrack } from './Components/VoteTrack';
-import { IconContext } from 'react-icons';
-import { RiVipCrownFill } from 'react-icons/ri';
 import { AiFillEyeInvisible, AiFillEye } from 'react-icons/ai';
 import { BiEditAlt } from 'react-icons/bi';
 
 import { IoQrCodeSharp } from 'react-icons/io5';
 import classNames from 'classnames';
 import { NameInput } from './NameInput';
+import { Button } from '../../Components/Button/Button';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -97,29 +96,22 @@ const Avalon = ({ roomCode }: any) => {
 
     return (
         <div className="avalonWrapper">
-            <div>
-                <h2>Avalon</h2>
-                <div className="roomInfo">
-                    <div className="roomInfoItem">
-                        <p>Room code:</p>
-                        <p>
-                            <span>{roomCode}</span>
-                            <span className="qr" onClick={showQRModal}>
-                                <IoQrCodeSharp />
-                            </span>
-                        </p>
-                    </div>
-                    <div className="roomInfoItem">
-                        <p>Name:</p>
-                        <p>
-                            {`${nickname} `}
-                            <span onClick={openChangeName}>
-                                <BiEditAlt />
-                            </span>
-                        </p>
-                    </div>
+            <div className="roomInfo">
+                <div className="roomInfoItem start">
+                    <span>{roomCode}</span>
+                    <span className="qr" onClick={showQRModal}>
+                        <IoQrCodeSharp />
+                    </span>
+                </div>
+                <span className="gameTitle">Avalon</span>
+                <div className="roomInfoItem end">
+                    <span>{nickname}</span>
+                    <span onClick={openChangeName}>
+                        <BiEditAlt />
+                    </span>
                 </div>
             </div>
+
             <div className="mainContainer">
                 {host && !gameStarted && (
                     <div className="adminActions">
@@ -138,11 +130,6 @@ const Avalon = ({ roomCode }: any) => {
                 {gameOverInfo && <div>{`Game is over and ${gameOverInfo.goodWon ? 'Good' : 'Evil'} won!`}</div>}
                 <div className="gameFieldContainer">
                     <div className="leaderTextContainer">
-                        <span className="leaderIconWrapper">
-                            <IconContext.Provider value={{ className: 'leaderIcon' }}>
-                                <RiVipCrownFill />
-                            </IconContext.Provider>
-                        </span>
                         <span className="leaderText">
                             Leader: {players.find((player) => player.isCurrentLeader)?.name}
                         </span>
@@ -163,14 +150,6 @@ const Avalon = ({ roomCode }: any) => {
                     </div>
                     <VoteTrack />
                 </div>
-                {showVoteControls && (
-                    <VoteComponent isGlobalVote={globalVoteInProgress} isQuestVote={questVoteInProgress} />
-                )}
-                {isLeader && nominationInProgress && (
-                    <button className="confirmPartyButton" onClick={onConfirmParty} disabled={!enoughPlayersNominated}>
-                        Confirm Party
-                    </button>
-                )}
 
                 {roleInfo.roleName && (
                     <div className={classNames('secretContainer', { open: showRoleInfo })}>
@@ -195,13 +174,26 @@ const Avalon = ({ roomCode }: any) => {
                     </div>
                 )}
                 <div className="playerListContainer">
-                    <h3>Player List:</h3>
                     <div className="playerList">
                         {players?.map((player: any) => (
                             <PlayerItem key={player.socketId} {...player} />
                         ))}
                     </div>
                 </div>
+            </div>
+            <div className="playerActionContainer">
+                {showVoteControls && (
+                    <VoteComponent isGlobalVote={globalVoteInProgress} isQuestVote={questVoteInProgress} />
+                )}
+                {isLeader && nominationInProgress && (
+                    <Button
+                        secondary
+                        text="confirm party"
+                        onClick={onConfirmParty}
+                        disabled={!enoughPlayersNominated}
+                        extraClasses="confirmPartyButton"
+                    />
+                )}
             </div>
             <Modal
                 isOpen={isQRModalVisible}

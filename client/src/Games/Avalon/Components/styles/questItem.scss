@@ -1,4 +1,5 @@
 @import '../../../../_variables';
+@import '../../styles/avalonVars';
 
 .questItemWrapper {
     display: flex;
@@ -10,7 +11,7 @@
     height: 60px;
     border-radius: 50%;
     position: relative;
-    border: 2px $textColor solid;
+    border: 2px $mainLightColor solid;
     // z-index: 10;
     &.success {
         border-color: #04f17a;

@@ -1,0 +1,30 @@
+@import '../../variables';
+
+.actionScreenContainer {
+    padding: 20px 40px;
+    max-width: 700px;
+    display: flex;
+    flex-flow: column nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    position: relative;
+    .iconBackWrapper {
+        position: absolute;
+        top: 17px;
+        left: 25px;
+        cursor: pointer;
+        .iconBack {
+            font-size: 24px;
+            color: $mainLightColor;
+        }
+    }
+    .gameTitle {
+        height: 16px;
+        font-size: 16px;
+        margin-bottom: 150px;
+        text-transform: capitalize;
+    }
+    .actionScreenItem {
+        margin-bottom: 30px;
+    }
+}

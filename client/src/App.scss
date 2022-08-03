@@ -17,10 +17,14 @@ h5 {
     text-align: center;
     width: 100%;
     min-height: 100vh;
-    max-width: 700px;
+    // max-width: 700px;
     margin: 0 auto;
-    background-color: $backgroundColor;
-    color: $textColor;
+    background-color: $mainDarkColor;
+    color: $mainLightColor;
+    .content {
+        max-width: 400px;
+        margin: 0 auto;
+    }
 }
 
 .app-header {
@@ -36,13 +40,6 @@ h5 {
     justify-content: space-between;
 }
 
-.chat-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 16px;
-}
-
 .ReactModal__Overlay {
     opacity: 0;
     transition: opacity 200ms ease-in-out;
@@ -54,4 +51,46 @@ h5 {
 
 .ReactModal__Overlay--before-close {
     opacity: 0;
+}
+
+.fade-enter {
+    opacity: 0;
+    z-index: 1;
+}
+
+.fade-enter.fade-enter-active {
+    opacity: 1;
+    transition: opacity 250ms ease-in;
+}
+
+.right-to-left-enter {
+    transform: translateX(100%);
+}
+.right-to-left-enter-active {
+    transform: translateX(0);
+    transition: all 1s ease;
+}
+
+.right-to-left-exit {
+    transform: translateX(0);
+}
+.right-to-left-exit-active {
+    transform: translateX(-100%);
+    transition: all 1s ease;
+}
+
+.left-to-right-enter {
+    transform: translateX(-100%);
+}
+.left-to-right-enter-active {
+    transform: translateX(0);
+    transition: all 1s ease;
+}
+
+.left-to-right-exit {
+    transform: translateX(0);
+}
+.left-to-right-exit-active {
+    transform: translateX(100%);
+    transition: all 1s ease;
 }

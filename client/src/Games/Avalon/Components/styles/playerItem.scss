@@ -1,4 +1,5 @@
 @import '../../../../_variables';
+@import '../../styles/avalonVars';
 
 @mixin borderGlow($color) {
     border-color: $color;

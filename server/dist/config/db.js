@@ -13,11 +13,13 @@ const AvalonGame_1 = __importDefault(require("../models/AvalonGame"));
 const AvalonRoom_1 = __importDefault(require("../models/AvalonRoom"));
 const db = process.env.DATABASE_URL || config_1.default.get('postgresURI');
 const sequelize = new sequelize_1.Sequelize(db, {
-    dialectOptions: {
-    // ssl: {
-    //     rejectUnauthorized: false,
-    // },
-    },
+    dialectOptions: process.env.NODE_ENV === 'production'
+        ? {
+            ssl: {
+                rejectUnauthorized: false,
+            },
+        }
+        : {},
 });
 exports.sequelize = sequelize;
 const queryInterface = sequelize.getQueryInterface();

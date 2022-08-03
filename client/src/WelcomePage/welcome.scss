@@ -1,37 +1,53 @@
 @import '../variables';
-.welcomeContainer {
-    width: 100%;
-    max-width: 700px;
-    height: 500px;
-    padding: 10px;
-    display: flex;
-    flex-flow: column nowrap;
-    align-items: center;
-    justify-content: flex-start;
-    & > * {
-        margin: 15px 0;
+.welcomeScreenContainer {
+    padding: 20px 40px;
+    .welcomeTitle {
+        font-size: 16px;
+        margin-bottom: 40px;
     }
-    .choiceContainer {
-        width: 100%;
-
-        .choiceText {
-            margin: 10px 0;
+    .joinButtonWrapper {
+        margin-bottom: 60px;
+    }
+    .createButtonsContainer {
+        text-align: left;
+        .createGameMsg {
+            font-size: 12px;
         }
-        .choiceActions {
-            display: flex;
-            flex-flow: row nowrap;
-            align-items: center;
-            justify-content: space-evenly;
-            .choiceButton {
-                height: 50px;
-                cursor: pointer;
-                outline: none;
-                border: 1px white solid;
-                width: 30%;
-                color: $textColor;
-                background-color: transparent;
-                &:disabled {
-                    opacity: 0.5;
+    }
+    .welcomeContainer {
+        width: 100%;
+        max-width: 700px;
+        height: 500px;
+        padding: 10px;
+        display: flex;
+        flex-flow: column nowrap;
+        align-items: center;
+        justify-content: flex-start;
+        & > * {
+            margin: 15px 0;
+        }
+        .choiceContainer {
+            width: 100%;
+
+            .choiceText {
+                margin: 10px 0;
+            }
+            .choiceActions {
+                display: flex;
+                flex-flow: row nowrap;
+                align-items: center;
+                justify-content: space-evenly;
+                .choiceButton {
+                    height: 50px;
+                    cursor: pointer;
+                    outline: none;
+                    border: 1px white solid;
+                    width: 30%;
+                    color: $mainLightColor;
+                    background-color: transparent;
+                    &:disabled {
+                        opacity: 0.5;
+                    }
                 }
             }
         }

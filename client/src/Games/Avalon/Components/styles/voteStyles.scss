@@ -1,20 +1,24 @@
 @import '../../../../variables';
+@import '../../styles/avalonVars';
+
 .votingControls {
-    width: 80%;
+    width: 100%;
     margin-top: 10px;
     display: flex;
     flex-flow: row nowrap;
-    justify-content: space-evenly;
+    justify-content: space-between;
     align-items: center;
     .voteButton {
-        color: $textColor;
-        width: 40%;
-        height: 40px;
+        color: $mainLightColor;
+        font-size: 12px;
+        width: 45%;
+        height: 32px;
         margin: 0 10px;
         outline: none;
         border: none;
+        color: white;
         cursor: pointer;
-        border-radius: 4px;
+
         &.good {
             background-color: $goodColor;
         }
