@@ -10,6 +10,7 @@
     padding: 10px 15px;
     width: 100%;
     min-width: 50px;
+    cursor: pointer;
 
     &:hover {
         border-color: $btnHoverColor;
@@ -22,6 +23,7 @@
     &:disabled {
         border-color: $btnDisabledColor;
         background-color: $btnDisabledColor;
+        cursor: not-allowed;
     }
 
     &.secondary {
