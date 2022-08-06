@@ -27,6 +27,9 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
     const dispatch = useAppDispatch();
     const navigate = useNavigate();
 
+    const [inputNameError, setInputNameError] = React.useState(false);
+    const [roomCodeError, setRoomCodeError] = React.useState(false);
+
     // useEffect(() => {
     //     const keyDownHandler = (event: KeyboardEvent) => {
     //         if (event.key === 'Enter') {
@@ -55,16 +58,27 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
     };
 
     const onGameSelect = () => {
-        const newRoomId = Math.random().toString(36).substring(2, 6).toUpperCase();
-        dispatch(setAction('create'));
-        navigate(`/${gameName}/${newRoomId}`);
+        if (!!nickname) {
+            const newRoomId = Math.random().toString(36).substring(2, 6).toUpperCase();
+            dispatch(setAction('create'));
+            navigate(`/${gameName}/${newRoomId}`);
+        } else {
+            setInputNameError(true);
+        }
     };
     // TODO Prevent joining ongoing game. Part of the server restructure
 
     const joinRoom = () => {
+        if (!nickname) {
+            setInputNameError(true);
+            return;
+        }
+
         if (roomCode && roomCode.length === 4) {
             dispatch(setAction('join'));
             navigate(`/avalon/${roomCode}`);
+        } else {
+            setRoomCodeError(true);
         }
     };
 
@@ -76,19 +90,22 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
         navigate(-1);
     };
 
+    const onNameInputFocus = () => {
+        setInputNameError(false);
+    };
+
+    const onRoomCodeInputFocus = () => {
+        setRoomCodeError(false);
+    };
+
     const renderButtons = () => {
+        // TODO instead of disabling button, show alert
         if (type === 'create') {
             return (
                 <>
-                    <Button
-                        disabled={!nickname}
-                        text="create and join as a player"
-                        onClick={onGameSelect}
-                        extraClasses="actionScreenItem"
-                    />
+                    <Button text="create and join as a player" onClick={onGameSelect} extraClasses="actionScreenItem" />
                     <Button
                         disabled
-                        // disabled={!nickname}
                         secondary
                         text="create and join as a screen"
                         onClick={() => onCreateGame('screen')}
@@ -99,15 +116,9 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
         } else {
             return (
                 <>
-                    <Button
-                        disabled={!nickname || roomCode?.length !== 4}
-                        text="join as a player"
-                        onClick={joinRoom}
-                        extraClasses="actionScreenItem"
-                    />
+                    <Button text="join as a player" onClick={joinRoom} extraClasses="actionScreenItem" />
                     <Button
                         disabled
-                        // disabled={!nickname || roomCode?.length !== 4}
                         secondary
                         text="join as a screen"
                         onClick={() => onJoinGame()}
@@ -129,15 +140,19 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
             <Input
                 labelText="enter your name"
                 onChange={onNameChange}
+                onFocus={onNameInputFocus}
                 value={nickname}
                 extraClasses="actionScreenItem"
+                error={inputNameError}
             />
             {type === 'join' && (
                 <Input
                     labelText="enter room code"
                     onChange={onRoomCodeChange}
+                    onFocus={onRoomCodeInputFocus}
                     value={roomCode}
                     extraClasses="actionScreenItem"
+                    error={roomCodeError}
                 />
             )}
             {renderButtons()}

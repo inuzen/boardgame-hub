@@ -29,4 +29,14 @@
             color: $btnFocusColor;
         }
     }
+
+    &.error {
+        .inputLabel {
+            color: #cc2936;
+        }
+        .inputField {
+            color: #cc2936;
+            border-color: #cc2936;
+        }
+    }
 }
