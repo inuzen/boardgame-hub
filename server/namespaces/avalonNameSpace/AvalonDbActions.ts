@@ -1,7 +1,7 @@
 import { Op } from 'sequelize';
-import { AvalonRoom, AvalonPlayer, AvalonQuest } from '../config/db';
-import { AvalonPlayerModel, AvalonPlayerType } from '../models/AvalonPlayer';
-import { AvalonRoomType } from '../models/AvalonRoom';
+import { AvalonRoom, AvalonPlayer, AvalonQuest, CommonRoom } from '../../config/db';
+import { AvalonPlayerModel, AvalonPlayerType } from '../../models/Avalon/AvalonPlayer';
+import { AvalonRoomType } from '../../models/Avalon/AvalonRoom';
 import { createMessageByRole, createRoleDistributionArray, DISTRIBUTION } from './engine';
 
 export const getPlayerList = async (roomCode: string) => {
@@ -82,16 +82,6 @@ export const deleteRoomIfNoPlayers = async (roomCode: string) => {
         }
     } catch (error) {}
 };
-
-// export const getPlayerRole = async (roomCode: string, socketId: string) => {
-//     const player = await AvalonPlayer.findOne({
-//         where: {
-//             roomCode,
-//             socketId,
-//         },
-//     });
-//     return player?.role;
-// };
 
 export const getPlayerBySocketId = async (roomCode: string, socketId: string) => {
     const player = await AvalonPlayer.findOne({
@@ -202,6 +192,17 @@ export const getCompleteRoom = async (roomCode: string) => {
 };
 
 export const createRoom = async (roomCode: string, socketId: string) => {
+    // TODO move this to utils and generate room code here
+    await CommonRoom.findOrCreate({
+        where: {
+            roomCode,
+        },
+        defaults: {
+            roomCode,
+            gameName: 'avalon',
+        },
+    });
+
     return await AvalonRoom.findOrCreate({
         where: {
             roomCode,
@@ -327,30 +328,6 @@ export const updateQuestResult = async (
     );
 };
 
-// export const updateQuest = async ({ roomCode, questNumber, questResult, active }: Quest) => {
-//     const currentActiveQuest = await AvalonQuest.findOne({
-//         where: {
-//             roomCode,
-//             active: true,
-//         },
-//     });
-
-//     if (currentActiveQuest && currentActiveQuest.questNumber !== questNumber && active) {
-//         currentActiveQuest.active = false;
-//         await currentActiveQuest.save();
-//     }
-
-//     await AvalonQuest.update(
-//         { active, questResult: questResult || '' },
-//         {
-//             where: {
-//                 roomCode,
-//                 questNumber,
-//             },
-//         },
-//     );
-// };
-
 // UTILS
 // also assigns the first leader
 
@@ -384,7 +361,6 @@ export const switchToNextLeader = async (roomCode: string) => {
     const currentLeader = players.find((player) => player.isCurrentLeader);
     if (currentLeader) {
         const newLeaderOrder = currentLeader.order + 1;
-        console.log('newLeaderOrder', newLeaderOrder);
 
         const newLeader = players.find((player) => {
             if (newLeaderOrder >= players.length) {

@@ -1,5 +1,5 @@
-import { AvalonPlayerModel } from '../models/AvalonPlayer';
-import { shuffle } from '../utils/utils';
+import { AvalonPlayerModel } from '../../models/Avalon/AvalonPlayer';
+import { shuffle } from '../../utils/utils';
 import { ROLES, Role, SIDES, ROLE_LIST } from './types';
 interface QuestDistribution {
     questPartySize: number[];

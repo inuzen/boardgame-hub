@@ -1,6 +1,6 @@
-import { ROLE_LIST } from './../namespaces/types';
+import { ROLE_LIST } from '../../namespaces/avalonNameSpace/types';
 import { InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize/types';
-import { SIDES } from '../namespaces/types';
+import { SIDES } from '../../namespaces/avalonNameSpace/types';
 
 type VoteType = 'yes' | 'no';
 export interface AvalonPlayerType {

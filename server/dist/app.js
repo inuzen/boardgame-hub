@@ -11,7 +11,8 @@ const cors_1 = __importDefault(require("cors"));
 const db_1 = require("./config/db");
 const socket_io_1 = require("socket.io");
 const http_1 = require("http");
-const avalonNameSpace_js_1 = require("./namespaces/avalonNameSpace.js");
+const mainNameSpace_1 = require("./namespaces/mainNameSpace/mainNameSpace");
+const avalonNameSpace_js_1 = require("./namespaces/avalonNameSpace/avalonNameSpace.js");
 (0, db_1.connectDB)();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
@@ -29,19 +30,9 @@ app.use(express_1.default.json());
 app.use(express_1.default.urlencoded({ extended: false }));
 app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.static(path_1.default.join(__dirname, 'public')));
-io.on('connection', (socket) => {
-    console.log(`New connection: ${socket.id}`);
-});
-// TODO move this to avalon namespace file
-(0, avalonNameSpace_js_1.initNameSpace)(io);
-//Serve static assets in production
-// if (process.env.NODE_ENV === 'production') {
-//     //set static folder
-//     app.use(express.static('client/build'));
-//     app.get('*', (req, res) => res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html')));
-// }
+(0, mainNameSpace_1.initMainNameSpace)(io);
+(0, avalonNameSpace_js_1.initAvalonNameSpace)(io);
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });
-// module.exports = app;

@@ -1,10 +1,14 @@
 import { Sequelize } from 'sequelize';
 import config from 'config';
 
-import AvalonPlayerModel from '../models/AvalonPlayer';
-import AvalonQuestModel from '../models/AvalonQuest';
-import AvalonGameModel from '../models/AvalonGame';
-import RoomModel from '../models/AvalonRoom';
+// Common Models
+import CommonRoomModel from '../models/CommonModels/CommonRoom';
+import CommonUserModel from '../models/CommonModels/CommonUser';
+
+// Avalon Imports
+import AvalonPlayerModel from '../models/Avalon/AvalonPlayer';
+import AvalonQuestModel from '../models/Avalon/AvalonQuest';
+import AvalonRoomModel from '../models/Avalon/AvalonRoom';
 
 const db: string = process.env.DATABASE_URL || config.get('postgresURI');
 const sequelize = new Sequelize(db, {
@@ -19,19 +23,22 @@ const sequelize = new Sequelize(db, {
 });
 const queryInterface = sequelize.getQueryInterface();
 
-const Avalon = AvalonGameModel(sequelize, Sequelize);
-const AvalonRoom = RoomModel(sequelize, Sequelize);
+const CommonRoom = CommonRoomModel(sequelize, Sequelize);
+const CommonUser = CommonUserModel(sequelize, Sequelize);
+
+const AvalonRoom = AvalonRoomModel(sequelize, Sequelize);
 const AvalonPlayer = AvalonPlayerModel(sequelize, Sequelize);
 const AvalonQuest = AvalonQuestModel(sequelize, Sequelize);
-
-Avalon.hasMany(AvalonRoom);
-AvalonRoom.belongsTo(Avalon);
 
 AvalonRoom.hasMany(AvalonPlayer, { foreignKey: 'roomCode' });
 AvalonPlayer.belongsTo(AvalonRoom, { foreignKey: 'roomCode' });
 
 AvalonRoom.hasMany(AvalonQuest, { foreignKey: 'roomCode' });
 AvalonQuest.belongsTo(AvalonRoom, { foreignKey: 'roomCode' });
+
+// Add every game room to Common Room
+CommonRoom.hasMany(AvalonRoom, { foreignKey: 'roomCode' });
+AvalonRoom.belongsTo(CommonRoom, { foreignKey: 'roomCode' });
 
 const connectDB = async () => {
     try {
@@ -45,4 +52,14 @@ const connectDB = async () => {
     }
 };
 
-export { connectDB, sequelize, Sequelize, queryInterface, AvalonRoom, Avalon, AvalonPlayer, AvalonQuest };
+export {
+    connectDB,
+    sequelize,
+    Sequelize,
+    queryInterface,
+    CommonRoom,
+    CommonUser,
+    AvalonRoom,
+    AvalonPlayer,
+    AvalonQuest,
+};

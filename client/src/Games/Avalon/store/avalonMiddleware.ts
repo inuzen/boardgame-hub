@@ -17,7 +17,6 @@ const avalonMiddleware: Middleware = (store) => {
     let socket: Socket;
     let roomCode: string = '';
 
-    // TODO make reconnection possible
     // TODO make a waiting list or something for when someone tries to join a game that is already in progress
     return (next) => (action) => {
         if (!action.type.startsWith('avalon/')) {
@@ -27,13 +26,13 @@ const avalonMiddleware: Middleware = (store) => {
 
         if (!socket && action.type === AvalonEvents.START_CONNECTING) {
             roomCode = action.payload;
-            socket = io(`https://boardgame-hub-server.herokuapp.com/avalon`, {
-                withCredentials: false,
-                extraHeaders: {
-                    'my-custom-header': 'abcd',
-                },
-            });
-            // socket = io(`http://${window.location.hostname}:3001/avalon`);
+            // socket = io(`https://boardgame-hub-server.herokuapp.com/avalon`, {
+            //     withCredentials: false,
+            //     extraHeaders: {
+            //         'my-custom-header': 'abcd',
+            //     },
+            // });
+            socket = io(`http://${window.location.hostname}:3001/avalon`);
 
             socket.on('connect', () => {
                 store.dispatch(connectionEstablished(socket.id));
@@ -48,7 +47,6 @@ const avalonMiddleware: Middleware = (store) => {
                     });
                 } else {
                     const action = store.getState().app.action;
-                    console.log(action);
 
                     const params = {
                         roomCode,

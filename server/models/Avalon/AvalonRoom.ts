@@ -1,5 +1,5 @@
 import { InferAttributes, InferCreationAttributes, Model, Sequelize } from 'sequelize/types';
-import { AVATARS, ROLE_LIST } from '../namespaces/types';
+import { AVATARS, ROLE_LIST } from '../../namespaces/avalonNameSpace/types';
 import { AvalonPlayerType } from './AvalonPlayer';
 export interface AvalonRoomType {
     roomCode: string;

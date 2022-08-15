@@ -7,7 +7,8 @@ import { connectDB } from './config/db';
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 
-import { initNameSpace } from './namespaces/avalonNameSpace.js';
+import { initMainNameSpace } from './namespaces/mainNameSpace/mainNameSpace';
+import { initAvalonNameSpace } from './namespaces/avalonNameSpace/avalonNameSpace.js';
 
 connectDB();
 
@@ -30,23 +31,10 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-io.on('connection', (socket) => {
-    console.log(`New connection: ${socket.id}`);
-});
-
-// TODO move this to avalon namespace file
-initNameSpace(io);
-
-//Serve static assets in production
-// if (process.env.NODE_ENV === 'production') {
-//     //set static folder
-//     app.use(express.static('client/build'));
-
-//     app.get('*', (req, res) => res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html')));
-// }
+initMainNameSpace(io);
+initAvalonNameSpace(io);
 
 const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });
-// module.exports = app;

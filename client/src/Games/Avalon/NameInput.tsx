@@ -4,6 +4,8 @@ import { useAppDispatch } from '../../app/hooks';
 type Props = {
     onSetName?: (name: string) => void;
 };
+
+// TODO style this
 export const NameInput = (props: Props) => {
     const dispatch = useAppDispatch();
 

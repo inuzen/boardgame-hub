@@ -5,7 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import Avalon from './Avalon';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { startConnecting, disconnect } from './store/avalonSlice';
-import { selectNickname, setNickname, setAction, selectAction } from '../../app/appSlice';
+import { selectNickname, setAction, selectAction } from '../../app/appSlice';
 import { NameInput } from './NameInput';
 
 const AvalonGameContainer = () => {
@@ -15,7 +15,7 @@ const AvalonGameContainer = () => {
     const action = useAppSelector(selectAction);
     const nickname = useAppSelector(selectNickname);
 
-    const [name, setName] = useState('');
+    // const [name, setName] = useState('');
 
     useEffect(() => {
         if (!roomCode || roomCode.length !== 4) {
