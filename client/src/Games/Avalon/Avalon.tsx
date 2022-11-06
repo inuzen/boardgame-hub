@@ -26,7 +26,7 @@ import { BiEditAlt } from 'react-icons/bi';
 
 import { IoQrCodeSharp } from 'react-icons/io5';
 import classNames from 'classnames';
-import { NameInput } from './NameInput';
+import { NameInput } from './Components/NameInput';
 import { Button } from '../../Components/Button/Button';
 
 const Avalon = ({ roomCode }: any) => {

@@ -26,20 +26,6 @@ export const appSlice = createSlice({
     initialState,
 
     reducers: {
-        startConnecting: (state) => {
-            state.isEstablishingConnection = true;
-        },
-        connectionEstablished: (state, action) => {
-            state.isConnected = true;
-            state.isEstablishingConnection = true;
-        },
-        disconnect: (state) => {
-            state = { ...initialState };
-        },
-        userReceived: (state, action: PayloadAction<UserServerResponse>) => {
-            localStorage.set('playerUUID', action.payload.uuid);
-            state.nickname = action.payload.nickname || '';
-        },
         setNickname: (state, action: PayloadAction<string>) => {
             localStorage.setItem('nickname', action.payload);
             state.nickname = action.payload;
@@ -57,17 +43,7 @@ export const appSlice = createSlice({
     },
 });
 
-export const {
-    setNickname,
-    setRoomCode,
-    setAction,
-    setGame,
-    createGameRoom,
-    startConnecting,
-    connectionEstablished,
-    disconnect,
-    userReceived,
-} = appSlice.actions;
+export const { setNickname, setRoomCode, setAction, setGame, createGameRoom } = appSlice.actions;
 
 export const selectNickname = (state: RootState) => state.app.nickname || localStorage.getItem('nickname') || '';
 export const selectAction = (state: RootState) => state.app.action;

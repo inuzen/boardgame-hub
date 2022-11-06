@@ -6,7 +6,7 @@ import Avalon from './Avalon';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { startConnecting, disconnect } from './store/avalonSlice';
 import { selectNickname, setAction, selectAction } from '../../app/appSlice';
-import { NameInput } from './NameInput';
+import { NameInput } from './Components/NameInput';
 
 const AvalonGameContainer = () => {
     const { roomCode } = useParams();

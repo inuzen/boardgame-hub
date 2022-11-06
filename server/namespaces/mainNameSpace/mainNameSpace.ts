@@ -5,28 +5,21 @@ class MainConnection {
     socket: Socket;
     constructor(socket: Socket) {
         this.socket = socket;
-
-        this.socket.on('init user', async (uuid: string | null) => this.initUser(uuid));
-        this.socket.on('disconnect', () => this.onDisconnect());
     }
 
-    async initUser(uuid: string | null) {
-        const findOrCreate = async () => {
-            if (uuid) {
-                const user = await getUserByUUID(uuid);
-                if (user) {
-                    return user;
-                }
-            }
-            const newUser = await createUser();
-            return newUser;
-        };
-        this.socket.emit('send user', await findOrCreate());
-    }
-
-    onDisconnect() {
-        console.log('MainConnection: onDisconnect');
-    }
+    // async initUser(uuid: string | null) {
+    //     const findOrCreate = async () => {
+    //         if (uuid) {
+    //             const user = await getUserByUUID(uuid);
+    //             if (user) {
+    //                 return user;
+    //             }
+    //         }
+    //         const newUser = await createUser();
+    //         return newUser;
+    //     };
+    //     this.socket.emit('send user', await findOrCreate());
+    // }
 }
 
 const initMainNameSpace = (io: Server) => {

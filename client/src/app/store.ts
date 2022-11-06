@@ -1,7 +1,7 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import avalonMiddleware from '../Games/Avalon/store/avalonMiddleware';
 import avalonReducer from '../Games/Avalon/store/avalonSlice';
-import appMiddleware from './appMiddleware';
+// import appMiddleware from './appMiddleware';
 import appReducer from './appSlice';
 
 export const store = configureStore({
@@ -10,7 +10,7 @@ export const store = configureStore({
         avalon: avalonReducer,
     },
     middleware(getDefaultMiddleware) {
-        return getDefaultMiddleware().concat(avalonMiddleware, appMiddleware);
+        return getDefaultMiddleware().concat(avalonMiddleware);
     },
 });
 
