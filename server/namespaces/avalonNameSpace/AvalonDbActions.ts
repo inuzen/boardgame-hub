@@ -1,5 +1,5 @@
 import { Op } from 'sequelize';
-import { AvalonRoom, AvalonPlayer, AvalonQuest, CommonRoom } from '../../config/db';
+import { AvalonRoom, AvalonPlayer, AvalonQuest } from '../../config/db';
 import { AvalonPlayerModel, AvalonPlayerType } from '../../models/Avalon/AvalonPlayer';
 import { AvalonRoomType } from '../../models/Avalon/AvalonRoom';
 import { createMessageByRole, createRoleDistributionArray, DISTRIBUTION } from './engine';
@@ -193,15 +193,15 @@ export const getCompleteRoom = async (roomCode: string) => {
 
 export const createRoom = async (roomCode: string, socketId: string) => {
     // TODO move this to utils and generate room code here
-    await CommonRoom.findOrCreate({
-        where: {
-            roomCode,
-        },
-        defaults: {
-            roomCode,
-            gameName: 'avalon',
-        },
-    });
+    // await CommonRoom.findOrCreate({
+    //     where: {
+    //         roomCode,
+    //     },
+    //     defaults: {
+    //         roomCode,
+    //         gameName: 'avalon',
+    //     },
+    // });
 
     return await AvalonRoom.findOrCreate({
         where: {

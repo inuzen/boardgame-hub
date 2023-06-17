@@ -32,19 +32,19 @@ const avalonMiddleware: Middleware = (store) => {
             //         'my-custom-header': 'abcd',
             //     },
             // });
-            socket = io(`http://${window.location.hostname}:3001/avalon`);
+            socket = io(`http://${window.location.hostname}:3500/avalon`);
 
             socket.on('connect', () => {
                 store.dispatch(connectionEstablished(socket.id));
 
-                const playerUUID = localStorage.getItem('playerUUID');
+                // const playerUUID = localStorage.getItem('playerUUID');
 
-                if (playerUUID) {
-                    socket.emit('get existing player', {
-                        playerUUID,
-                        roomCode,
-                        nickname: store.getState().app.nickname,
-                    });
+                if (false) {
+                    // socket.emit('get existing player', {
+                    //     playerUUID,
+                    //     roomCode,
+                    //     nickname: store.getState().app.nickname,
+                    // });
                 } else {
                     const action = store.getState().app.action;
 
@@ -70,6 +70,8 @@ const avalonMiddleware: Middleware = (store) => {
             });
 
             socket.on('players', (players: any[]) => {
+                console.log(players);
+
                 store.dispatch(receivePlayers(players));
             });
 

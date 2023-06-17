@@ -186,15 +186,15 @@ const getCompleteRoom = async (roomCode) => {
 exports.getCompleteRoom = getCompleteRoom;
 const createRoom = async (roomCode, socketId) => {
     // TODO move this to utils and generate room code here
-    await db_1.CommonRoom.findOrCreate({
-        where: {
-            roomCode,
-        },
-        defaults: {
-            roomCode,
-            gameName: 'avalon',
-        },
-    });
+    // await CommonRoom.findOrCreate({
+    //     where: {
+    //         roomCode,
+    //     },
+    //     defaults: {
+    //         roomCode,
+    //         gameName: 'avalon',
+    //     },
+    // });
     return await db_1.AvalonRoom.findOrCreate({
         where: {
             roomCode,

@@ -9,8 +9,10 @@ import { createServer } from 'http';
 
 import { initMainNameSpace } from './namespaces/mainNameSpace/mainNameSpace';
 import { initAvalonNameSpace } from './namespaces/avalonNameSpace/avalonNameSpace.js';
+import { initLoki } from './config/lokiDB';
 
 connectDB();
+initLoki();
 
 const app = express();
 const httpServer = createServer(app);
@@ -34,7 +36,27 @@ app.use(express.static(path.join(__dirname, 'public')));
 initMainNameSpace(io);
 initAvalonNameSpace(io);
 
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3500;
+process.on('SIGTERM', (signal) => {
+    console.log(`Process ${process.pid} received a SIGTERM signal`);
+    process.exit(0);
+});
+
+process.on('SIGINT', (signal) => {
+    console.log(`Process ${process.pid} has been interrupted`);
+    process.exit(0);
+});
+
+process.on('uncaughtException', (err) => {
+    console.log(`Uncaught Exception: ${err.message}`);
+    process.exit(1);
+});
+
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled rejection at ', promise, `reason: ${reason}`);
+    process.exit(1);
+});
+
 httpServer.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });

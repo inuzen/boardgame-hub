@@ -1,19 +1,13 @@
 "use strict";
-Object.defineProperty(exports, "__esModule", { value: true });
-exports.getUserByUUID = exports.createUser = void 0;
-const db_1 = require("../../config/db");
-const createUser = async () => {
-    const user = await db_1.CommonUser.create();
-    return user;
-};
-exports.createUser = createUser;
-const getUserByUUID = async (uuid) => {
-    const user = await db_1.CommonUser.findOne({
-        where: {
-            uuid,
-        },
-    });
-    return user;
-};
-exports.getUserByUUID = getUserByUUID;
+// import { CommonUser } from '../../config/db';
+// export const createUser = async () => {
+//     return await CommonUser.create();
+// };
+// export const getUserByUUID = async (uuid: string) => {
+//     return await CommonUser.findOne({
+//         where: {
+//             uuid,
+//         },
+//     });
+// };
 // export const updateUser = async (user) => {};

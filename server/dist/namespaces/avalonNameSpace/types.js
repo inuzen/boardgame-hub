@@ -5,7 +5,7 @@ var SIDES;
 (function (SIDES) {
     SIDES["GOOD"] = "GOOD";
     SIDES["EVIL"] = "EVIL";
-})(SIDES = exports.SIDES || (exports.SIDES = {}));
+})(SIDES || (exports.SIDES = SIDES = {}));
 var ROLE_LIST;
 (function (ROLE_LIST) {
     ROLE_LIST["MINION"] = "MINION";
@@ -16,7 +16,7 @@ var ROLE_LIST;
     ROLE_LIST["MORDRED"] = "MORDRED";
     ROLE_LIST["OBERON"] = "OBERON";
     ROLE_LIST["MORGANA"] = "MORGANA";
-})(ROLE_LIST = exports.ROLE_LIST || (exports.ROLE_LIST = {}));
+})(ROLE_LIST || (exports.ROLE_LIST = ROLE_LIST = {}));
 exports.DEFAULT_ROLES = [ROLE_LIST.MERLIN, ROLE_LIST.ASSASSIN, ROLE_LIST.MINION, ROLE_LIST.SERVANT];
 exports.ROLES = {
     [ROLE_LIST.MINION]: {
@@ -80,4 +80,4 @@ var AVATARS;
     AVATARS["MARTIAL"] = "martial";
     AVATARS["PRIEST"] = "priest";
     AVATARS["SWORDSMAN"] = "swordsman";
-})(AVATARS = exports.AVATARS || (exports.AVATARS = {}));
+})(AVATARS || (exports.AVATARS = AVATARS = {}));

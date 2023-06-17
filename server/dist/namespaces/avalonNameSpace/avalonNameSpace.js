@@ -4,6 +4,9 @@ exports.initAvalonNameSpace = void 0;
 const types_1 = require("./types");
 const AvalonDbActions_1 = require("./AvalonDbActions");
 const utils_1 = require("../../utils/utils");
+const AvalonLokiActions_1 = require("./AvalonLokiActions");
+const uuid_1 = require("uuid");
+const lokiDB_1 = require("../../config/lokiDB");
 class AvalonConnection {
     socket;
     ns;
@@ -22,21 +25,61 @@ class AvalonConnection {
         socket.on('start new vote', async () => await this.startNewVote());
         socket.on('assassinate', async (targetId) => await this.assassinate(targetId));
         socket.on('toggle extra role', async (roleKey) => await this.toggleExtraRole(roleKey));
-        socket.on('get existing player', async (params) => await this.getExistingPlayer(params));
+        // socket.on(
+        //     'get existing player',
+        //     async (params: { playerUUID: string; roomCode: string; nickname: string }) =>
+        //         await this.getExistingPlayer(params),
+        // );
         socket.on('change player name', async (newName) => await this.changePlayerName(newName));
-        socket.on('init room', async (params) => await this.initRoom(params));
-        socket.on('join room', async ({ roomCode, nickname }) => await this.addPlayerToRoom({ roomCode, nickname }));
+        socket.on('init room', async (params) => this.initRoom(params));
+        socket.on('join room', async ({ roomCode, nickname }) => this.addPlayerLoki({ roomCode, nickname }));
     }
-    async initRoom(params) {
+    initRoom(params) {
         try {
             const { roomCode, nickname } = params;
-            const [_, created] = await (0, AvalonDbActions_1.createRoom)(roomCode, this.socket.id);
+            console.log(roomCode, nickname);
+            // const [_, created] = await createRoom(roomCode, this.socket.id);
+            (0, AvalonLokiActions_1.addRoom)(roomCode);
+            console.log('added room');
             this.socket.join(roomCode);
             this.roomCode = roomCode;
-            await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+            // await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+            this.addPlayerLoki({ nickname, roomCode, isHost: true });
         }
         catch (error) {
             console.log(error);
+        }
+    }
+    addPlayerLoki({ nickname, roomCode, isHost = false }) {
+        console.log('add player');
+        this.roomCode = roomCode;
+        this.socket.join(roomCode);
+        const room = (0, AvalonLokiActions_1.getRoomByCode)(roomCode);
+        console.log('ROOM', room);
+        if (room) {
+            //@ts-ignore
+            const playerCount = room.players.length;
+            const avatars = Object.values(room.takenImages);
+            const availableAvatars = avatars.filter((avatar) => !avatar.taken);
+            const suggestedAvatar = !!availableAvatars.length
+                ? (0, utils_1.shuffle)(availableAvatars)[0]
+                : avatars[Math.floor(Math.random() * avatars.length)];
+            room.takenImages[suggestedAvatar.key].taken = true;
+            const playerUUID = (0, uuid_1.v4)();
+            room.players.push({
+                playerUUID,
+                roomCode,
+                socketId: this.socket.id,
+                name: nickname,
+                isHost,
+                order: playerCount + 1,
+                connected: true,
+                imageName: suggestedAvatar.key,
+            });
+            lokiDB_1.Avalon.update(room);
+            this.ns.to(this.socket.id).emit('register', playerUUID);
+            //@ts-ignore
+            this.ns.to(roomCode).emit('players', room.players);
         }
     }
     async addPlayerToRoom({ nickname, roomCode, isHost = false, }) {

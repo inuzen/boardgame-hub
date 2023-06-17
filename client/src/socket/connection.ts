@@ -11,7 +11,7 @@ class SocketConnection {
     private socket: Socket;
 
     constructor() {
-        this.socket = io(`http://${window.location.hostname}:3001/`);
+        this.socket = io(`http://${window.location.hostname}:3500/`);
     }
 
     public connectToNamespace(namespace: string): void {

@@ -22,6 +22,9 @@ import {
     getCompleteRoom,
 } from './AvalonDbActions';
 import { shuffle } from '../../utils/utils';
+import { addRoom, getRoomByCode } from './AvalonLokiActions';
+import { v4 as uuidv4 } from 'uuid';
+import { Avalon } from '../../config/lokiDB';
 
 class AvalonConnection {
     socket: Socket;
@@ -43,31 +46,73 @@ class AvalonConnection {
         socket.on('start new vote', async () => await this.startNewVote());
         socket.on('assassinate', async (targetId: string) => await this.assassinate(targetId));
         socket.on('toggle extra role', async (roleKey: ROLE_LIST) => await this.toggleExtraRole(roleKey));
-        socket.on(
-            'get existing player',
-            async (params: { playerUUID: string; roomCode: string; nickname: string }) =>
-                await this.getExistingPlayer(params),
-        );
+        // socket.on(
+        //     'get existing player',
+        //     async (params: { playerUUID: string; roomCode: string; nickname: string }) =>
+        //         await this.getExistingPlayer(params),
+        // );
         socket.on('change player name', async (newName: string) => await this.changePlayerName(newName));
 
-        socket.on('init room', async (params: { roomCode: string; nickname: string }) => await this.initRoom(params));
+        socket.on('init room', async (params: { roomCode: string; nickname: string }) => this.initRoom(params));
 
-        socket.on(
-            'join room',
-            async ({ roomCode, nickname }: { roomCode: string; nickname: string }) =>
-                await this.addPlayerToRoom({ roomCode, nickname }),
+        socket.on('join room', async ({ roomCode, nickname }: { roomCode: string; nickname: string }) =>
+            this.addPlayerLoki({ roomCode, nickname }),
         );
     }
 
-    async initRoom(params: { roomCode: string; nickname: string }) {
+    initRoom(params: { roomCode: string; nickname: string }) {
         try {
             const { roomCode, nickname } = params;
-            const [_, created] = await createRoom(roomCode, this.socket.id);
+            console.log(roomCode, nickname);
+
+            // const [_, created] = await createRoom(roomCode, this.socket.id);
+            addRoom(roomCode);
+            console.log('added room');
+
             this.socket.join(roomCode);
             this.roomCode = roomCode;
-            await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+            // await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
+
+            this.addPlayerLoki({ nickname, roomCode, isHost: true });
         } catch (error) {
             console.log(error);
+        }
+    }
+
+    addPlayerLoki({ nickname, roomCode, isHost = false }: { nickname: string; roomCode: string; isHost?: boolean }) {
+        console.log('add player');
+
+        this.roomCode = roomCode;
+        this.socket.join(roomCode);
+        const room = getRoomByCode(roomCode);
+        console.log('ROOM', room);
+        if (room) {
+            //@ts-ignore
+            const playerCount = room.players.length;
+
+            const avatars = Object.values(room.takenImages) as Array<{ key: string; taken: boolean }>;
+            const availableAvatars = avatars.filter((avatar) => !avatar.taken);
+            const suggestedAvatar = !!availableAvatars.length
+                ? shuffle(availableAvatars)[0]
+                : avatars[Math.floor(Math.random() * avatars.length)];
+
+            room.takenImages[suggestedAvatar.key].taken = true;
+            const playerUUID = uuidv4();
+
+            room.players.push({
+                playerUUID,
+                roomCode,
+                socketId: this.socket.id,
+                name: nickname,
+                isHost,
+                order: playerCount + 1,
+                connected: true,
+                imageName: suggestedAvatar.key,
+            });
+            Avalon.update(room);
+            this.ns.to(this.socket.id).emit('register', playerUUID);
+            //@ts-ignore
+            this.ns.to(roomCode).emit('players', room.players);
         }
     }
 

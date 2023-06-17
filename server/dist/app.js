@@ -13,7 +13,9 @@ const socket_io_1 = require("socket.io");
 const http_1 = require("http");
 const mainNameSpace_1 = require("./namespaces/mainNameSpace/mainNameSpace");
 const avalonNameSpace_js_1 = require("./namespaces/avalonNameSpace/avalonNameSpace.js");
+const lokiDB_1 = require("./config/lokiDB");
 (0, db_1.connectDB)();
+(0, lokiDB_1.initLoki)();
 const app = (0, express_1.default)();
 const httpServer = (0, http_1.createServer)(app);
 const io = new socket_io_1.Server(httpServer, {
@@ -32,7 +34,23 @@ app.use((0, cookie_parser_1.default)());
 app.use(express_1.default.static(path_1.default.join(__dirname, 'public')));
 (0, mainNameSpace_1.initMainNameSpace)(io);
 (0, avalonNameSpace_js_1.initAvalonNameSpace)(io);
-const PORT = process.env.PORT || 3001;
+const PORT = process.env.PORT || 3500;
+process.on('SIGTERM', (signal) => {
+    console.log(`Process ${process.pid} received a SIGTERM signal`);
+    process.exit(0);
+});
+process.on('SIGINT', (signal) => {
+    console.log(`Process ${process.pid} has been interrupted`);
+    process.exit(0);
+});
+process.on('uncaughtException', (err) => {
+    console.log(`Uncaught Exception: ${err.message}`);
+    process.exit(1);
+});
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled rejection at ', promise, `reason: ${reason}`);
+    process.exit(1);
+});
 httpServer.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });
