@@ -1,6 +1,6 @@
 import { db, Avalon } from '../../config/lokiDB';
 import { AvalonPlayerModel, AvalonPlayerType } from '../../models/Avalon/AvalonPlayer';
-import { createMessageByRole, createRoleDistributionArray } from './engine';
+import { DISTRIBUTION, createMessageByRole, createRoleDistributionArray } from './engine';
 import { AVATARS } from './types';
 
 export const addRoom = (roomCode: string) => {
@@ -26,6 +26,9 @@ export const addRoom = (roomCode: string) => {
         gameMessage: '',
         revealVotes: false,
         revealRoles: false,
+        quests: [1, 2, 3, 4, 5].map((questNumber) => {
+            return { questNumber, questPartySize: null, questResult: null, active: false };
+        }),
     });
 };
 
@@ -63,4 +66,22 @@ export const assignRolesLoki = (lokiRoom: any) => {
 
 export const startNewVoteCycleLoki = (room: any) => {
     updateAllPlayersLoki(room, { globalVote: null, questVote: null, nominated: false });
+};
+
+export const initQuestsLoki = (room: any) => {
+    const { questPartySize } = DISTRIBUTION[room.players.length];
+    room.quests.forEach(
+        (
+            quest: {
+                questNumber: number;
+                active: boolean;
+                questPartySize: number;
+            },
+            i: number,
+        ) => {
+            quest.questPartySize = questPartySize[i];
+            if (quest.questNumber === 1) quest.active = true;
+        },
+    );
+    Avalon.update(room);
 };

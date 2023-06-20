@@ -22,7 +22,7 @@ import {
     getCompleteRoom,
 } from './AvalonDbActions';
 import { shuffle } from '../../utils/utils';
-import { addRoom, assignRolesLoki, getRoomByCode, startNewVoteCycleLoki } from './AvalonLokiActions';
+import { addRoom, assignRolesLoki, getRoomByCode, initQuestsLoki, startNewVoteCycleLoki } from './AvalonLokiActions';
 import { v4 as uuidv4 } from 'uuid';
 import { Avalon } from '../../config/lokiDB';
 
@@ -213,6 +213,19 @@ class AvalonConnection {
         );
     }
 
+    initAndSendQuestsLoki() {
+        if (this.room) {
+            initQuestsLoki(this.room);
+
+            this.ns.to(this.roomCode).emit(
+                'quests',
+                this.room.quests.sort(
+                    (a: { questNumber: number }, b: { questNumber: number }) => a.questNumber - b.questNumber,
+                ),
+            );
+        }
+    }
+
     async startGame() {
         await startNewVoteCycle(this.roomCode);
         await assignRoles(this.roomCode);
@@ -252,7 +265,7 @@ class AvalonConnection {
     startGameLoki() {
         console.log('START GAME');
         // TODO change to getter?
-        const room = getRoomByCode(this.roomCode);
+        const room = this.room;
 
         startNewVoteCycleLoki(room);
         console.log('Assign roles');
@@ -286,7 +299,7 @@ class AvalonConnection {
                     description: player.roleDescription,
                 });
             });
-            // this.initAndSendQuests(players.length);
+            this.initAndSendQuestsLoki();
             this.ns.to(this.roomCode).emit('player killed', null);
         }
     }
@@ -378,6 +391,10 @@ class AvalonConnection {
             await player.save();
             this.ns.to(this.roomCode).emit('update room', await getRoomWithPlayers(this.roomCode));
         }
+    }
+
+    get room() {
+        return (this.roomCode ? getRoomByCode(this.roomCode) || {} : {}) as ReturnType<typeof getRoomByCode>;
     }
 }
 

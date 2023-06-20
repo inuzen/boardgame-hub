@@ -27,6 +27,7 @@ const Avalon = db.addCollection('rooms', {
         'gameMessage',
         'revealVotes',
         'revealRoles',
+        'quests',
     ],
     unique: ['roomCode'],
     autoupdate: true,

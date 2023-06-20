@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.startNewVoteCycleLoki = exports.assignRolesLoki = exports.updateAllPlayersLoki = exports.getRoomByCode = exports.addRoom = void 0;
+exports.initQuestsLoki = exports.startNewVoteCycleLoki = exports.assignRolesLoki = exports.updateAllPlayersLoki = exports.getRoomByCode = exports.addRoom = void 0;
 const lokiDB_1 = require("../../config/lokiDB");
 const engine_1 = require("./engine");
 const types_1 = require("./types");
@@ -27,6 +27,9 @@ const addRoom = (roomCode) => {
         gameMessage: '',
         revealVotes: false,
         revealRoles: false,
+        quests: [1, 2, 3, 4, 5].map((questNumber) => {
+            return { questNumber, questPartySize: null, questResult: null, active: false };
+        }),
     });
 };
 exports.addRoom = addRoom;
@@ -62,3 +65,13 @@ const startNewVoteCycleLoki = (room) => {
     (0, exports.updateAllPlayersLoki)(room, { globalVote: null, questVote: null, nominated: false });
 };
 exports.startNewVoteCycleLoki = startNewVoteCycleLoki;
+const initQuestsLoki = (room) => {
+    const { questPartySize } = engine_1.DISTRIBUTION[room.players.length];
+    room.quests.forEach((quest, i) => {
+        quest.questPartySize = questPartySize[i];
+        if (quest.questNumber === 1)
+            quest.active = true;
+    });
+    lokiDB_1.Avalon.update(room);
+};
+exports.initQuestsLoki = initQuestsLoki;

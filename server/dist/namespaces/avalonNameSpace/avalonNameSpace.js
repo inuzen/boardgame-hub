@@ -160,6 +160,12 @@ class AvalonConnection {
         const quests = await (0, AvalonDbActions_1.getQuests)(this.roomCode);
         this.ns.to(this.roomCode).emit('quests', quests.sort((a, b) => a.questNumber - b.questNumber));
     }
+    initAndSendQuestsLoki() {
+        if (this.room) {
+            (0, AvalonLokiActions_1.initQuestsLoki)(this.room);
+            this.ns.to(this.roomCode).emit('quests', this.room.quests.sort((a, b) => a.questNumber - b.questNumber));
+        }
+    }
     async startGame() {
         await (0, AvalonDbActions_1.startNewVoteCycle)(this.roomCode);
         await (0, AvalonDbActions_1.assignRoles)(this.roomCode);
@@ -196,7 +202,7 @@ class AvalonConnection {
     startGameLoki() {
         console.log('START GAME');
         // TODO change to getter?
-        const room = (0, AvalonLokiActions_1.getRoomByCode)(this.roomCode);
+        const room = this.room;
         (0, AvalonLokiActions_1.startNewVoteCycleLoki)(room);
         console.log('Assign roles');
         (0, AvalonLokiActions_1.assignRolesLoki)(room);
@@ -226,7 +232,7 @@ class AvalonConnection {
                     description: player.roleDescription,
                 });
             });
-            // this.initAndSendQuests(players.length);
+            this.initAndSendQuestsLoki();
             this.ns.to(this.roomCode).emit('player killed', null);
         }
     }
@@ -313,6 +319,9 @@ class AvalonConnection {
             await player.save();
             this.ns.to(this.roomCode).emit('update room', await (0, AvalonDbActions_1.getRoomWithPlayers)(this.roomCode));
         }
+    }
+    get room() {
+        return (this.roomCode ? (0, AvalonLokiActions_1.getRoomByCode)(this.roomCode) || {} : {});
     }
 }
 const initAvalonNameSpace = (io) => {
