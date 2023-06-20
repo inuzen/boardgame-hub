@@ -17,7 +17,7 @@ class AvalonConnection {
         this.roomCode = '';
         socket.on('disconnect', () => this.disconnect());
         socket.on('disconnecting', () => this.disconnecting());
-        socket.on('start game', async () => await this.startGame());
+        socket.on('start game', async () => this.startGameLoki());
         socket.on('nominate player', async (playerId) => await this.nominatePlayer(playerId));
         socket.on('global vote', async (vote) => await this.vote(vote, true));
         socket.on('quest vote', async (vote) => await this.vote(vote));
@@ -51,7 +51,6 @@ class AvalonConnection {
         }
     }
     addPlayerLoki({ nickname, roomCode, isHost = false }) {
-        console.log('add player');
         this.roomCode = roomCode;
         this.socket.join(roomCode);
         const room = (0, AvalonLokiActions_1.getRoomByCode)(roomCode);
@@ -191,6 +190,43 @@ class AvalonConnection {
                 });
             });
             this.initAndSendQuests(players.length);
+            this.ns.to(this.roomCode).emit('player killed', null);
+        }
+    }
+    startGameLoki() {
+        console.log('START GAME');
+        // TODO change to getter?
+        const room = (0, AvalonLokiActions_1.getRoomByCode)(this.roomCode);
+        (0, AvalonLokiActions_1.startNewVoteCycleLoki)(room);
+        console.log('Assign roles');
+        (0, AvalonLokiActions_1.assignRolesLoki)(room);
+        // TODO: exclude secret info from room for this
+        if (room) {
+            const players = room.players;
+            room.gameInProgress = true;
+            room.nominationInProgress = true;
+            room.globalVoteInProgress = false;
+            room.questVoteInProgress = false;
+            room.assassinationInProgress = false;
+            room.revealVotes = false;
+            room.revealRoles = false;
+            room.missedTeamVotes = 1;
+            room.currentQuest = 1;
+            room.currentLeaderId = players.find((player) => player.isCurrentLeader)?.socketId || '';
+            room.gameMessage = `Leader must nominate players for the quest.`;
+            lokiDB_1.Avalon.update(room);
+            // TODO check that at least 5 players joined
+            this.ns.to(this.roomCode).emit('update room', room);
+            players.forEach((player) => {
+                this.ns.to(player.socketId).emit('assigned role', {
+                    roleName: player.roleName,
+                    roleKey: player.roleKey,
+                    side: player.side,
+                    secretInfo: player.secretInformation,
+                    description: player.roleDescription,
+                });
+            });
+            // this.initAndSendQuests(players.length);
             this.ns.to(this.roomCode).emit('player killed', null);
         }
     }

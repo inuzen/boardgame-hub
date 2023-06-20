@@ -22,7 +22,7 @@ import {
     getCompleteRoom,
 } from './AvalonDbActions';
 import { shuffle } from '../../utils/utils';
-import { addRoom, getRoomByCode } from './AvalonLokiActions';
+import { addRoom, assignRolesLoki, getRoomByCode, startNewVoteCycleLoki } from './AvalonLokiActions';
 import { v4 as uuidv4 } from 'uuid';
 import { Avalon } from '../../config/lokiDB';
 
@@ -38,7 +38,7 @@ class AvalonConnection {
 
         socket.on('disconnect', () => this.disconnect());
         socket.on('disconnecting', () => this.disconnecting());
-        socket.on('start game', async () => await this.startGame());
+        socket.on('start game', async () => this.startGameLoki());
         socket.on('nominate player', async (playerId: string) => await this.nominatePlayer(playerId));
         socket.on('global vote', async (vote) => await this.vote(vote, true));
         socket.on('quest vote', async (vote) => await this.vote(vote));
@@ -80,8 +80,6 @@ class AvalonConnection {
     }
 
     addPlayerLoki({ nickname, roomCode, isHost = false }: { nickname: string; roomCode: string; isHost?: boolean }) {
-        console.log('add player');
-
         this.roomCode = roomCode;
         this.socket.join(roomCode);
         const room = getRoomByCode(roomCode);
@@ -247,6 +245,48 @@ class AvalonConnection {
                 });
             });
             this.initAndSendQuests(players.length);
+            this.ns.to(this.roomCode).emit('player killed', null);
+        }
+    }
+
+    startGameLoki() {
+        console.log('START GAME');
+        // TODO change to getter?
+        const room = getRoomByCode(this.roomCode);
+
+        startNewVoteCycleLoki(room);
+        console.log('Assign roles');
+        assignRolesLoki(room);
+
+        // TODO: exclude secret info from room for this
+
+        if (room) {
+            const players = room.players;
+
+            room.gameInProgress = true;
+            room.nominationInProgress = true;
+            room.globalVoteInProgress = false;
+            room.questVoteInProgress = false;
+            room.assassinationInProgress = false;
+            room.revealVotes = false;
+            room.revealRoles = false;
+            room.missedTeamVotes = 1;
+            room.currentQuest = 1;
+            room.currentLeaderId = players.find((player: any) => player.isCurrentLeader)?.socketId || '';
+            room.gameMessage = `Leader must nominate players for the quest.`;
+            Avalon.update(room);
+            // TODO check that at least 5 players joined
+            this.ns.to(this.roomCode).emit('update room', room);
+            players.forEach((player: any) => {
+                this.ns.to(player.socketId).emit('assigned role', {
+                    roleName: player.roleName,
+                    roleKey: player.roleKey,
+                    side: player.side,
+                    secretInfo: player.secretInformation,
+                    description: player.roleDescription,
+                });
+            });
+            // this.initAndSendQuests(players.length);
             this.ns.to(this.roomCode).emit('player killed', null);
         }
     }

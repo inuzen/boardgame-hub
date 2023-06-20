@@ -115,6 +115,7 @@ const Avalon = ({ roomCode }: any) => {
             <div className="mainContainer">
                 {host && !gameStarted && (
                     <div className="adminActions">
+                        {/* change to < 5  */}
                         <button onClick={onStartGame} disabled={players?.length < 2}>
                             Start game
                         </button>

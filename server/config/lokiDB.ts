@@ -3,7 +3,26 @@ import loki from 'lokijs';
 const db = new loki('BoardgameHub');
 
 const Avalon = db.addCollection('rooms', {
-    indices: ['roomCode', 'players', 'takenImages'],
+    indices: [
+        'roomCode',
+        'players',
+        'takenImages',
+        'currentQuest',
+        'hostSocketId',
+        'currentLeaderId',
+        'extraRoles',
+        'missedTeamVotes',
+        'currentQuestResults',
+        'leaderCanSelectQuest',
+        'gameInProgress',
+        'nominationInProgress',
+        'globalVoteInProgress',
+        'questVoteInProgress',
+        'assassinationInProgress',
+        'gameMessage',
+        'revealVotes',
+        'revealRoles',
+    ],
     unique: ['roomCode'],
     autoupdate: true,
     disableMeta: true,

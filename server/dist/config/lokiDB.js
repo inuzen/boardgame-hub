@@ -8,7 +8,26 @@ const lokijs_1 = __importDefault(require("lokijs"));
 const db = new lokijs_1.default('BoardgameHub');
 exports.db = db;
 const Avalon = db.addCollection('rooms', {
-    indices: ['roomCode', 'players', 'takenImages'],
+    indices: [
+        'roomCode',
+        'players',
+        'takenImages',
+        'currentQuest',
+        'hostSocketId',
+        'currentLeaderId',
+        'extraRoles',
+        'missedTeamVotes',
+        'currentQuestResults',
+        'leaderCanSelectQuest',
+        'gameInProgress',
+        'nominationInProgress',
+        'globalVoteInProgress',
+        'questVoteInProgress',
+        'assassinationInProgress',
+        'gameMessage',
+        'revealVotes',
+        'revealRoles',
+    ],
     unique: ['roomCode'],
     autoupdate: true,
     disableMeta: true,
