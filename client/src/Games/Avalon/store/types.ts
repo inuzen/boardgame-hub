@@ -17,7 +17,6 @@ export interface AvalonPlayerServer {
 }
 
 export interface AvalonQuestServer {
-    roomCode: string;
     questNumber: number;
     questResult: string;
     active: boolean;
@@ -26,11 +25,9 @@ export interface AvalonQuestServer {
 
 export interface AvalonRoomServer {
     roomCode: string;
-    AvalonGameId: string | null;
     players: AvalonPlayerServer[];
     quests: AvalonQuestServer[];
     currentQuest: number;
-    votingArray: string[] | null;
     missedTeamVotes: number;
     currentLeaderId: string;
     nominationInProgress: boolean;
@@ -43,6 +40,9 @@ export interface AvalonRoomServer {
     assassinationInProgress: boolean;
     revealRoles: boolean;
     extraRoles: ROLE_LIST[];
+    takenImages: Record<string, { key: string; taken: boolean }>;
+    hostSocketId: string;
+    leaderCanSelectQuest: boolean;
 }
 
 export enum ROLE_LIST {

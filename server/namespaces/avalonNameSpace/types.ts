@@ -88,3 +88,52 @@ export enum AVATARS {
     PRIEST = 'priest',
     SWORDSMAN = 'swordsman',
 }
+
+export type AvalonPlayer = {
+    connected: boolean;
+    globalVote: 'yes' | 'no' | null;
+    imageName: string;
+    isCurrentLeader: boolean;
+    isHost: boolean;
+    name: string;
+    nominated: boolean;
+    order: number;
+    playerUUID: string;
+    questVote: 'yes' | 'no' | null;
+    roleDescription: string;
+    roleKey: ROLE_LIST;
+    roleName: string;
+    roomCode: string;
+    secretInformation: string;
+    side: string;
+    socketId: string;
+};
+
+export type AvalonQuest = {
+    questNumber: number;
+    questResult: string | null;
+    active: boolean;
+    questPartySize: number | null;
+};
+
+export type AvalonRoom = {
+    assassinationInProgress: boolean;
+    currentLeaderId: string | null;
+    currentQuest: number | null;
+    currentQuestResults: boolean[] | null;
+    extraRoles: ROLE_LIST[];
+    gameInProgress: boolean;
+    gameMessage: string;
+    globalVoteInProgress: boolean;
+    hostSocketId: string;
+    leaderCanSelectQuest: boolean;
+    missedTeamVotes: number | null;
+    nominationInProgress: boolean;
+    players: AvalonPlayer[];
+    quests: AvalonQuest[];
+    questVoteInProgress: boolean;
+    revealRoles: boolean;
+    revealVotes: boolean;
+    roomCode: string;
+    takenImages: Record<string, { key: string; taken: boolean }>;
+};

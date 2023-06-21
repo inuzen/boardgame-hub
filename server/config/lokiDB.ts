@@ -1,8 +1,9 @@
 import loki from 'lokijs';
+import { AvalonRoom } from '../namespaces/avalonNameSpace/types';
 
 const db = new loki('BoardgameHub');
 
-const Avalon = db.addCollection('rooms', {
+const Avalon = db.addCollection<AvalonRoom>('rooms', {
     indices: [
         'roomCode',
         'players',

@@ -1,6 +1,6 @@
 import { AvalonPlayerModel } from '../../models/Avalon/AvalonPlayer';
 import { shuffle } from '../../utils/utils';
-import { ROLES, Role, SIDES, ROLE_LIST } from './types';
+import { ROLES, Role, SIDES, ROLE_LIST, AvalonPlayer } from './types';
 interface QuestDistribution {
     questPartySize: number[];
     good: number;
@@ -74,7 +74,7 @@ export const createRoleDistributionArray = (playerCount: number, extraRolesList:
     return shuffle(goodRoles.concat(evilRoles));
 };
 
-export const createMessageByRole = (player: AvalonPlayerModel, allPlayers: AvalonPlayerModel[]): string => {
+export const createMessageByRole = (player: AvalonPlayer, allPlayers: AvalonPlayer[]): string => {
     if (player.side === SIDES.EVIL && player.roleKey !== ROLE_LIST.OBERON) {
         const otherEvilPlayers = allPlayers.filter(
             (p) => p.side === SIDES.EVIL && p.roleKey !== ROLE_LIST.OBERON && p.socketId !== player.socketId,

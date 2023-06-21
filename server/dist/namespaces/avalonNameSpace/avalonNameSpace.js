@@ -18,12 +18,12 @@ class AvalonConnection {
         socket.on('disconnect', () => this.disconnectLoki());
         socket.on('disconnecting', () => this.disconnectingLoki());
         socket.on('start game', () => this.startGameLoki());
-        socket.on('nominate player', async (playerId) => await this.nominatePlayer(playerId));
-        socket.on('global vote', async (vote) => await this.vote(vote, true));
-        socket.on('quest vote', async (vote) => await this.vote(vote));
-        socket.on('confirm party', async () => await this.confirmParty());
-        socket.on('start new vote', async () => await this.startNewVote());
-        socket.on('assassinate', async (targetId) => await this.assassinate(targetId));
+        socket.on('nominate player', (playerId) => this.nominatePlayerLoki(playerId));
+        socket.on('global vote', (vote) => this.voteLoki(vote, true));
+        socket.on('quest vote', (vote) => this.voteLoki(vote));
+        socket.on('confirm party', () => this.confirmPartyLoki());
+        socket.on('start new vote', () => this.startNewVoteLoki());
+        socket.on('assassinate', (targetId) => this.assassinateLoki(targetId));
         socket.on('toggle extra role', (roleKey) => this.toggleExtraRoleLoki(roleKey));
         // socket.on(
         //     'get existing player',
@@ -31,7 +31,7 @@ class AvalonConnection {
         //         await this.getExistingPlayer(params),
         // );
         socket.on('change player name', (newName) => this.changePlayerNameLoki(newName));
-        socket.on('init room', async (params) => this.initRoom(params));
+        socket.on('init room', (params) => this.initRoom(params));
         socket.on('join room', ({ roomCode, nickname }) => this.addPlayerLoki({ roomCode, nickname }));
     }
     initRoom(params) {
@@ -206,7 +206,7 @@ class AvalonConnection {
         }
     }
     startGameLoki() {
-        const room = this.room;
+        const { room } = this;
         (0, AvalonLokiActions_1.startNewVoteCycleLoki)(room);
         (0, AvalonLokiActions_1.assignRolesLoki)(room);
         // TODO: exclude secret info from room for this
@@ -223,7 +223,6 @@ class AvalonConnection {
             room.currentQuest = 1;
             room.currentLeaderId = players.find((player) => player.isCurrentLeader)?.socketId || '';
             room.gameMessage = `Leader must nominate players for the quest.`;
-            lokiDB_1.Avalon.update(room);
             // TODO check that at least 5 players joined
             this.ns.to(this.roomCode).emit('update room', room);
             players.forEach((player) => {
@@ -235,6 +234,7 @@ class AvalonConnection {
                     description: player.roleDescription,
                 });
             });
+            lokiDB_1.Avalon.update(room);
             this.initAndSendQuestsLoki();
             this.ns.to(this.roomCode).emit('player killed', null);
         }
@@ -271,6 +271,27 @@ class AvalonConnection {
             this.ns.to(this.roomCode).emit('update room', roomInfo);
         }
     }
+    voteLoki(vote, isGlobal = false) {
+        const { room, socket: { id: voterId }, } = this;
+        if (!room)
+            return;
+        this.ns.to(this.roomCode).emit('player voted', voterId);
+        if (isGlobal) {
+            (0, AvalonLokiActions_1.updatePlayerLoki)({ room: this.room, socketId: voterId, updatedProperties: { globalVote: vote } });
+            (0, AvalonLokiActions_1.handleGlobalVoteLoki)(this.room);
+        }
+        else {
+            (0, AvalonLokiActions_1.updatePlayerLoki)({ room: this.room, socketId: voterId, updatedProperties: { questVote: vote } });
+            (0, AvalonLokiActions_1.handleQuestVoteLoki)(this.room);
+        }
+        // TODO create function to get room or players with excluded properties.
+        if (this.room?.gameInProgress === false) {
+            this.ns.to(this.roomCode).emit('update room', this.room);
+        }
+        else {
+            this.ns.to(this.roomCode).emit('update room', this.room);
+        }
+    }
     async confirmParty() {
         const activeQuest = await (0, AvalonDbActions_1.getActiveQuest)(this.roomCode);
         const nominatedPlayerCount = await (0, AvalonDbActions_1.countPlayers)(this.roomCode, { nominated: true });
@@ -288,6 +309,24 @@ class AvalonConnection {
         }
         else {
             this.ns.to(this.roomCode).emit('not enough players');
+        }
+    }
+    confirmPartyLoki() {
+        const { room } = this;
+        if (room) {
+            const activeQuest = (0, AvalonLokiActions_1.getActiveQuestLoki)(this.room);
+            const nominatedPlayerCount = room.players.filter((p) => !p.nominated).length;
+            if (nominatedPlayerCount === activeQuest?.questPartySize) {
+                room.nominationInProgress = false;
+                room.globalVoteInProgress = true;
+                room.revealVotes = false;
+                room.gameMessage = 'Everyone should vote for the selected party';
+                (0, AvalonLokiActions_1.clearVotesLoki)(room);
+                this.ns.to(this.roomCode).emit('update room', room);
+            }
+            else {
+                this.ns.to(this.roomCode).emit('not enough players');
+            }
         }
     }
     async assassinate(targetId) {
@@ -308,6 +347,26 @@ class AvalonConnection {
             await room.save();
             this.ns.to(this.roomCode).emit('update room', room);
         }
+    }
+    assassinateLoki(targetId) {
+        const { room } = this;
+        if (!room)
+            return;
+        const { players } = room;
+        const assassin = players.find((p) => p.roleKey === types_1.ROLE_LIST.ASSASSIN);
+        const target = players.find((p) => p.socketId === targetId);
+        if (assassin?.socketId === this.socket.id) {
+            this.ns.to(this.roomCode).emit('player killed', targetId);
+            const merlinKilled = target?.roleKey === types_1.ROLE_LIST.MERLIN;
+            room.gameMessage = merlinKilled
+                ? 'Merlin was killed! Evil are now victorious'
+                : 'Assassin has missed! The victory stays on the Good side';
+            room.revealRoles = true;
+        }
+        room.gameInProgress = false;
+        room.revealVotes = false;
+        lokiDB_1.Avalon.update(room);
+        this.ns.to(this.roomCode).emit('update room', room);
     }
     async toggleExtraRole(roleKey) {
         const room = await (0, AvalonDbActions_1.getRoom)(this.roomCode);
@@ -332,6 +391,9 @@ class AvalonConnection {
     async startNewVote() {
         await (0, AvalonDbActions_1.startNewVoteCycle)(this.roomCode);
     }
+    startNewVoteLoki() {
+        (0, AvalonLokiActions_1.startNewVoteCycleLoki)(this.room);
+    }
     async changePlayerName(newName) {
         const player = await (0, AvalonDbActions_1.findPlayer)(this.roomCode, { socketId: this.socket.id });
         if (player) {
@@ -348,7 +410,6 @@ class AvalonConnection {
         if (room && player) {
             player.name = newName;
             lokiDB_1.Avalon.update(room);
-            console.log(this.room.players);
             this.ns.to(this.roomCode).emit('update room', this.room);
         }
     }
