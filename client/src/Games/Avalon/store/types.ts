@@ -27,8 +27,8 @@ export interface AvalonQuestServer {
 export interface AvalonRoomServer {
     roomCode: string;
     AvalonGameId: string | null;
-    AvalonPlayers: AvalonPlayerServer[];
-    AvalonQuests: AvalonQuestServer[];
+    players: AvalonPlayerServer[];
+    quests: AvalonQuestServer[];
     currentQuest: number;
     votingArray: string[] | null;
     missedTeamVotes: number;

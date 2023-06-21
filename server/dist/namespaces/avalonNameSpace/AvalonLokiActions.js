@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.initQuestsLoki = exports.startNewVoteCycleLoki = exports.assignRolesLoki = exports.updateAllPlayersLoki = exports.getRoomByCode = exports.addRoom = void 0;
+exports.nominatePlayerLoki = exports.initQuestsLoki = exports.startNewVoteCycleLoki = exports.assignRolesLoki = exports.updateAllPlayersLoki = exports.updatePlayerLoki = exports.getRoomByCode = exports.addRoom = void 0;
 const lokiDB_1 = require("../../config/lokiDB");
 const engine_1 = require("./engine");
 const types_1 = require("./types");
@@ -35,6 +35,15 @@ const addRoom = (roomCode) => {
 exports.addRoom = addRoom;
 const getRoomByCode = (roomCode) => lokiDB_1.Avalon.findOne({ roomCode });
 exports.getRoomByCode = getRoomByCode;
+const updatePlayerLoki = ({ room, socketId, updatedProperties, }) => {
+    room.players.forEach((p) => {
+        if (socketId === p.socketId) {
+            p = { ...p, ...updatedProperties };
+        }
+    });
+    lokiDB_1.Avalon.update(room);
+};
+exports.updatePlayerLoki = updatePlayerLoki;
 const updateAllPlayersLoki = (lokiRoom, updatedProperties) => {
     lokiRoom.players.forEach((player) => {
         player = { ...player, ...updatedProperties };
@@ -75,3 +84,29 @@ const initQuestsLoki = (room) => {
     lokiDB_1.Avalon.update(room);
 };
 exports.initQuestsLoki = initQuestsLoki;
+const nominatePlayerLoki = (room, playerId) => {
+    const players = room.players;
+    const { selectedPlayer, nominatedCount } = players.reduce((acc, currPlayer) => {
+        if (currPlayer.socketId === playerId) {
+            acc.selectedPlayer = currPlayer;
+        }
+        if (currPlayer.nominated) {
+            acc.nominatedCount++;
+        }
+        return acc;
+    }, {
+        selectedPlayer: null,
+        nominatedCount: 0,
+    });
+    if (selectedPlayer) {
+        const activeQuest = room.quests.find((q) => q.active);
+        if (selectedPlayer.nominated) {
+            selectedPlayer.nominated = false;
+        }
+        if (!selectedPlayer.nominated && activeQuest?.questPartySize > nominatedCount) {
+            selectedPlayer.nominated = true;
+        }
+    }
+    lokiDB_1.Avalon.update(room);
+};
+exports.nominatePlayerLoki = nominatePlayerLoki;

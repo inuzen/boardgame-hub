@@ -56,8 +56,6 @@ export const DISTRIBUTION: Record<number, QuestDistribution> = {
 };
 
 export const createRoleDistributionArray = (playerCount: number, extraRolesList: ROLE_LIST[] = []) => {
-    console.log(playerCount, extraRolesList);
-
     const defaultRoles = [ROLES.MERLIN, ROLES.ASSASSIN];
     const extraRoles = extraRolesList.map((el) => ROLES[el]);
     const roles = defaultRoles.concat(extraRoles);

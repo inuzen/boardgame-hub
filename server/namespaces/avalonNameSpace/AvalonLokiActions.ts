@@ -34,6 +34,23 @@ export const addRoom = (roomCode: string) => {
 
 export const getRoomByCode = (roomCode: string) => Avalon.findOne({ roomCode });
 
+export const updatePlayerLoki = ({
+    room,
+    socketId,
+    updatedProperties,
+}: {
+    room: any;
+    socketId: string;
+    updatedProperties: Partial<AvalonPlayerType>;
+}) => {
+    room.players.forEach((p) => {
+        if (socketId === p.socketId) {
+            p = { ...p, ...updatedProperties };
+        }
+    });
+    Avalon.update(room);
+};
+
 export const updateAllPlayersLoki = (lokiRoom: any, updatedProperties: Partial<AvalonPlayerType>) => {
     lokiRoom.players.forEach((player: AvalonPlayerType) => {
         player = { ...player, ...updatedProperties };
@@ -83,5 +100,35 @@ export const initQuestsLoki = (room: any) => {
             if (quest.questNumber === 1) quest.active = true;
         },
     );
+    Avalon.update(room);
+};
+
+export const nominatePlayerLoki = (room: any, playerId: string) => {
+    const players = room.players;
+    const { selectedPlayer, nominatedCount } = players.reduce(
+        (acc: { selectedPlayer: AvalonPlayerModel | null; nominatedCount: number }, currPlayer) => {
+            if (currPlayer.socketId === playerId) {
+                acc.selectedPlayer = currPlayer;
+            }
+            if (currPlayer.nominated) {
+                acc.nominatedCount++;
+            }
+            return acc;
+        },
+        {
+            selectedPlayer: null,
+            nominatedCount: 0,
+        },
+    );
+    if (selectedPlayer) {
+        const activeQuest = room.quests.find((q) => q.active);
+        if (selectedPlayer.nominated) {
+            selectedPlayer.nominated = false;
+        }
+
+        if (!selectedPlayer.nominated && activeQuest?.questPartySize! > nominatedCount) {
+            selectedPlayer.nominated = true;
+        }
+    }
     Avalon.update(room);
 };

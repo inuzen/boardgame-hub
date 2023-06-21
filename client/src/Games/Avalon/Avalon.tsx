@@ -218,7 +218,7 @@ const Avalon = ({ roomCode }: any) => {
             <Modal
                 isOpen={changeNameModal}
                 onRequestClose={handleChangeNameClose}
-                contentLabel="qr link"
+                contentLabel="edit name"
                 closeTimeoutMS={200}
                 ariaHideApp={false}
             >

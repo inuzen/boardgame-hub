@@ -15,35 +15,31 @@ class AvalonConnection {
         this.socket = socket;
         this.ns = ns;
         this.roomCode = '';
-        socket.on('disconnect', () => this.disconnect());
-        socket.on('disconnecting', () => this.disconnecting());
-        socket.on('start game', async () => this.startGameLoki());
+        socket.on('disconnect', () => this.disconnectLoki());
+        socket.on('disconnecting', () => this.disconnectingLoki());
+        socket.on('start game', () => this.startGameLoki());
         socket.on('nominate player', async (playerId) => await this.nominatePlayer(playerId));
         socket.on('global vote', async (vote) => await this.vote(vote, true));
         socket.on('quest vote', async (vote) => await this.vote(vote));
         socket.on('confirm party', async () => await this.confirmParty());
         socket.on('start new vote', async () => await this.startNewVote());
         socket.on('assassinate', async (targetId) => await this.assassinate(targetId));
-        socket.on('toggle extra role', async (roleKey) => await this.toggleExtraRole(roleKey));
+        socket.on('toggle extra role', (roleKey) => this.toggleExtraRoleLoki(roleKey));
         // socket.on(
         //     'get existing player',
         //     async (params: { playerUUID: string; roomCode: string; nickname: string }) =>
         //         await this.getExistingPlayer(params),
         // );
-        socket.on('change player name', async (newName) => await this.changePlayerName(newName));
+        socket.on('change player name', (newName) => this.changePlayerNameLoki(newName));
         socket.on('init room', async (params) => this.initRoom(params));
-        socket.on('join room', async ({ roomCode, nickname }) => this.addPlayerLoki({ roomCode, nickname }));
+        socket.on('join room', ({ roomCode, nickname }) => this.addPlayerLoki({ roomCode, nickname }));
     }
     initRoom(params) {
         try {
             const { roomCode, nickname } = params;
-            console.log(roomCode, nickname);
-            // const [_, created] = await createRoom(roomCode, this.socket.id);
             (0, AvalonLokiActions_1.addRoom)(roomCode);
-            console.log('added room');
             this.socket.join(roomCode);
             this.roomCode = roomCode;
-            // await this.addPlayerToRoom({ nickname, isHost: created, roomCode });
             this.addPlayerLoki({ nickname, roomCode, isHost: true });
         }
         catch (error) {
@@ -54,7 +50,6 @@ class AvalonConnection {
         this.roomCode = roomCode;
         this.socket.join(roomCode);
         const room = (0, AvalonLokiActions_1.getRoomByCode)(roomCode);
-        console.log('ROOM', room);
         if (room) {
             //@ts-ignore
             const playerCount = room.players.length;
@@ -149,11 +144,22 @@ class AvalonConnection {
     async disconnect() {
         await (0, AvalonDbActions_1.deleteRoomIfNoPlayers)(this.roomCode);
     }
+    disconnectLoki() {
+        const room = this.room;
+        if (room && !room.players.length)
+            lokiDB_1.Avalon.remove(room);
+    }
     async disconnecting() {
         const { id } = this.socket;
         await (0, AvalonDbActions_1.updatePlayer)({ socketId: id, updatedProperties: { connected: false } });
         const roomInfo = await (0, AvalonDbActions_1.getRoomWithPlayers)(this.roomCode);
         this.ns.to(this.roomCode).emit('update room', roomInfo);
+    }
+    disconnectingLoki() {
+        const { id } = this.socket;
+        const room = this.room;
+        (0, AvalonLokiActions_1.updatePlayerLoki)({ room, socketId: id, updatedProperties: { connected: false } });
+        this.ns.to(this.roomCode).emit('update room', room);
     }
     async initAndSendQuests(playerCount) {
         await (0, AvalonDbActions_1.initQuests)(this.roomCode, playerCount);
@@ -200,11 +206,8 @@ class AvalonConnection {
         }
     }
     startGameLoki() {
-        console.log('START GAME');
-        // TODO change to getter?
         const room = this.room;
         (0, AvalonLokiActions_1.startNewVoteCycleLoki)(room);
-        console.log('Assign roles');
         (0, AvalonLokiActions_1.assignRolesLoki)(room);
         // TODO: exclude secret info from room for this
         if (room) {
@@ -240,6 +243,13 @@ class AvalonConnection {
         await (0, AvalonDbActions_1.nominatePlayer)(this.roomCode, playerId);
         const playerList = await (0, AvalonDbActions_1.getPlayerList)(this.roomCode);
         this.ns.to(this.roomCode).emit('players', playerList);
+    }
+    nominatePlayerLoki(playerId) {
+        const room = this.room;
+        if (room) {
+            (0, AvalonLokiActions_1.nominatePlayerLoki)(room, playerId);
+            this.ns.to(this.roomCode).emit('players', room.players);
+        }
     }
     // TODO Optimize this and maybe split global and quest votes
     async vote(vote, isGlobal = false) {
@@ -309,6 +319,16 @@ class AvalonConnection {
             this.ns.to(this.roomCode).emit('update room', room);
         }
     }
+    toggleExtraRoleLoki(roleKey) {
+        const room = this.room;
+        if (room) {
+            room.extraRoles = room.extraRoles.includes(roleKey)
+                ? room.extraRoles.filter((role) => role !== roleKey)
+                : [...room.extraRoles, roleKey];
+            lokiDB_1.Avalon.update(room);
+            this.ns.to(this.roomCode).emit('update room', room);
+        }
+    }
     async startNewVote() {
         await (0, AvalonDbActions_1.startNewVoteCycle)(this.roomCode);
     }
@@ -318,6 +338,18 @@ class AvalonConnection {
             player.name = newName;
             await player.save();
             this.ns.to(this.roomCode).emit('update room', await (0, AvalonDbActions_1.getRoomWithPlayers)(this.roomCode));
+        }
+    }
+    changePlayerNameLoki(newName) {
+        console.log(newName);
+        const room = this.room;
+        const player = room?.players.find((p) => p.socketId === this.socket.id);
+        console.log(player);
+        if (room && player) {
+            player.name = newName;
+            lokiDB_1.Avalon.update(room);
+            console.log(this.room.players);
+            this.ns.to(this.roomCode).emit('update room', this.room);
         }
     }
     get room() {

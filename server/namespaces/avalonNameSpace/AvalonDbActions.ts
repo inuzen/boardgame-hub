@@ -42,6 +42,7 @@ export const updatePlayer = async ({
         },
     });
 };
+
 export const updateAllPlayers = async (roomCode: string, updatedProperties: Partial<AvalonPlayerType>) => {
     await AvalonPlayer.update(updatedProperties, {
         where: {

@@ -52,7 +52,6 @@ exports.DISTRIBUTION = {
     },
 };
 const createRoleDistributionArray = (playerCount, extraRolesList = []) => {
-    console.log(playerCount, extraRolesList);
     const defaultRoles = [types_1.ROLES.MERLIN, types_1.ROLES.ASSASSIN];
     const extraRoles = extraRolesList.map((el) => types_1.ROLES[el]);
     const roles = defaultRoles.concat(extraRoles);
