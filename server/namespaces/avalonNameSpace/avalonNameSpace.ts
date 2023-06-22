@@ -401,7 +401,8 @@ class AvalonConnection {
         const { room } = this;
         if (room) {
             const activeQuest = getActiveQuestLoki(this.room);
-            const nominatedPlayerCount = room.players.filter((p) => !p.nominated).length;
+            const nominatedPlayerCount = room.players.filter((p) => p.nominated).length;
+
             if (nominatedPlayerCount === activeQuest?.questPartySize!) {
                 room.nominationInProgress = false;
                 room.globalVoteInProgress = true;

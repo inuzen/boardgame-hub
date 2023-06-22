@@ -9,7 +9,7 @@ interface QuestDistribution {
 // in a format of "player_count": {questPartySize: [2, 3, ...], good: 1, evil: 1}
 export const DISTRIBUTION: Record<number, QuestDistribution> = {
     2: {
-        questPartySize: [1, 1, 1, 2, 1],
+        questPartySize: [2, 1, 1, 2, 1],
         good: 1,
         evil: 1,
     },

@@ -2,6 +2,9 @@ import { db, Avalon } from '../../config/lokiDB';
 import { DISTRIBUTION, createMessageByRole, createRoleDistributionArray } from './engine';
 import { AVATARS, AvalonPlayer } from './types';
 
+const initialQuests = [1, 2, 3, 4, 5].map((questNumber) => {
+    return { questNumber, questPartySize: null, questResult: null, active: false };
+});
 export const addRoom = (roomCode: string) => {
     return Avalon.insert({
         roomCode,
@@ -25,9 +28,7 @@ export const addRoom = (roomCode: string) => {
         gameMessage: '',
         revealVotes: false,
         revealRoles: false,
-        quests: [1, 2, 3, 4, 5].map((questNumber) => {
-            return { questNumber, questPartySize: null, questResult: null, active: false };
-        }),
+        quests: initialQuests,
     });
 };
 
@@ -101,6 +102,7 @@ export const initQuestsLoki = (room: AvalonLokiRoom) => {
     if (!room) return;
 
     const { questPartySize } = DISTRIBUTION[room.players.length];
+    room.quests = initialQuests;
     room.quests.forEach((quest, i) => {
         quest.questPartySize = questPartySize[i];
         if (quest.questNumber === 1) quest.active = true;
@@ -111,28 +113,17 @@ export const initQuestsLoki = (room: AvalonLokiRoom) => {
 export const nominatePlayerLoki = (room: AvalonLokiRoom, playerId: string) => {
     if (!room) return;
 
-    const players = room.players;
-    const { selectedPlayer, nominatedCount } = players.reduce(
-        (acc: { selectedPlayer: AvalonPlayer | null; nominatedCount: number }, currPlayer) => {
-            if (currPlayer.socketId === playerId) {
-                acc.selectedPlayer = currPlayer;
-            }
-            if (currPlayer.nominated) {
-                acc.nominatedCount++;
-            }
-            return acc;
-        },
-        {
-            selectedPlayer: null,
-            nominatedCount: 0,
-        },
-    );
+    const { players } = room;
+
+    const selectedPlayer = players.find((p) => p.socketId === playerId);
+    const nominatedCount = players.filter((p) => p.nominated).length;
+
     if (selectedPlayer) {
-        const activeQuest = room.quests.find((q) => q.active);
         if (selectedPlayer.nominated) {
             selectedPlayer.nominated = false;
         }
 
+        const activeQuest = room.quests.find((q) => q.active);
         if (!selectedPlayer.nominated && activeQuest?.questPartySize! > nominatedCount) {
             selectedPlayer.nominated = true;
         }
