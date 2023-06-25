@@ -37,28 +37,29 @@ const avalonMiddleware: Middleware = (store) => {
             socket.on('connect', () => {
                 store.dispatch(connectionEstablished(socket.id));
 
-                // const playerUUID = localStorage.getItem('playerUUID');
+                const playerUUID = localStorage.getItem('playerUUID');
+                const action = store.getState().app.action;
+                const params = {
+                    roomCode,
+                    nickname: store.getState().app.nickname,
+                };
 
-                if (false) {
-                    // socket.emit('get existing player', {
-                    //     playerUUID,
-                    //     roomCode,
-                    //     nickname: store.getState().app.nickname,
-                    // });
-                } else {
-                    const action = store.getState().app.action;
+                if (action === 'create') {
+                    socket.emit('init room', params);
+                }
 
-                    const params = {
-                        roomCode,
-                        nickname: store.getState().app.nickname,
-                    };
-                    if (action === 'create') {
-                        socket.emit('init room', params);
-                    } else if (action === 'join') {
+                if (action === 'join') {
+                    if (playerUUID) {
+                        socket.emit('get existing player', {
+                            playerUUID,
+                            ...params,
+                        });
+                    } else {
                         socket.emit('join room', params);
                     }
-                    store.dispatch(setAction(null));
                 }
+
+                store.dispatch(setAction(null));
             });
 
             socket.on('register', (playerUUID: string) => {
@@ -70,7 +71,7 @@ const avalonMiddleware: Middleware = (store) => {
             });
 
             socket.on('players', (players: any[]) => {
-                console.log(players);
+                console.log('PLAYERS', players);
 
                 store.dispatch(receivePlayers(players));
             });

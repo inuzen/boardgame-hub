@@ -3,7 +3,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
-import { connectDB } from './config/db';
+
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 
@@ -11,7 +11,6 @@ import { initMainNameSpace } from './namespaces/mainNameSpace/mainNameSpace';
 import { initAvalonNameSpace } from './namespaces/avalonNameSpace/avalonNameSpace.js';
 import { initLoki } from './config/lokiDB';
 
-connectDB();
 initLoki();
 
 const app = express();

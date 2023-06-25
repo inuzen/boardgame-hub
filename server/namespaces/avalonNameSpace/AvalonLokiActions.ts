@@ -1,12 +1,14 @@
 import { db, Avalon } from '../../config/lokiDB';
+import { shuffle } from '../../utils/utils';
 import { DISTRIBUTION, createMessageByRole, createRoleDistributionArray } from './engine';
 import { AVATARS, AvalonPlayer } from './types';
+import { v4 as uuidv4 } from 'uuid';
 
 const initialQuests = [1, 2, 3, 4, 5].map((questNumber) => {
     return { questNumber, questPartySize: null, questResult: null, active: false };
 });
 export const addRoom = (roomCode: string) => {
-    return Avalon.insert({
+    Avalon.insert({
         roomCode,
         players: [],
         takenImages: Object.keys(AVATARS).reduce((acc: Record<string, any>, avatar) => {
@@ -32,9 +34,35 @@ export const addRoom = (roomCode: string) => {
     });
 };
 
-export const getRoomByCode = (roomCode: string) => Avalon.findOne({ roomCode });
+export const getRoomByCode = (roomCode: string) => Avalon.findOne({ roomCode })!;
 
 export type AvalonLokiRoom = ReturnType<typeof getRoomByCode>;
+
+export const addPlayerToRoom = (room: AvalonLokiRoom, { nickname, roomCode, isHost = false, socketId }) => {
+    const playerCount = room.players.length;
+    console.log('WE HERE');
+
+    const avatars = Object.values(room.takenImages);
+    const availableAvatars = avatars.filter((avatar) => !avatar.taken);
+    const suggestedAvatar = !!availableAvatars.length
+        ? shuffle(availableAvatars)[0]
+        : avatars[Math.floor(Math.random() * avatars.length)];
+
+    room.takenImages[suggestedAvatar.key].taken = true;
+    const playerUUID = uuidv4();
+
+    room.players.push({
+        playerUUID,
+        roomCode,
+        socketId,
+        name: nickname,
+        isHost,
+        order: playerCount + 1,
+        connected: true,
+        imageName: suggestedAvatar.key,
+    } as AvalonPlayer);
+    return playerUUID;
+};
 
 export const updatePlayerLoki = ({
     room,
