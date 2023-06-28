@@ -5,6 +5,7 @@ import {
     AvalonLokiRoom,
     addPlayerToRoom,
     addRoom,
+    assassinateLoki,
     assignRolesLoki,
     clearVotesLoki,
     getActiveQuestLoki,
@@ -174,12 +175,8 @@ class AvalonConnection {
     }
 
     nominatePlayerLoki(playerId: string) {
-        const room = this.room;
-        if (room) {
-            nominatePlayerLoki(room, playerId);
-
-            this.ns.to(this.roomCode).emit('players', room.players);
-        }
+        this.useLoki(nominatePlayerLoki, playerId);
+        this.ns.to(this.roomCode).emit('players', this.room.players);
     }
 
     // TODO Optimize this and maybe split global and quest votes
@@ -227,24 +224,11 @@ class AvalonConnection {
     }
 
     assassinateLoki(targetId: string) {
-        const { room } = this;
-        if (!room) return;
-        const { players } = room;
-        const assassin = players.find((p) => p.roleKey === ROLE_LIST.ASSASSIN);
-        const target = players.find((p) => p.socketId === targetId);
-
-        if (assassin?.socketId === this.socket.id) {
+        const playerKilled = this.useLoki(assassinateLoki, targetId, this.socket.id);
+        if (playerKilled) {
             this.ns.to(this.roomCode).emit('player killed', targetId);
-            const merlinKilled = target?.roleKey === ROLE_LIST.MERLIN;
-            room.gameMessage = merlinKilled
-                ? 'Merlin was killed! Evil are now victorious'
-                : 'Assassin has missed! The victory stays on the Good side';
-            room.revealRoles = true;
         }
-        room.gameInProgress = false;
-        room.revealVotes = false;
-        Avalon.update(room);
-        this.ns.to(this.roomCode).emit('update room', room);
+        this.ns.to(this.roomCode).emit('update room', this.room);
     }
 
     toggleExtraRoleLoki(roleKey: ROLE_LIST) {
@@ -277,18 +261,22 @@ class AvalonConnection {
         return (this.roomCode ? getRoomByCode(this.roomCode) || {} : {}) as AvalonLokiRoom;
     }
 
+    prevLog = {};
+
     useLoki = (fun: any, ...restArgs: any) => {
         const { room } = this;
         if (room) {
             const retVal = fun(room, ...restArgs);
             Avalon.update(room);
             const changesArr = JSON.parse(db.serializeChanges(['rooms'])) || [];
-            const [prevToLast, last] = changesArr.slice(-2);
-            this.compareObjects(prevToLast, last);
+            const last = changesArr[changesArr.length - 1];
+            this.compareObjects(this.prevLog, last);
+            this.prevLog = last;
             return retVal;
         }
     };
 
+    // TODO: MOVE to general utils
     compareObjects(obj1: { [x: string]: any }, obj2: { [x: string]: any }, path = '') {
         for (let key in obj1) {
             if (

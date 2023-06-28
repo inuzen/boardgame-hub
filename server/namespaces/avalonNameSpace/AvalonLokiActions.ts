@@ -1,7 +1,7 @@
 import { db, Avalon } from '../../config/lokiDB';
 import { shuffle } from '../../utils/utils';
 import { DISTRIBUTION, createMessageByRole, createRoleDistributionArray } from './engine';
-import { AVATARS, AvalonPlayer } from './types';
+import { AVATARS, AvalonPlayer, ROLE_LIST } from './types';
 import { v4 as uuidv4 } from 'uuid';
 
 const initialQuests = [1, 2, 3, 4, 5].map((questNumber) => {
@@ -139,8 +139,6 @@ export const initQuestsLoki = (room: AvalonLokiRoom) => {
 };
 
 export const nominatePlayerLoki = (room: AvalonLokiRoom, playerId: string) => {
-    if (!room) return;
-
     const { players } = room;
 
     const selectedPlayer = players.find((p) => p.socketId === playerId);
@@ -149,14 +147,13 @@ export const nominatePlayerLoki = (room: AvalonLokiRoom, playerId: string) => {
     if (selectedPlayer) {
         if (selectedPlayer.nominated) {
             selectedPlayer.nominated = false;
-        }
-
-        const activeQuest = room.quests.find((q) => q.active);
-        if (!selectedPlayer.nominated && activeQuest?.questPartySize! > nominatedCount) {
-            selectedPlayer.nominated = true;
+        } else {
+            const activeQuest = room.quests.find((q) => q.active);
+            if (activeQuest?.questPartySize! > nominatedCount) {
+                selectedPlayer.nominated = true;
+            }
         }
     }
-    Avalon.update(room);
 };
 
 export const handleGlobalVoteLoki = (room: AvalonLokiRoom) => {
@@ -334,4 +331,22 @@ export const clearVotesLoki = (room: AvalonLokiRoom) => {
         p.questVote = null;
     });
     Avalon.update(room);
+};
+
+export const assassinateLoki = (room: AvalonLokiRoom, targetId: string, socketId: string) => {
+    const { players } = room;
+    const assassin = players.find((p) => p.roleKey === ROLE_LIST.ASSASSIN);
+    const target = players.find((p) => p.socketId === targetId);
+
+    if (assassin?.socketId === socketId) {
+        const merlinKilled = target?.roleKey === ROLE_LIST.MERLIN;
+        room.gameMessage = merlinKilled
+            ? 'Merlin was killed! Evil are now victorious'
+            : 'Assassin has missed! The victory stays on the Good side';
+        room.revealRoles = true;
+        room.gameInProgress = false;
+        room.revealVotes = false;
+        return true;
+    }
+    return false;
 };

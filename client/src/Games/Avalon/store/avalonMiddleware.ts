@@ -84,7 +84,6 @@ const avalonMiddleware: Middleware = (store) => {
                 store.dispatch(updateRoom(roomData));
             });
 
-            // TODO add side?
             socket.on(
                 'assigned role',
                 (secret: {
