@@ -111,7 +111,7 @@ export type AvalonPlayer = {
 
 export type AvalonQuest = {
     questNumber: number;
-    questResult: string | null;
+    questResult: 'success' | 'fail' | null;
     active: boolean;
     questPartySize: number | null;
 };

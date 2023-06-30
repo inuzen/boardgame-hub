@@ -7,6 +7,7 @@ import { v4 as uuidv4 } from 'uuid';
 const initialQuests = [1, 2, 3, 4, 5].map((questNumber) => {
     return { questNumber, questPartySize: null, questResult: null, active: false };
 });
+
 export const addRoom = (roomCode: string) => {
     Avalon.insert({
         roomCode,
@@ -92,8 +93,8 @@ export const updatePlayerLoki = (
     });
 };
 
-export const updateAllPlayersLoki = (lokiRoom: AvalonLokiRoom, updatedProperties: Partial<AvalonPlayer>) => {
-    lokiRoom.players.forEach((player) => {
+export const updateAllPlayersLoki = (room: AvalonLokiRoom, updatedProperties: Partial<AvalonPlayer>) => {
+    room.players.forEach((player) => {
         Object.entries(updatedProperties).forEach(([key, val]) => {
             // @ts-ignore
             player[key] = val;
@@ -101,23 +102,29 @@ export const updateAllPlayersLoki = (lokiRoom: AvalonLokiRoom, updatedProperties
     });
 };
 
-export const assignRolesLoki = (lokiRoom: AvalonLokiRoom) => {
-    const players = lokiRoom.players;
+export const assignRolesLoki = (room: AvalonLokiRoom) => {
+    const { players } = room;
 
     const playerCount = players.length;
     const firstLeaderOrderNumber = Math.floor(Math.random() * playerCount);
-    const rolesForPlayers = createRoleDistributionArray(playerCount, lokiRoom.extraRoles);
+    console.log(firstLeaderOrderNumber, 'first');
 
-    players.forEach((player, i) => {
+    const rolesForPlayers = createRoleDistributionArray(playerCount, room.extraRoles);
+
+    players.forEach((player, i, arr) => {
         player.roleName = rolesForPlayers[i].roleName;
         player.roleKey = rolesForPlayers[i].key;
         player.side = rolesForPlayers[i].side;
-        player.isCurrentLeader = i === firstLeaderOrderNumber;
+        if (i === firstLeaderOrderNumber) {
+            console.log('set LEADER');
+
+            player.isCurrentLeader = true;
+            room.currentLeaderId = player.socketId;
+        } else {
+            player.isCurrentLeader = false;
+        }
         player.order = i;
         player.roleDescription = rolesForPlayers[i].ability;
-    });
-
-    players.forEach((player, i, arr) => {
         player.secretInformation = createMessageByRole(player, arr);
     });
 };
@@ -160,11 +167,11 @@ export const handleGlobalVoteLoki = (room: AvalonLokiRoom) => {
             room.missedTeamVotes = 1;
             room.gameMessage = 'The vote passed!\n Selected players must now decide on the quest result';
         } else {
-            const newLeaderId = switchToNextLeaderLoki(room);
-            room.questVoteInProgress = false;
+            switchToNextLeaderLoki(room);
+            // room.questVoteInProgress = false;
             room.nominationInProgress = true;
             room.missedTeamVotes = room?.missedTeamVotes! + 1;
-            room.currentLeaderId = newLeaderId;
+
             room.gameMessage = 'The vote has failed!\n Now new leader must nominate a new party';
             updateAllPlayersLoki(room, { nominated: false });
         }
@@ -186,45 +193,52 @@ export const handleQuestVoteLoki = (room: AvalonLokiRoom) => {
     const nextQuestNumber = room?.currentQuest! + 1;
     if (votedPlayers.length === nominatedPlayersCount) {
         const votedAgainst = players.filter((player) => player.questVote === 'no');
-        const newLeaderId = switchToNextLeaderLoki(room);
+        switchToNextLeaderLoki(room);
 
         room.questVoteInProgress = false;
         room.nominationInProgress = true;
         room.revealVotes = false;
-        room.currentLeaderId = newLeaderId;
-        room.currentQuestResults = votedPlayers.map((player) => !!player.questVote);
+
+        // room.currentQuestResults = votedPlayers.map((player) => !!player.questVote);
         const requiredVotesToFail = room.currentQuest === 4 && players.length > 6 ? 2 : 1;
-        if (votedAgainst.length >= requiredVotesToFail) {
-            updateQuestResultLoki(room, room?.currentQuest!, 'fail');
-        } else {
-            updateQuestResultLoki(room, room?.currentQuest!, 'success');
+
+        const activeQuest = getActiveQuestLoki(room);
+        if (activeQuest) {
+            activeQuest.questResult = votedAgainst.length >= requiredVotesToFail ? 'fail' : 'success';
         }
+
         room.gameMessage = `${
             votedPlayers.length - votedAgainst.length
         } player(s) voted in favor of the quest.\nNow new leader must nominate a new party.\n${
             nextQuestNumber === 4 && players.length > 6 ? 'Note: This quest requires 2 votes to fail.' : ''
         }`;
-        room.currentQuest = nextQuestNumber;
+        // room.currentQuest = nextQuestNumber;
         startNewVoteCycleLoki(room);
 
-        const gameEnd = checkForEndGameLoki(room);
-        // Need this check in case the quest is selected manually
+        const endGame = room.quests.reduce(
+            (acc, q) => {
+                if (q.questResult) {
+                    acc[q.questResult] += 1;
+                }
+                return acc;
+            },
+            {
+                success: 0,
+                fail: 0,
+            },
+        );
 
-        if (gameEnd.gameEnded) {
-            console.log('GAME END');
-
-            if (gameEnd.goodWon) {
-                room.gameMessage =
-                    'Good has won. But evil still has a chance. Assassin must kill Merlin to snatch a victory.';
-                room.assassinationInProgress = true;
-                room.questVoteInProgress = false;
-                room.nominationInProgress = false;
-                room.currentLeaderId = null;
-            } else {
-                room.revealRoles = true;
-                room.gameInProgress = false;
-                room.gameMessage = 'Evil has won!';
-            }
+        if (endGame.success === 3) {
+            room.gameMessage =
+                'Good has won. But evil still has a chance. Assassin must kill Merlin to snatch a victory.';
+            room.assassinationInProgress = true;
+            room.questVoteInProgress = false;
+            room.nominationInProgress = false;
+            room.currentLeaderId = null;
+        } else if (endGame.fail === 3) {
+            room.revealRoles = true;
+            room.gameInProgress = false;
+            room.gameMessage = 'Evil has won!';
         } else {
             changeActiveQuestLoki(room, nextQuestNumber);
         }
@@ -246,39 +260,17 @@ export const switchToNextLeaderLoki = (room: AvalonLokiRoom) => {
         currentLeader.isCurrentLeader = false;
         if (newLeader) {
             newLeader.isCurrentLeader = true;
-            return newLeader.socketId;
+            room.currentLeaderId = newLeader.socketId;
         }
     }
-    return '';
-};
-
-export const updateQuestResultLoki = (
-    room: AvalonLokiRoom,
-    questNumber: number,
-    questResult: 'success' | 'fail' | null,
-) => {
-    const quest = room.quests.find((q) => q.questNumber === questNumber);
-    if (quest) {
-        quest.questResult = questResult;
-    }
-};
-
-export const checkForEndGameLoki = (room: AvalonLokiRoom) => {
-    const wonQuests = room?.quests.filter((quest) => quest.questResult === 'success');
-    const failedQuests = room?.quests.filter((quest) => quest.questResult === 'fail');
-
-    return {
-        gameEnded: wonQuests?.length === 3 || failedQuests?.length === 3,
-        goodWon: wonQuests?.length === 3,
-    };
 };
 
 export const changeActiveQuestLoki = (room: AvalonLokiRoom, nextActiveQuestNumber: number) => {
-    if (nextActiveQuestNumber > 5) {
+    if (nextActiveQuestNumber > 5 || nextActiveQuestNumber < 1) {
         return;
     }
 
-    const currentActiveQuest = room.quests.find((q) => q.active);
+    const currentActiveQuest = getActiveQuestLoki(room);
     const nextActiveQuest = room.quests.find((q) => q.questNumber === nextActiveQuestNumber);
 
     if (currentActiveQuest && currentActiveQuest.questNumber !== nextActiveQuestNumber) {
@@ -286,12 +278,12 @@ export const changeActiveQuestLoki = (room: AvalonLokiRoom, nextActiveQuestNumbe
     }
 
     if (nextActiveQuest) {
+        room.currentQuest = nextActiveQuest.questNumber;
         nextActiveQuest.active = true;
     }
 };
 
 export const getActiveQuestLoki = (room: AvalonLokiRoom) => {
-    if (!room) return null;
     return room.quests.find((q) => q.active);
 };
 
@@ -358,7 +350,6 @@ export const resetQuests = (room: AvalonLokiRoom) => {
 export const startGameLoki = (room: AvalonLokiRoom) => {
     startNewVoteCycleLoki(room);
     assignRolesLoki(room);
-    const players = room.players;
 
     room.gameInProgress = true;
     room.nominationInProgress = true;
@@ -369,7 +360,7 @@ export const startGameLoki = (room: AvalonLokiRoom) => {
     room.revealRoles = false;
     room.missedTeamVotes = 1;
     room.currentQuest = 1;
-    room.currentLeaderId = players.find((player: any) => player.isCurrentLeader)?.socketId || '';
+    // room.currentLeaderId = room.players.find((player: any) => player.isCurrentLeader)?.socketId || '';
     room.gameMessage = `Leader must nominate players for the quest.`;
 
     resetQuests(room);

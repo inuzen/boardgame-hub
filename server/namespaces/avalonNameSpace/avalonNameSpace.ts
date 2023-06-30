@@ -16,6 +16,7 @@ import {
     updatePlayerLoki,
 } from './AvalonLokiActions';
 import { Avalon, db } from '../../config/lokiDB';
+import { compareObjectsAndLog } from '../../utils/utils';
 
 class AvalonConnection {
     socket: Socket;
@@ -52,21 +53,42 @@ class AvalonConnection {
     initRoom(params: { roomCode: string; nickname: string }) {
         try {
             const { roomCode, nickname } = params;
+
             addRoom(roomCode);
+
             this.socket.join(roomCode);
             this.roomCode = roomCode;
 
-            this.addPlayer({ nickname, roomCode, isHost: true });
+            this.addPlayer({ nickname, roomCode, isHost: true, roomCreator: true });
         } catch (error) {
             console.log(error);
         }
     }
 
-    addPlayer({ nickname, roomCode, isHost = false }: { nickname: string; roomCode: string; isHost?: boolean }) {
-        this.roomCode = roomCode;
-        this.socket.join(roomCode);
+    addPlayer({
+        nickname,
+        roomCode,
+        isHost = false,
+        roomCreator = false,
+    }: {
+        nickname: string;
+        roomCode: string;
+        isHost?: boolean;
+        roomCreator?: boolean;
+    }) {
+        if (!roomCreator) {
+            this.roomCode = roomCode;
+            this.socket.join(roomCode);
+        }
 
         const playerUUID = this.useLoki(addPlayerToRoomLoki, { nickname, roomCode, isHost, socketId: this.socket.id });
+        // const playerUUID = useLokiHOC(this.room)(addPlayerToRoomLoki, {
+        //     nickname,
+        //     roomCode,
+        //     isHost,
+        //     socketId: this.socket.id,
+        // });
+        // const playerUUID = this.useLoki();
 
         this.ns.to(this.socket.id).emit('register', playerUUID);
         this.ns.to(roomCode).emit('players', this.room.players);
@@ -118,13 +140,11 @@ class AvalonConnection {
     }
 
     startGame() {
-        const { room } = this;
-
         // TODO check that at least 5 players joined
         this.useLoki(startGameLoki);
 
         // TODO: exclude secret info from room for this
-        this.ns.to(this.roomCode).emit('update room', room);
+        this.ns.to(this.roomCode).emit('update room', this.room);
         this.room.players.forEach((player: any) => {
             this.ns.to(player.socketId).emit('assigned role', {
                 roleName: player.roleName,
@@ -216,27 +236,14 @@ class AvalonConnection {
             Avalon.update(room);
             const changesArr = JSON.parse(db.serializeChanges(['rooms'])) || [];
             const last = changesArr[changesArr.length - 1];
-            this.compareObjects(this.prevLog, last);
+            compareObjectsAndLog(this.prevLog, last);
             this.prevLog = last;
             return retVal;
         }
     };
-
-    // TODO: MOVE to general utils
-    compareObjects(obj1: { [x: string]: any }, obj2: { [x: string]: any }, path = '') {
-        for (let key in obj1) {
-            if (
-                typeof obj1[key] === 'object' &&
-                obj1[key] !== null &&
-                typeof obj2[key] === 'object' &&
-                obj2[key] !== null
-            ) {
-                this.compareObjects(obj1[key], obj2[key], `${path}.${key}`);
-            } else if (obj1[key] !== obj2[key]) {
-                console.log(`${path}.${key}: changed from ${obj1[key]} to ${obj2[key]}`);
-            }
-        }
-    }
+    // useLoki(fun: (room: AvalonLokiRoom, ...restArgs: any[]) => any, ...restArgs: any[]) {
+    //     return useLokiHOC(this.room)(fun, ...restArgs);
+    // }
 }
 
 const initAvalonNameSpace = (io: Server) => {
