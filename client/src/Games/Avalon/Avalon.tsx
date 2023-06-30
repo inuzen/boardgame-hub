@@ -28,6 +28,7 @@ import { IoQrCodeSharp } from 'react-icons/io5';
 import classNames from 'classnames';
 import { NameInput } from './Components/NameInput';
 import { Button } from '../../Components/Button/Button';
+import ChangeNameModal from '../../Components/ModalChangeName/ChangeNameModal';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -215,15 +216,8 @@ const Avalon = ({ roomCode }: any) => {
             >
                 <QRCode value={window.location.href} size={200} style={{ zIndex: 100 }} />
             </Modal>
-            <Modal
-                isOpen={changeNameModal}
-                onRequestClose={handleChangeNameClose}
-                contentLabel="edit name"
-                closeTimeoutMS={200}
-                ariaHideApp={false}
-            >
-                <NameInput onSetName={onSetName} />
-            </Modal>
+
+            <ChangeNameModal isOpen={changeNameModal} onRequestClose={handleChangeNameClose} onSetName={onSetName} />
         </div>
     );
 };
