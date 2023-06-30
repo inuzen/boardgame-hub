@@ -1,4 +1,3 @@
-import { AvalonPlayerModel } from '../../models/Avalon/AvalonPlayer';
 import { shuffle } from '../../utils/utils';
 import { ROLES, Role, SIDES, ROLE_LIST, AvalonPlayer } from './types';
 interface QuestDistribution {

@@ -1,23 +1,20 @@
-import { AVATARS, AvalonPlayer, ROLE_LIST } from './types';
+import { ROLE_LIST } from './types';
 import { Namespace, Server, Socket } from 'socket.io';
-import { shuffle } from '../../utils/utils';
 import {
     AvalonLokiRoom,
-    addPlayerToRoom,
+    addPlayerToRoomLoki,
     addRoom,
     assassinateLoki,
-    assignRolesLoki,
-    clearVotesLoki,
-    getActiveQuestLoki,
+    confirmPartyLoki,
     getRoomByCode,
     handleGlobalVoteLoki,
     handleQuestVoteLoki,
-    initQuestsLoki,
     nominatePlayerLoki,
+    startGameLoki,
     startNewVoteCycleLoki,
+    toggleExtraRoleLoki,
     updatePlayerLoki,
 } from './AvalonLokiActions';
-import { v4 as uuidv4 } from 'uuid';
 import { Avalon, db } from '../../config/lokiDB';
 
 class AvalonConnection {
@@ -30,25 +27,25 @@ class AvalonConnection {
         this.ns = ns;
         this.roomCode = '';
 
-        socket.on('disconnect', () => this.disconnectLoki());
-        socket.on('disconnecting', () => this.disconnectingLoki());
-        socket.on('start game', () => this.startGameLoki());
-        socket.on('nominate player', (playerId: string) => this.nominatePlayerLoki(playerId));
-        socket.on('global vote', (vote) => this.voteLoki(vote, true));
-        socket.on('quest vote', (vote) => this.voteLoki(vote));
-        socket.on('confirm party', () => this.confirmPartyLoki());
-        socket.on('start new vote', () => this.startNewVoteLoki());
-        socket.on('assassinate', (targetId: string) => this.assassinateLoki(targetId));
-        socket.on('toggle extra role', (roleKey: ROLE_LIST) => this.toggleExtraRoleLoki(roleKey));
+        socket.on('disconnect', () => this.disconnect());
+        socket.on('disconnecting', () => this.disconnecting());
+        socket.on('start game', () => this.startGame());
+        socket.on('nominate player', (playerId: string) => this.nominatePlayer(playerId));
+        socket.on('global vote', (vote) => this.vote(vote, true));
+        socket.on('quest vote', (vote) => this.vote(vote));
+        socket.on('confirm party', () => this.confirmParty());
+        socket.on('start new vote', () => this.startNewVote());
+        socket.on('assassinate', (targetId: string) => this.assassinate(targetId));
+        socket.on('toggle extra role', (roleKey: ROLE_LIST) => this.toggleExtraRole(roleKey));
         socket.on('get existing player', (params: { playerUUID: string; roomCode: string; nickname: string }) =>
-            this.getExistingPlayerLoki(params),
+            this.getExistingPlayer(params),
         );
-        socket.on('change player name', (newName: string) => this.changePlayerNameLoki(newName));
+        socket.on('change player name', (newName: string) => this.changePlayerName(newName));
 
         socket.on('init room', (params: { roomCode: string; nickname: string }) => this.initRoom(params));
 
         socket.on('join room', ({ roomCode, nickname }: { roomCode: string; nickname: string }) =>
-            this.addPlayerLoki({ roomCode, nickname }),
+            this.addPlayer({ roomCode, nickname }),
         );
     }
 
@@ -59,24 +56,23 @@ class AvalonConnection {
             this.socket.join(roomCode);
             this.roomCode = roomCode;
 
-            this.addPlayerLoki({ nickname, roomCode, isHost: true });
+            this.addPlayer({ nickname, roomCode, isHost: true });
         } catch (error) {
             console.log(error);
         }
     }
 
-    addPlayerLoki({ nickname, roomCode, isHost = false }: { nickname: string; roomCode: string; isHost?: boolean }) {
+    addPlayer({ nickname, roomCode, isHost = false }: { nickname: string; roomCode: string; isHost?: boolean }) {
         this.roomCode = roomCode;
         this.socket.join(roomCode);
 
-        const playerUUID = this.useLoki(addPlayerToRoom, { nickname, roomCode, isHost, socketId: this.socket.id });
+        const playerUUID = this.useLoki(addPlayerToRoomLoki, { nickname, roomCode, isHost, socketId: this.socket.id });
 
         this.ns.to(this.socket.id).emit('register', playerUUID);
-
         this.ns.to(roomCode).emit('players', this.room.players);
     }
 
-    async getExistingPlayerLoki(params: { playerUUID: string; roomCode: string; nickname: string }) {
+    getExistingPlayer(params: { playerUUID: string; roomCode: string; nickname: string }) {
         const { playerUUID, roomCode, nickname } = params;
         this.roomCode = roomCode;
 
@@ -103,96 +99,63 @@ class AvalonConnection {
                     description: playerExist.roleDescription,
                 });
             } else {
-                this.addPlayerLoki({ nickname, roomCode });
+                this.addPlayer({ nickname, roomCode });
             }
         } else {
             this.initRoom({ roomCode, nickname });
         }
     }
 
-    disconnectLoki() {
+    disconnect() {
         const room = this.room;
         if (room && !room.players.length) Avalon.remove(room);
     }
 
-    disconnectingLoki() {
+    disconnecting() {
         const { id } = this.socket;
-        const room = this.room;
-        updatePlayerLoki({ room, socketId: id, updatedProperties: { connected: false } });
-
-        this.ns.to(this.roomCode).emit('update room', room);
+        this.useLoki(updatePlayerLoki, { socketId: id, updatedProperties: { connected: false } });
+        this.ns.to(this.roomCode).emit('update room', this.room);
     }
 
-    initAndSendQuestsLoki() {
-        if (this.room) {
-            initQuestsLoki(this.room);
-
-            this.ns.to(this.roomCode).emit(
-                'quests',
-                this.room.quests.sort(
-                    (a: { questNumber: number }, b: { questNumber: number }) => a.questNumber - b.questNumber,
-                ),
-            );
-        }
-    }
-
-    startGameLoki() {
+    startGame() {
         const { room } = this;
 
-        startNewVoteCycleLoki(room);
-        assignRolesLoki(room);
+        // TODO check that at least 5 players joined
+        this.useLoki(startGameLoki);
 
         // TODO: exclude secret info from room for this
-        if (room) {
-            const players = room.players;
-
-            room.gameInProgress = true;
-            room.nominationInProgress = true;
-            room.globalVoteInProgress = false;
-            room.questVoteInProgress = false;
-            room.assassinationInProgress = false;
-            room.revealVotes = false;
-            room.revealRoles = false;
-            room.missedTeamVotes = 1;
-            room.currentQuest = 1;
-            room.currentLeaderId = players.find((player: any) => player.isCurrentLeader)?.socketId || '';
-            room.gameMessage = `Leader must nominate players for the quest.`;
-            // TODO check that at least 5 players joined
-            this.ns.to(this.roomCode).emit('update room', room);
-            players.forEach((player: any) => {
-                this.ns.to(player.socketId).emit('assigned role', {
-                    roleName: player.roleName,
-                    roleKey: player.roleKey,
-                    side: player.side,
-                    secretInfo: player.secretInformation,
-                    description: player.roleDescription,
-                });
+        this.ns.to(this.roomCode).emit('update room', room);
+        this.room.players.forEach((player: any) => {
+            this.ns.to(player.socketId).emit('assigned role', {
+                roleName: player.roleName,
+                roleKey: player.roleKey,
+                side: player.side,
+                secretInfo: player.secretInformation,
+                description: player.roleDescription,
             });
-            Avalon.update(room);
-            this.initAndSendQuestsLoki();
-            this.ns.to(this.roomCode).emit('player killed', null);
-        }
+        });
+        this.ns.to(this.roomCode).emit('quests', this.room.quests);
+        this.ns.to(this.roomCode).emit('player killed', null);
     }
 
-    nominatePlayerLoki(playerId: string) {
+    nominatePlayer(playerId: string) {
         this.useLoki(nominatePlayerLoki, playerId);
         this.ns.to(this.roomCode).emit('players', this.room.players);
     }
 
     // TODO Optimize this and maybe split global and quest votes
-    voteLoki(vote: 'yes' | 'no', isGlobal: boolean = false) {
+    vote(vote: 'yes' | 'no', isGlobal: boolean = false) {
         const {
-            room,
             socket: { id: voterId },
         } = this;
-        if (!room) return;
+
         this.ns.to(this.roomCode).emit('player voted', voterId);
         if (isGlobal) {
-            updatePlayerLoki({ room: this.room, socketId: voterId, updatedProperties: { globalVote: vote } });
-            handleGlobalVoteLoki(this.room);
+            this.useLoki(updatePlayerLoki, { socketId: voterId, updatedProperties: { globalVote: vote } });
+            this.useLoki(handleGlobalVoteLoki);
         } else {
-            updatePlayerLoki({ room: this.room, socketId: voterId, updatedProperties: { questVote: vote } });
-            handleQuestVoteLoki(this.room);
+            this.useLoki(updatePlayerLoki, { socketId: voterId, updatedProperties: { questVote: vote } });
+            this.useLoki(handleQuestVoteLoki);
         }
 
         // TODO create function to get room or players with excluded properties.
@@ -203,27 +166,16 @@ class AvalonConnection {
         }
     }
 
-    confirmPartyLoki() {
-        const { room } = this;
-        if (room) {
-            const activeQuest = getActiveQuestLoki(this.room);
-            const nominatedPlayerCount = room.players.filter((p) => p.nominated).length;
-
-            if (nominatedPlayerCount === activeQuest?.questPartySize!) {
-                room.nominationInProgress = false;
-                room.globalVoteInProgress = true;
-                room.revealVotes = false;
-                room.gameMessage = 'Everyone should vote for the selected party';
-
-                this.useLoki(clearVotesLoki);
-                this.ns.to(this.roomCode).emit('update room', room);
-            } else {
-                this.ns.to(this.roomCode).emit('not enough players');
-            }
+    confirmParty() {
+        const partyComplete = this.useLoki(confirmPartyLoki);
+        if (partyComplete) {
+            this.ns.to(this.roomCode).emit('update room', this.room);
+        } else {
+            this.ns.to(this.roomCode).emit('not enough players');
         }
     }
 
-    assassinateLoki(targetId: string) {
+    assassinate(targetId: string) {
         const playerKilled = this.useLoki(assassinateLoki, targetId, this.socket.id);
         if (playerKilled) {
             this.ns.to(this.roomCode).emit('player killed', targetId);
@@ -231,22 +183,16 @@ class AvalonConnection {
         this.ns.to(this.roomCode).emit('update room', this.room);
     }
 
-    toggleExtraRoleLoki(roleKey: ROLE_LIST) {
-        const room = this.room;
-        if (room) {
-            room.extraRoles = room.extraRoles.includes(roleKey)
-                ? room.extraRoles.filter((role) => role !== roleKey)
-                : [...room.extraRoles, roleKey];
-            Avalon.update(room);
-            this.ns.to(this.roomCode).emit('update room', room);
-        }
+    toggleExtraRole(roleKey: ROLE_LIST) {
+        this.useLoki(toggleExtraRoleLoki, roleKey);
+        this.ns.to(this.roomCode).emit('update room', this.room);
     }
 
-    startNewVoteLoki() {
-        startNewVoteCycleLoki(this.room);
+    startNewVote() {
+        this.useLoki(startNewVoteCycleLoki);
     }
 
-    changePlayerNameLoki(newName: string) {
+    changePlayerName(newName: string) {
         const room = this.room;
         const player = room?.players.find((p) => p.socketId === this.socket.id);
 
@@ -263,7 +209,7 @@ class AvalonConnection {
 
     prevLog = {};
 
-    useLoki = (fun: any, ...restArgs: any) => {
+    useLoki = (fun: (room: AvalonLokiRoom, ...restArgs: any[]) => any, ...restArgs: any[]) => {
         const { room } = this;
         if (room) {
             const retVal = fun(room, ...restArgs);
