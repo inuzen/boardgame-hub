@@ -13,6 +13,8 @@ import {
 import { AvalonEvents } from './AvalonEvents';
 import { AvalonRoomServer, ROLE_LIST } from './types';
 import { setAction } from '../../../app/appSlice';
+import { redirect } from 'react-router-dom';
+
 const avalonMiddleware: Middleware = (store) => {
     let socket: Socket;
     let roomCode: string = '';
@@ -107,6 +109,12 @@ const avalonMiddleware: Middleware = (store) => {
 
             socket.on('player killed', (playerId: string) => {
                 store.dispatch(playerKilled(playerId));
+            });
+
+            socket.on('game locked', () => {
+                alert('Unable to join - game is in progress');
+                window.location.href = '/';
+                socket.close();
             });
 
             socket.on('disconnect', () => {

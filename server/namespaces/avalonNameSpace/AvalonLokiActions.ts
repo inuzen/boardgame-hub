@@ -49,7 +49,6 @@ export const addPlayerToRoomLoki = (
     }: { nickname: string; roomCode: string; isHost: boolean; socketId: string },
 ) => {
     const playerCount = room.players.length;
-    console.log('WE HERE');
 
     const avatars = Object.values(room.takenImages);
     const availableAvatars = avatars.filter((avatar) => !avatar.taken);
@@ -107,7 +106,6 @@ export const assignRolesLoki = (room: AvalonLokiRoom) => {
 
     const playerCount = players.length;
     const firstLeaderOrderNumber = Math.floor(Math.random() * playerCount);
-    console.log(firstLeaderOrderNumber, 'first');
 
     const rolesForPlayers = createRoleDistributionArray(playerCount, room.extraRoles);
 
@@ -116,8 +114,6 @@ export const assignRolesLoki = (room: AvalonLokiRoom) => {
         player.roleKey = rolesForPlayers[i].key;
         player.side = rolesForPlayers[i].side;
         if (i === firstLeaderOrderNumber) {
-            console.log('set LEADER');
-
             player.isCurrentLeader = true;
             room.currentLeaderId = player.socketId;
         } else {

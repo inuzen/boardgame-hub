@@ -81,14 +81,12 @@ class AvalonConnection {
             this.socket.join(roomCode);
         }
 
+        if (this.room.gameInProgress) {
+            this.ns.to(this.socket.id).emit('game locked');
+            return;
+        }
+
         const playerUUID = this.useLoki(addPlayerToRoomLoki, { nickname, roomCode, isHost, socketId: this.socket.id });
-        // const playerUUID = useLokiHOC(this.room)(addPlayerToRoomLoki, {
-        //     nickname,
-        //     roomCode,
-        //     isHost,
-        //     socketId: this.socket.id,
-        // });
-        // const playerUUID = this.useLoki();
 
         this.ns.to(this.socket.id).emit('register', playerUUID);
         this.ns.to(roomCode).emit('players', this.room.players);
@@ -135,12 +133,17 @@ class AvalonConnection {
 
     disconnecting() {
         const { id } = this.socket;
+
         this.useLoki(updatePlayerLoki, { socketId: id, updatedProperties: { connected: false } });
         this.ns.to(this.roomCode).emit('update room', this.room);
     }
 
     startGame() {
         // TODO check that at least 5 players joined
+        if (process.env.STATUS === 'prod') {
+            // TODO emit error msg
+            if (this.room.players.length < 5) return;
+        }
         this.useLoki(startGameLoki);
 
         // TODO: exclude secret info from room for this
@@ -234,16 +237,15 @@ class AvalonConnection {
         if (room) {
             const retVal = fun(room, ...restArgs);
             Avalon.update(room);
-            const changesArr = JSON.parse(db.serializeChanges(['rooms'])) || [];
-            const last = changesArr[changesArr.length - 1];
-            compareObjectsAndLog(this.prevLog, last);
-            this.prevLog = last;
+            if (process.env.STATUS === 'dev') {
+                const changesArr = JSON.parse(db.serializeChanges(['rooms'])) || [];
+                const last = changesArr[changesArr.length - 1];
+                compareObjectsAndLog(this.prevLog, last);
+                this.prevLog = last;
+            }
             return retVal;
         }
     };
-    // useLoki(fun: (room: AvalonLokiRoom, ...restArgs: any[]) => any, ...restArgs: any[]) {
-    //     return useLokiHOC(this.room)(fun, ...restArgs);
-    // }
 }
 
 const initAvalonNameSpace = (io: Server) => {

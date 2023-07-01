@@ -3,6 +3,7 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
+import 'dotenv/config';
 
 import { Server } from 'socket.io';
 import { createServer } from 'http';

@@ -6,15 +6,8 @@ import { Route, Routes } from 'react-router-dom';
 import Welcome from './WelcomePage/Welcome';
 import AvalonGameContainer from './Games/Avalon/AvalonGameContainer';
 import { ActionScreen } from './WelcomePage/ActionScreen';
-import { useAppDispatch } from './app/hooks';
-// import { startConnecting } from './app/appSlice';
 
 function App() {
-    const dispatch = useAppDispatch();
-
-    useEffect(() => {
-        // dispatch(startConnecting());
-    }, []);
     return (
         <div className="App">
             <div className="content">
