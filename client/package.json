@@ -32,7 +32,7 @@
         "test": "react-scripts test --env=jsdom",
         "eject": "react-scripts eject",
         "heroku-postbuild": "npm run build",
-        "railway": "serve build -s -n -L"
+        "railway": "CI=false npm run build && serve build -s -n -L"
     },
     "eslintConfig": {
         "extends": [

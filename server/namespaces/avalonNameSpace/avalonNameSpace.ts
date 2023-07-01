@@ -237,7 +237,7 @@ class AvalonConnection {
         if (room) {
             const retVal = fun(room, ...restArgs);
             Avalon.update(room);
-            if (process.env.STATUS === 'dev') {
+            if (process.env.NODE_ENV === 'development') {
                 const changesArr = JSON.parse(db.serializeChanges(['rooms'])) || [];
                 const last = changesArr[changesArr.length - 1];
                 compareObjectsAndLog(this.prevLog, last);
