@@ -16,7 +16,7 @@ import { FaRegCalendarCheck, FaRegCalendarTimes } from 'react-icons/fa';
 
 import './styles/playerItem.scss';
 import { IconContext } from 'react-icons';
-// import knight from '../avatars/knight.png';
+import { avalonAvatars } from '../avalonAvatars/avalonAvatars';
 
 const PlayerItemPill: React.FC<{ good?: boolean; danger?: boolean; ready?: boolean; text: string }> = ({
     good,
@@ -31,6 +31,7 @@ const PlayerItemPill: React.FC<{ good?: boolean; danger?: boolean; ready?: boole
     );
 };
 
+// TODO: type this normally
 export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, roleKey, connected, order }: any) => {
     const dispatch = useAppDispatch();
     const currentLeader = useAppSelector(selectCurrentLeader);
@@ -60,8 +61,6 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
     const votedForGood = showVotes && globalVote === 'yes';
     const votedForBad = showVotes && globalVote === 'no';
 
-    // TODO adjust colors of icons
-    // TODO move vote result to the corner instead of pill. Maybe use pill as a prompt for action like nominate/kill
     return (
         <div className="playerItemContainer">
             <div
@@ -100,7 +99,8 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
                     </div>
                 </div>
                 <div className="imageContainer">
-                    <img className="avatar" src={process.env.PUBLIC_URL + `/avalonAvatars/${imageName}.png`} alt="" />
+                    {/* @ts-expect-error */}
+                    <img className="avatar" src={avalonAvatars[imageName.toLowerCase()]} alt="" />
                 </div>
                 <div className="pillItemWrapper">
                     {targetId === socketId && <PlayerItemPill text="killed" danger />}
