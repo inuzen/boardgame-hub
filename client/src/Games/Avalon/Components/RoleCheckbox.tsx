@@ -11,8 +11,7 @@ export const RoleCheckbox: React.FC<RoleCheckboxProps> = ({ roleKey }) => {
     const dispatch = useAppDispatch();
     const roleChecked = useAppSelector((state) => state.avalon.extraRoles.includes(roleKey));
 
-    const lastLetters = roleKey.slice(1).toLowerCase();
-    const roleKeyInLowerCase = roleKey.charAt(0) + lastLetters;
+    const roleKeyInLowerCase = roleKey.toLowerCase();
 
     const onRoleChecked = () => {
         dispatch(toggleExtraRole(roleKey));
