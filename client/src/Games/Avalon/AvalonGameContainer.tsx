@@ -1,12 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { useNavigate } from 'react-router-dom';
-
 import Avalon from './Avalon';
 import { useAppDispatch, useAppSelector } from '../../app/hooks';
 import { startConnecting, disconnect } from './store/avalonSlice';
 import { selectNickname, setAction, selectAction } from '../../app/appSlice';
 import { NameInput } from './Components/NameInput';
+import './styles/avalonContainer.scss';
 
 const AvalonGameContainer = () => {
     const { roomCode } = useParams();
@@ -37,7 +37,11 @@ const AvalonGameContainer = () => {
 
     // TODO add logic to handle when uuid is present but the player is not
     if (!nickname && !localStorage.getItem('nickname')) {
-        return <NameInput />;
+        return (
+            <div className="classNameWrapper">
+                <NameInput />
+            </div>
+        );
     }
 
     return <Avalon roomCode={roomCode} />;
