@@ -97,6 +97,7 @@ const Avalon = ({ roomCode }: any) => {
 
     return (
         <div className="avalonWrapper">
+            <p>{process.env.toString()}</p>
             <div className="roomInfo">
                 <div className="roomInfoItem start">
                     <span>{roomCode}</span>
