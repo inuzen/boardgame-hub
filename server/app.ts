@@ -36,6 +36,11 @@ app.use(express.static(path.join(__dirname, 'public')));
 initMainNameSpace(io);
 initAvalonNameSpace(io);
 
+app.get('/foobar', (req, res) => {
+    const j = { foo: 'bar' };
+    res.json(j);
+});
+
 const PORT = process.env.PORT || 3500;
 process.on('SIGTERM', (signal) => {
     console.log(`Process ${process.pid} received a SIGTERM signal`);

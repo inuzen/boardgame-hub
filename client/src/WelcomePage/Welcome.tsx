@@ -12,6 +12,12 @@ const Welcome = () => {
 
     useEffect(() => {
         dispatch(setGame(null));
+        const getstuff = async () => {
+            const response = await fetch('https://boardgame-hub.railway.internal/foobar', { method: 'GET' });
+            return response;
+        };
+        const stuff = getstuff();
+        console.log(JSON.stringify(stuff));
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
@@ -39,6 +45,12 @@ const Welcome = () => {
                         <Button key={game} secondary text={game} onClick={() => onCreateRoom(game)} />
                     ))}
                 </div>
+                <Button
+                    text={go}
+                    onClick={() => {
+                        window.location.href;
+                    }}
+                />
             </div>
         </div>
     );
