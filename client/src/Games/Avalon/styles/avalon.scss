@@ -11,6 +11,17 @@
     justify-content: space-between;
     width: 100%;
     height: 100%;
+    .addRolesWrapper {
+        display: grid;
+        grid-template-columns: repeat(2, 2fr);
+        gap: 10px;
+        margin: 20px;
+    }
+
+    .addRolesWrapper > * {
+        justify-self: start;
+        font-size: 12px;
+    }
     .playerListContainer {
         width: 100%;
         margin-top: 40px;

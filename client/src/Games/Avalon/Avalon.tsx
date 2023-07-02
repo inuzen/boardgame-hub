@@ -117,9 +117,7 @@ const Avalon = ({ roomCode }: any) => {
                 {host && !gameStarted && (
                     <div className="adminActions">
                         {/* change to < 5  */}
-                        <button onClick={onStartGame} disabled={players?.length < 2}>
-                            Start game
-                        </button>
+                        <Button text="Start game" onClick={onStartGame} disabled={players?.length < 2} />
                         <div className="addRolesWrapper">
                             {Object.values(ROLE_LIST)
                                 .filter((role) => !DEFAULT_ROLES.includes(role))
