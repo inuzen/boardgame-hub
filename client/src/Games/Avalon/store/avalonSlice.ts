@@ -126,7 +126,8 @@ export const avalonSlice = createSlice({
             state.quests = action.payload;
         },
         startGame: (state) => {
-            state.gameInProgress = true;
+            // TODO do not set a game to in progress unless confirmed by server
+            // state.gameInProgress = true;
             state.gameOverInfo = null;
             state.votedPlayers = [];
             state.assassinTargetId = null;
