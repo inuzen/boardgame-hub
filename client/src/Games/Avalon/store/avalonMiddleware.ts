@@ -29,9 +29,7 @@ const avalonMiddleware: Middleware = (store) => {
         if (!socket && action.type === AvalonEvents.START_CONNECTING) {
             roomCode = action.payload;
             if (process.env.NODE_ENV === 'production') {
-                socket = io(`boardgame-hub-production.up.railway.app`, {
-                    path: '/avalon/',
-                });
+                socket = io(`boardgame-hub-production.up.railway.app/avalon`);
             } else {
                 socket = io(`http://${window.location.hostname}:3500/avalon`);
             }
