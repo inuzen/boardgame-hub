@@ -100,7 +100,7 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
                     </div>
                 </div>
                 <div className="imageContainer">
-                    <img className="avatar" src={`${window.location.origin}/avalonAvatars/${imageName}.png`} alt="" />
+                    <img className="avatar" src={process.env.PUBLIC_URL + `/avalonAvatars/${imageName}.png`} alt="" />
                 </div>
                 <div className="pillItemWrapper">
                     {targetId === socketId && <PlayerItemPill text="killed" danger />}
