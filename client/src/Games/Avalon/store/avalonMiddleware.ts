@@ -13,7 +13,6 @@ import {
 import { AvalonEvents } from './AvalonEvents';
 import { AvalonRoomServer, ROLE_LIST } from './types';
 import { setAction } from '../../../app/appSlice';
-import { redirect } from 'react-router-dom';
 
 const avalonMiddleware: Middleware = (store) => {
     let socket: Socket;
@@ -29,7 +28,12 @@ const avalonMiddleware: Middleware = (store) => {
         if (!socket && action.type === AvalonEvents.START_CONNECTING) {
             roomCode = action.payload;
             if (process.env.NODE_ENV === 'production') {
-                socket = io(`boardgame-hub-production.up.railway.app/avalon`);
+                socket = io(`boardgame-hub-production.up.railway.app/avalon`, {
+                    withCredentials: false,
+                    extraHeaders: {
+                        'my-custom-header': 'abcd',
+                    },
+                });
             } else {
                 socket = io(`http://${window.location.hostname}:3500/avalon`);
             }

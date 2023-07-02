@@ -95,9 +95,9 @@ const Avalon = ({ roomCode }: any) => {
         setChangeNameModal(false);
     };
 
+    console.log(process.env);
     return (
         <div className="avalonWrapper">
-            <p>{process.env.toString()}</p>
             <div className="roomInfo">
                 <div className="roomInfoItem start">
                     <span>{roomCode}</span>

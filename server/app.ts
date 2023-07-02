@@ -59,5 +59,5 @@ process.on('unhandledRejection', (reason, promise) => {
 
 httpServer.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
-    console.log(`Server listening on port ${process.env}`);
+    console.log(process.env);
 });
