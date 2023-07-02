@@ -12,12 +12,6 @@ const Welcome = () => {
 
     useEffect(() => {
         dispatch(setGame(null));
-        const getStuff = async () => {
-            const response = await fetch('https://boardgame-hub.railway.internal/foobar', { method: 'GET' });
-            return await response.json();
-        };
-        const stuff = getStuff();
-        console.log(stuff);
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 
