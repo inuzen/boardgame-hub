@@ -19,7 +19,11 @@ function App() {
     const notification = useAppSelector(selectNotification);
     useEffect(() => {
         if (notification) {
-            toast(notification.text, { duration: 2000, position: 'top-right' });
+            if (notification.error) {
+                toast.error(notification.text, { duration: 2000, position: 'top-right' });
+            } else {
+                toast.success(notification.text, { duration: 2000, position: 'top-right' });
+            }
             dispatch(setNotification(null));
         }
     }, [notification, dispatch]);

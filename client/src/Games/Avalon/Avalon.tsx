@@ -26,7 +26,6 @@ import { BiEditAlt } from 'react-icons/bi';
 
 import { IoQrCodeSharp } from 'react-icons/io5';
 import classNames from 'classnames';
-import { NameInput } from './Components/NameInput';
 import { Button } from '../../Components/Button/Button';
 import ChangeNameModal from '../../Components/ModalChangeName/ChangeNameModal';
 
@@ -136,7 +135,9 @@ const Avalon = ({ roomCode }: any) => {
                         </span>
                     </div>
                     <div className="gameMessageContainer">
-                        <span className="gameMessageText">{gameMessage}</span>
+                        <span key={gameMessage} className="gameMessageText lineUp">
+                            {gameMessage}
+                        </span>
                     </div>
                     <div className="questContainer">
                         {quests.map(({ active, questNumber, questPartySize, questResult }: any, i) => (
