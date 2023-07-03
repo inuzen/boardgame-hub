@@ -1,13 +1,28 @@
 import React, { useEffect } from 'react';
-
-import 'normalize.css';
-import './App.scss';
+// components
 import { Route, Routes } from 'react-router-dom';
 import Welcome from './WelcomePage/Welcome';
 import AvalonGameContainer from './Games/Avalon/AvalonGameContainer';
 import { ActionScreen } from './WelcomePage/ActionScreen';
+import toast, { Toaster } from 'react-hot-toast';
+
+// styles
+import 'normalize.css';
+import './App.scss';
+
+// store
+import { useAppDispatch, useAppSelector } from './app/hooks';
+import { selectNotification, setNotification } from './app/appSlice';
 
 function App() {
+    const dispatch = useAppDispatch();
+    const notification = useAppSelector(selectNotification);
+    useEffect(() => {
+        if (notification) {
+            toast(notification.text, { duration: 2000, position: 'top-right' });
+            dispatch(setNotification(null));
+        }
+    }, [notification, dispatch]);
     return (
         <div className="App">
             <div className="content">
@@ -21,6 +36,7 @@ function App() {
                     <Route path="werewolf/:roomCode" element={<AvalonGameContainer />} />
                 </Routes>
             </div>
+            <Toaster />
         </div>
     );
 }

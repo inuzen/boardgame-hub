@@ -12,7 +12,7 @@ import {
 } from './avalonSlice';
 import { AvalonEvents } from './AvalonEvents';
 import { AvalonRoomServer, ROLE_LIST } from './types';
-import { setAction } from '../../../app/appSlice';
+import { setAction, setNotification } from '../../../app/appSlice';
 
 const avalonMiddleware: Middleware = (store) => {
     let socket: Socket;
@@ -64,6 +64,10 @@ const avalonMiddleware: Middleware = (store) => {
                 }
 
                 store.dispatch(setAction(null));
+            });
+
+            socket.on('error', (errorText) => {
+                store.dispatch(setNotification({ error: true, text: errorText }));
             });
 
             socket.on('register', (playerUUID: string) => {

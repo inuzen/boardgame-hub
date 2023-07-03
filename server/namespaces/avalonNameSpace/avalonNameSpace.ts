@@ -139,10 +139,11 @@ class AvalonConnection {
     }
 
     startGame() {
-        // TODO check that at least 5 players joined
         if (process.env.STATUS === 'prod') {
-            // TODO emit error msg
-            if (this.room.players.length < 5) return;
+            if (this.room.players.length < 5) {
+                this.ns.to(this.socket.id).emit('error', 'Need more players to start');
+                return;
+            }
         }
         this.useLoki(startGameLoki);
 
