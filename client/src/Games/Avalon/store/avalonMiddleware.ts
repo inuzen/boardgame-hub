@@ -29,7 +29,7 @@ const avalonMiddleware: Middleware = (store) => {
             roomCode = action.payload;
             store.dispatch(setLoading(true));
             if (process.env.NODE_ENV === 'production') {
-                socket = io(`boardgame-hub-production.up.railway.app/avalon`, {
+                socket = io(`https://boardgame-server-fuz0.onrender.com/avalon`, {
                     withCredentials: false,
                     extraHeaders: {
                         'my-custom-header': 'abcd',
