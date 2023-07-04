@@ -82,7 +82,12 @@ class AvalonConnection {
         }
 
         if (this.room.gameInProgress) {
-            this.ns.to(this.socket.id).emit('game locked');
+            this.ns.to(this.socket.id).emit('game locked', 'The game already started');
+            return;
+        }
+
+        if (this.room.players.length === 10) {
+            this.ns.to(this.socket.id).emit('game locked', 'Room is full');
             return;
         }
 

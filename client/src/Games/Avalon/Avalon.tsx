@@ -28,6 +28,8 @@ import { IoQrCodeSharp } from 'react-icons/io5';
 import classNames from 'classnames';
 import { Button } from '../../Components/Button/Button';
 import ChangeNameModal from '../../Components/ModalChangeName/ChangeNameModal';
+import { Bars } from 'react-loader-spinner';
+import { selectLoading } from '../../app/appSlice';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -35,6 +37,7 @@ const Avalon = ({ roomCode }: any) => {
     const players = useAppSelector(getAllPlayers);
     const quests = useAppSelector(getQuests);
     const host = useAppSelector(isHost);
+    const loadingPlayers = useAppSelector(selectLoading);
 
     const roleInfo = useAppSelector(selectRoleInfo);
 
@@ -94,7 +97,6 @@ const Avalon = ({ roomCode }: any) => {
         setChangeNameModal(false);
     };
 
-    console.log(process.env);
     return (
         <div className="avalonWrapper">
             <div className="roomInfo">
@@ -116,8 +118,12 @@ const Avalon = ({ roomCode }: any) => {
             <div className="mainContainer">
                 {host && !gameStarted && (
                     <div className="adminActions">
-                        {/* change to < 5  */}
-                        <Button text="Start game" onClick={onStartGame} disabled={players?.length < 2} />
+                        {/* TODO: change to < 5  */}
+                        <Button
+                            text="Start game"
+                            onClick={onStartGame}
+                            disabled={players?.length < (process.env.NODE_ENV === 'production' ? 5 : 2)}
+                        />
                         <div className="addRolesWrapper">
                             {Object.values(ROLE_LIST)
                                 .filter((role) => !DEFAULT_ROLES.includes(role))
@@ -176,11 +182,22 @@ const Avalon = ({ roomCode }: any) => {
                     </div>
                 )}
                 <div className="playerListContainer">
-                    <div className="playerList">
-                        {players?.map((player: any) => (
-                            <PlayerItem key={player.socketId} {...player} />
-                        ))}
-                    </div>
+                    {loadingPlayers ? (
+                        <Bars
+                            height="80"
+                            width="80"
+                            color="#da6417"
+                            ariaLabel="bars-loading"
+                            wrapperClass="loading"
+                            visible={true}
+                        />
+                    ) : (
+                        <div className="playerList">
+                            {players?.map((player: any) => (
+                                <PlayerItem key={player.socketId} {...player} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="playerActionContainer">

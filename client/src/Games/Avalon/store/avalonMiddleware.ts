@@ -12,7 +12,7 @@ import {
 } from './avalonSlice';
 import { AvalonEvents } from './AvalonEvents';
 import { AvalonRoomServer, ROLE_LIST } from './types';
-import { setAction, setNotification } from '../../../app/appSlice';
+import { setAction, setLoading, setNotification } from '../../../app/appSlice';
 
 const avalonMiddleware: Middleware = (store) => {
     let socket: Socket;
@@ -27,6 +27,7 @@ const avalonMiddleware: Middleware = (store) => {
 
         if (!socket && action.type === AvalonEvents.START_CONNECTING) {
             roomCode = action.payload;
+            store.dispatch(setLoading(true));
             if (process.env.NODE_ENV === 'production') {
                 socket = io(`boardgame-hub-production.up.railway.app/avalon`, {
                     withCredentials: false,
@@ -82,6 +83,7 @@ const avalonMiddleware: Middleware = (store) => {
                 console.log('PLAYERS', players);
 
                 store.dispatch(receivePlayers(players));
+                store.dispatch(setLoading(false));
             });
 
             socket.on('quests', (quests: any[]) => {
@@ -117,15 +119,14 @@ const avalonMiddleware: Middleware = (store) => {
                 store.dispatch(playerKilled(playerId));
             });
 
-            socket.on('game locked', () => {
-                alert('Unable to join - game is in progress');
+            socket.on('game locked', (errorText) => {
+                store.dispatch(setNotification({ error: true, text: errorText }));
                 window.location.href = '/';
                 socket.close();
             });
 
             socket.on('disconnect', () => {
                 socket.close();
-                // store.dispatch(disconnect());
             });
         }
         if (isConnectionEstablished) {
