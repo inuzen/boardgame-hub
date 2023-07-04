@@ -163,14 +163,14 @@ const Avalon = ({ roomCode }: any) => {
 
                         <div className={classNames('privateInfoWrapper', { open: showRoleInfo })}>
                             <p className="secretInfoItem">
-                                <span>role: {roleInfo.roleName}</span>
+                                <span>{roleInfo.roleName}</span>
                                 <span>{'  |  '}</span>
                                 <span className={classNames('side', { evilSide: roleInfo.side === 'EVIL' })}>
                                     {roleInfo.side}
                                 </span>
                             </p>
                             {roleInfo.secretInfo && <p className="secretInfoItem">{roleInfo.secretInfo}</p>}
-                            <p className="secretInfoItem">ability: {roleInfo.description}</p>
+                            <p className="secretInfoItem"> {roleInfo.description}</p>
                         </div>
                     </div>
                 )}
