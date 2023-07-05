@@ -3,6 +3,7 @@ import { UserServerResponse } from './appTypes';
 
 import { RootState } from './store';
 
+type Notification = { error: boolean; text: string } | null;
 export interface AppState {
     nickname: string;
     roomCode: string;
@@ -10,6 +11,8 @@ export interface AppState {
     selectedGame: string | null;
     isEstablishingConnection: boolean;
     isConnected: boolean;
+    loading: boolean;
+    notification: Notification;
 }
 
 const initialState: AppState = {
@@ -19,6 +22,8 @@ const initialState: AppState = {
     action: null,
     isEstablishingConnection: false,
     isConnected: false,
+    notification: null,
+    loading: false,
 };
 
 export const appSlice = createSlice({
@@ -39,15 +44,24 @@ export const appSlice = createSlice({
         setGame: (state, action: PayloadAction<string | null>) => {
             state.selectedGame = action.payload;
         },
+        setLoading: (state, action: PayloadAction<boolean>) => {
+            state.loading = action.payload;
+        },
         createGameRoom: (state, action: PayloadAction<'player' | 'screen'>) => {},
+        setNotification: (state, action: PayloadAction<Notification>) => {
+            state.notification = action.payload;
+        },
     },
 });
 
-export const { setNickname, setRoomCode, setAction, setGame, createGameRoom } = appSlice.actions;
+export const { setNickname, setRoomCode, setAction, setGame, createGameRoom, setNotification, setLoading } =
+    appSlice.actions;
 
 export const selectNickname = (state: RootState) => state.app.nickname || localStorage.getItem('nickname') || '';
 export const selectAction = (state: RootState) => state.app.action;
 export const selectGame = (state: RootState) => state.app.selectedGame;
 export const selectRoomCode = (state: RootState) => state.app.roomCode;
+export const selectNotification = (state: RootState) => state.app.notification;
+export const selectLoading = (state: RootState) => state.app.loading;
 
 export default appSlice.reducer;

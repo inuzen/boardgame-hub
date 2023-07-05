@@ -25,6 +25,12 @@
     .playerListContainer {
         width: 100%;
         margin-top: 40px;
+        .loading {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
         .playerList {
             display: flex;
             flex-direction: row;
@@ -61,6 +67,11 @@
             background-color: $mainLightColor;
             color: $mainDarkColor;
             min-height: 25px;
+            padding: 4px;
+            border-radius: 4px;
+            .gameMessageText {
+                display: inline-block;
+            }
         }
 
         .questContainer {
@@ -232,4 +243,26 @@
     position: sticky;
     width: 100%;
     bottom: 35px;
+}
+
+.lineUp {
+    animation: 1s anim-lineUp ease-out;
+}
+
+@keyframes anim-lineUp {
+    0% {
+        opacity: 0;
+        transform: translate(0, 80%);
+    }
+    20% {
+        opacity: 0;
+    }
+    50% {
+        opacity: 1;
+        transform: translate(0, 40%);
+    }
+    100% {
+        opacity: 1;
+        transform: translate(0, 0%);
+    }
 }
