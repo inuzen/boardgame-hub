@@ -126,7 +126,8 @@ export const avalonSlice = createSlice({
             state.quests = action.payload;
         },
         startGame: (state) => {
-            state.gameInProgress = true;
+            // TODO do not set a game to in progress unless confirmed by server
+            // state.gameInProgress = true;
             state.gameOverInfo = null;
             state.votedPlayers = [];
             state.assassinTargetId = null;
@@ -135,9 +136,10 @@ export const avalonSlice = createSlice({
         nominatePlayer: (state, action: PayloadAction<string>) => {},
         updateRoom: (state, action: PayloadAction<AvalonRoomServer>) => {
             console.log(action.payload);
-            if (action.payload.AvalonPlayers) {
-                state.players = action.payload.AvalonPlayers.sort((a, b) => a.order - b.order);
-                state.nominated = action.payload.AvalonPlayers?.some(
+            // TODO: UPDATE Types for Loki. Also destructuring might be in order now
+            if (action.payload.players) {
+                state.players = action.payload.players.sort((a, b) => a.order - b.order);
+                state.nominated = action.payload.players?.some(
                     (player) => player.nominated && player.socketId === state.socketId,
                 );
             }
@@ -158,9 +160,9 @@ export const avalonSlice = createSlice({
             }
             state.gameMessage = action.payload.gameMessage;
 
-            if (action.payload.AvalonQuests) {
+            if (action.payload.quests) {
                 // @ts-ignore
-                state.quests = action.payload.AvalonQuests.sort((a, b) => a.questNumber - b.questNumber);
+                state.quests = action.payload.quests.sort((a, b) => a.questNumber - b.questNumber);
             }
         },
         globalVote: (state, action: PayloadAction<'yes' | 'no'>) => {},

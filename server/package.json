@@ -12,32 +12,35 @@
         "start": "node dist/app.js",
         "ser": "npm run build && npm run start",
         "server": "nodemon -q dist/app.js",
-        "client": "npm run start --prefix ../client",
+        "client": "npm run dev --prefix ../client",
         "clientinstall": "npm install --prefix ../client",
         "dev": "concurrently \"npx tsc --watch\" \"npm run server\" \"npm run client\" "
     },
     "dependencies": {
-        "@types/config": "^0.0.41",
+        "@types/config": "^3.3.0",
         "@types/cookie-parser": "^1.4.3",
+        "@types/lokijs": "^1.5.8",
         "@types/morgan": "^1.9.3",
+        "@types/uuid": "^9.0.2",
         "config": "^3.3.7",
         "cookie-parser": "~1.4.4",
         "cors": "^2.8.5",
-        "debug": "~2.6.9",
-        "express": "~4.16.1",
+        "debug": "^4.3.4",
+        "express": "^4.18.2",
+        "lokijs": "^1.5.12",
         "morgan": "~1.9.1",
         "node-json-db": "^1.5.0",
         "pg": "^8.7.3",
         "pg-hstore": "^2.3.4",
-        "sequelize": "^6.21.1",
         "socket.io": "^4.5.1",
-        "uuid": "^8.3.2"
+        "toad-scheduler": "^3.0.0",
+        "uuid": "^9.0.0"
     },
     "devDependencies": {
         "@types/express": "^4.17.13",
-        "@types/node": "^18.0.0",
-        "concurrently": "^7.2.2",
+        "@types/node": "^20.3.1",
+        "concurrently": "^8.2.0",
         "nodemon": "^2.0.16",
-        "typescript": "^4.7.4"
+        "typescript": "^5.1.3"
     }
 }

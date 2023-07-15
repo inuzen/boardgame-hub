@@ -26,8 +26,10 @@ import { BiEditAlt } from 'react-icons/bi';
 
 import { IoQrCodeSharp } from 'react-icons/io5';
 import classNames from 'classnames';
-import { NameInput } from './NameInput';
 import { Button } from '../../Components/Button/Button';
+import ChangeNameModal from '../../Components/ModalChangeName/ChangeNameModal';
+import { Bars } from 'react-loader-spinner';
+import { selectLoading } from '../../app/appSlice';
 
 const Avalon = ({ roomCode }: any) => {
     const dispatch = useAppDispatch();
@@ -35,6 +37,7 @@ const Avalon = ({ roomCode }: any) => {
     const players = useAppSelector(getAllPlayers);
     const quests = useAppSelector(getQuests);
     const host = useAppSelector(isHost);
+    const loadingPlayers = useAppSelector(selectLoading);
 
     const roleInfo = useAppSelector(selectRoleInfo);
 
@@ -115,9 +118,12 @@ const Avalon = ({ roomCode }: any) => {
             <div className="mainContainer">
                 {host && !gameStarted && (
                     <div className="adminActions">
-                        <button onClick={onStartGame} disabled={players?.length < 2}>
-                            Start game
-                        </button>
+                        {/* TODO: change to < 5  */}
+                        <Button
+                            text="Start game"
+                            onClick={onStartGame}
+                            disabled={players?.length < (process.env.NODE_ENV === 'production' ? 5 : 2)}
+                        />
                         <div className="addRolesWrapper">
                             {Object.values(ROLE_LIST)
                                 .filter((role) => !DEFAULT_ROLES.includes(role))
@@ -135,7 +141,9 @@ const Avalon = ({ roomCode }: any) => {
                         </span>
                     </div>
                     <div className="gameMessageContainer">
-                        <span className="gameMessageText">{gameMessage}</span>
+                        <span key={gameMessage} className="gameMessageText lineUp">
+                            {gameMessage}
+                        </span>
                     </div>
                     <div className="questContainer">
                         {quests.map(({ active, questNumber, questPartySize, questResult }: any, i) => (
@@ -161,24 +169,35 @@ const Avalon = ({ roomCode }: any) => {
                         </p>
 
                         <div className={classNames('privateInfoWrapper', { open: showRoleInfo })}>
-                            <p className="secretInfoItem">role: {roleInfo.roleName}</p>
                             <p className="secretInfoItem">
-                                {'side: '}
+                                <span>{roleInfo.roleName}</span>
+                                <span>{'  |  '}</span>
                                 <span className={classNames('side', { evilSide: roleInfo.side === 'EVIL' })}>
                                     {roleInfo.side}
                                 </span>
                             </p>
-                            <p className="secretInfoItem">ability: {roleInfo.description}</p>
                             {roleInfo.secretInfo && <p className="secretInfoItem">{roleInfo.secretInfo}</p>}
+                            <p className="secretInfoItem"> {roleInfo.description}</p>
                         </div>
                     </div>
                 )}
                 <div className="playerListContainer">
-                    <div className="playerList">
-                        {players?.map((player: any) => (
-                            <PlayerItem key={player.socketId} {...player} />
-                        ))}
-                    </div>
+                    {loadingPlayers ? (
+                        <Bars
+                            height="80"
+                            width="80"
+                            color="#da6417"
+                            ariaLabel="bars-loading"
+                            wrapperClass="loading"
+                            visible={true}
+                        />
+                    ) : (
+                        <div className="playerList">
+                            {players?.map((player: any) => (
+                                <PlayerItem key={player.socketId} {...player} />
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
             <div className="playerActionContainer">
@@ -214,15 +233,8 @@ const Avalon = ({ roomCode }: any) => {
             >
                 <QRCode value={window.location.href} size={200} style={{ zIndex: 100 }} />
             </Modal>
-            <Modal
-                isOpen={changeNameModal}
-                onRequestClose={handleChangeNameClose}
-                contentLabel="qr link"
-                closeTimeoutMS={200}
-                ariaHideApp={false}
-            >
-                <NameInput onSetName={onSetName} />
-            </Modal>
+
+            <ChangeNameModal isOpen={changeNameModal} onRequestClose={handleChangeNameClose} onSetName={onSetName} />
         </div>
     );
 };

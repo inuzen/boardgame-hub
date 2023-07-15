@@ -30,6 +30,12 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
     const [inputNameError, setInputNameError] = React.useState(false);
     const [roomCodeError, setRoomCodeError] = React.useState(false);
 
+    useEffect(() => {
+        if (!gameName && type === 'create') {
+            navigate('/');
+        }
+    }, [gameName, navigate, type]);
+
     // useEffect(() => {
     //     const keyDownHandler = (event: KeyboardEvent) => {
     //         if (event.key === 'Enter') {
@@ -82,9 +88,7 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
         }
     };
 
-    const onJoinGame = () => {
-        // console.log('fdsaf');
-    };
+    const onJoinGame = () => {};
 
     const onBackButton = () => {
         navigate(-1);

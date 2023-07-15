@@ -12,12 +12,12 @@ import {
 } from './avalonSlice';
 import { AvalonEvents } from './AvalonEvents';
 import { AvalonRoomServer, ROLE_LIST } from './types';
-import { setAction } from '../../../app/appSlice';
+import { setAction, setLoading, setNotification } from '../../../app/appSlice';
+
 const avalonMiddleware: Middleware = (store) => {
     let socket: Socket;
     let roomCode: string = '';
 
-    // TODO make reconnection possible
     // TODO make a waiting list or something for when someone tries to join a game that is already in progress
     return (next) => (action) => {
         if (!action.type.startsWith('avalon/')) {
@@ -27,40 +27,48 @@ const avalonMiddleware: Middleware = (store) => {
 
         if (!socket && action.type === AvalonEvents.START_CONNECTING) {
             roomCode = action.payload;
-            socket = io(`https://boardgame-hub-server.herokuapp.com/avalon`, {
-                withCredentials: false,
-                extraHeaders: {
-                    'my-custom-header': 'abcd',
-                },
-            });
-            // socket = io(`http://${window.location.hostname}:3001/avalon`);
+            store.dispatch(setLoading(true));
+            if (process.env.NODE_ENV === 'production') {
+                socket = io(`https://boardgame-server-fuz0.onrender.com/avalon`, {
+                    withCredentials: false,
+                    extraHeaders: {
+                        'my-custom-header': 'abcd',
+                    },
+                });
+            } else {
+                socket = io(`http://${window.location.hostname}:3500/avalon`);
+            }
 
             socket.on('connect', () => {
                 store.dispatch(connectionEstablished(socket.id));
 
                 const playerUUID = localStorage.getItem('playerUUID');
+                const action = store.getState().app.action;
+                const params = {
+                    roomCode,
+                    nickname: store.getState().app.nickname,
+                };
 
-                if (playerUUID) {
-                    socket.emit('get existing player', {
-                        playerUUID,
-                        roomCode,
-                        nickname: store.getState().app.nickname,
-                    });
-                } else {
-                    const action = store.getState().app.action;
-                    console.log(action);
+                if (action === 'create') {
+                    socket.emit('init room', params);
+                }
 
-                    const params = {
-                        roomCode,
-                        nickname: store.getState().app.nickname,
-                    };
-                    if (action === 'create') {
-                        socket.emit('init room', params);
-                    } else if (action === 'join') {
+                if (action === 'join') {
+                    if (playerUUID) {
+                        socket.emit('get existing player', {
+                            playerUUID,
+                            ...params,
+                        });
+                    } else {
                         socket.emit('join room', params);
                     }
-                    store.dispatch(setAction(null));
                 }
+
+                store.dispatch(setAction(null));
+            });
+
+            socket.on('error', (errorText) => {
+                store.dispatch(setNotification({ error: true, text: errorText }));
             });
 
             socket.on('register', (playerUUID: string) => {
@@ -72,7 +80,10 @@ const avalonMiddleware: Middleware = (store) => {
             });
 
             socket.on('players', (players: any[]) => {
+                console.log('PLAYERS', players);
+
                 store.dispatch(receivePlayers(players));
+                store.dispatch(setLoading(false));
             });
 
             socket.on('quests', (quests: any[]) => {
@@ -83,7 +94,6 @@ const avalonMiddleware: Middleware = (store) => {
                 store.dispatch(updateRoom(roomData));
             });
 
-            // TODO add side?
             socket.on(
                 'assigned role',
                 (secret: {
@@ -109,9 +119,14 @@ const avalonMiddleware: Middleware = (store) => {
                 store.dispatch(playerKilled(playerId));
             });
 
+            socket.on('game locked', (errorText) => {
+                store.dispatch(setNotification({ error: true, text: errorText }));
+                window.location.href = '/';
+                socket.close();
+            });
+
             socket.on('disconnect', () => {
                 socket.close();
-                // store.dispatch(disconnect());
             });
         }
         if (isConnectionEstablished) {

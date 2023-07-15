@@ -8,12 +8,10 @@ import { Button } from '../Components/Button/Button';
 
 const Welcome = () => {
     const navigate = useNavigate();
-
     const dispatch = useAppDispatch();
 
     useEffect(() => {
         dispatch(setGame(null));
-
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, []);
 

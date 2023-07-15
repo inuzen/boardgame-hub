@@ -3,13 +3,15 @@ import path from 'path';
 import cookieParser from 'cookie-parser';
 import logger from 'morgan';
 import cors from 'cors';
-import { connectDB } from './config/db';
+
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 
-import { initNameSpace } from './namespaces/avalonNameSpace.js';
+import { initMainNameSpace } from './namespaces/mainNameSpace/mainNameSpace';
+import { initAvalonNameSpace } from './namespaces/avalonNameSpace/avalonNameSpace.js';
+import { initLoki } from './config/lokiDB';
 
-connectDB();
+initLoki();
 
 const app = express();
 const httpServer = createServer(app);
@@ -30,23 +32,30 @@ app.use(express.urlencoded({ extended: false }));
 app.use(cookieParser());
 app.use(express.static(path.join(__dirname, 'public')));
 
-io.on('connection', (socket) => {
-    console.log(`New connection: ${socket.id}`);
+initMainNameSpace(io);
+initAvalonNameSpace(io);
+
+const PORT = process.env.PORT || 3500;
+process.on('SIGTERM', (signal) => {
+    console.log(`Process ${process.pid} received a SIGTERM signal`);
+    process.exit(0);
 });
 
-// TODO move this to avalon namespace file
-initNameSpace(io);
+process.on('SIGINT', (signal) => {
+    console.log(`Process ${process.pid} has been interrupted`);
+    process.exit(0);
+});
 
-//Serve static assets in production
-// if (process.env.NODE_ENV === 'production') {
-//     //set static folder
-//     app.use(express.static('client/build'));
+process.on('uncaughtException', (err) => {
+    console.log(`Uncaught Exception: ${err.message}`);
+    process.exit(1);
+});
 
-//     app.get('*', (req, res) => res.sendFile(path.resolve(__dirname, 'client', 'build', 'index.html')));
-// }
+process.on('unhandledRejection', (reason, promise) => {
+    console.log('Unhandled rejection at ', promise, `reason: ${reason}`);
+    process.exit(1);
+});
 
-const PORT = process.env.PORT || 3001;
 httpServer.listen(PORT, () => {
     console.log(`Server listening on port ${PORT}`);
 });
-// module.exports = app;

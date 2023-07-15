@@ -1,6 +1,7 @@
 import { configureStore, ThunkAction, Action } from '@reduxjs/toolkit';
 import avalonMiddleware from '../Games/Avalon/store/avalonMiddleware';
 import avalonReducer from '../Games/Avalon/store/avalonSlice';
+// import appMiddleware from './appMiddleware';
 import appReducer from './appSlice';
 
 export const store = configureStore({
