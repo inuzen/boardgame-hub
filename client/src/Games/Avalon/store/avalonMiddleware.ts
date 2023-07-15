@@ -85,9 +85,10 @@ const avalonMiddleware: Middleware = (store) => {
 
             socket.on('players', (players: any[]) => {
                 console.log('PLAYERS', players);
-
                 store.dispatch(receivePlayers(players));
-                store.dispatch(setLoading(false));
+                if (store.getState().app.loading) {
+                    store.dispatch(setLoading(false));
+                }
             });
 
             socket.on('quests', (quests: any[]) => {
@@ -96,6 +97,9 @@ const avalonMiddleware: Middleware = (store) => {
 
             socket.on('update room', (roomData: AvalonRoomServer) => {
                 store.dispatch(updateRoom(roomData));
+                if (store.getState().app.loading) {
+                    store.dispatch(setLoading(false));
+                }
             });
 
             socket.on(
