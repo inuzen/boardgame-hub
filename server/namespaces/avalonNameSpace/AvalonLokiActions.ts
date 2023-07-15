@@ -10,28 +10,29 @@ const initialQuests = [1, 2, 3, 4, 5].map((questNumber) => {
 
 export const addRoom = (roomCode: string) => {
     Avalon.insert({
-        roomCode,
+        assassinationInProgress: false,
+        currentLeaderId: null,
+        currentQuest: null,
+        currentQuestResults: null,
+        extraRoles: [],
+        gameInProgress: false,
+        gameMessage: '',
+        globalVoteInProgress: false,
+        hostSocketId: '',
+        leaderCanSelectQuest: false,
+        missedTeamVotes: null,
+        nominationInProgress: false,
         players: [],
+        quests: initialQuests,
+        questVoteInProgress: false,
+        revealRoles: false,
+        revealVotes: false,
+        roomCode,
         takenImages: Object.keys(AVATARS).reduce((acc: Record<string, any>, avatar) => {
             acc[avatar] = { key: avatar, taken: false };
             return acc;
         }, {}),
-        currentQuest: null,
-        hostSocketId: '',
-        currentLeaderId: null,
-        extraRoles: [],
-        missedTeamVotes: null,
-        currentQuestResults: null,
-        leaderCanSelectQuest: false,
-        gameInProgress: false,
-        nominationInProgress: false,
-        globalVoteInProgress: false,
-        questVoteInProgress: false,
-        assassinationInProgress: false,
-        gameMessage: '',
-        revealVotes: false,
-        revealRoles: false,
-        quests: initialQuests,
+        viewers: [],
     });
 };
 
@@ -164,16 +165,15 @@ export const handleGlobalVoteLoki = (room: AvalonLokiRoom) => {
             room.gameMessage = 'The vote passed!\n Selected players must now decide on the quest result';
         } else {
             switchToNextLeaderLoki(room);
-            // room.questVoteInProgress = false;
             room.nominationInProgress = true;
             room.missedTeamVotes = room?.missedTeamVotes! + 1;
 
-            room.gameMessage = 'The vote has failed!\n Now new leader must nominate a new party';
+            room.gameMessage = 'The vote has failed!\nNew leader must nominate a new party';
             updateAllPlayersLoki(room, { nominated: false });
         }
         if (room.missedTeamVotes === 5) {
             room.gameInProgress = false;
-            room.gameMessage = 'The EVIL has won!\n The party was not formed 5 times in a row.';
+            room.gameMessage = 'EVIL has won!\nThe party was not formed 5 times in a row.';
             room.revealRoles = true;
         }
     }
@@ -195,7 +195,6 @@ export const handleQuestVoteLoki = (room: AvalonLokiRoom) => {
         room.nominationInProgress = true;
         room.revealVotes = false;
 
-        // room.currentQuestResults = votedPlayers.map((player) => !!player.questVote);
         const requiredVotesToFail = room.currentQuest === 4 && players.length > 6 ? 2 : 1;
 
         const activeQuest = getActiveQuestLoki(room);
@@ -204,11 +203,10 @@ export const handleQuestVoteLoki = (room: AvalonLokiRoom) => {
         }
 
         room.gameMessage = `${
-            votedPlayers.length - votedAgainst.length
-        } player(s) voted in favor of the quest.\nNow new leader must nominate a new party.\n${
+            !votedAgainst.length ? 'All' : votedPlayers.length - votedAgainst.length
+        } player(s) voted to succeed.\nNew leader must nominate a new party.\n${
             nextQuestNumber === 4 && players.length > 6 ? 'Note: This quest requires 2 votes to fail.' : ''
         }`;
-        // room.currentQuest = nextQuestNumber;
         startNewVoteCycleLoki(room);
 
         const endGame = room.quests.reduce(
@@ -225,8 +223,7 @@ export const handleQuestVoteLoki = (room: AvalonLokiRoom) => {
         );
 
         if (endGame.success === 3) {
-            room.gameMessage =
-                'Good has won. But evil still has a chance. Assassin must kill Merlin to snatch a victory.';
+            room.gameMessage = 'Good prevails, but evil lingers. Assassin, eliminate Merlin to claim victory.';
             room.assassinationInProgress = true;
             room.questVoteInProgress = false;
             room.nominationInProgress = false;
@@ -356,7 +353,6 @@ export const startGameLoki = (room: AvalonLokiRoom) => {
     room.revealRoles = false;
     room.missedTeamVotes = 1;
     room.currentQuest = 1;
-    // room.currentLeaderId = room.players.find((player: any) => player.isCurrentLeader)?.socketId || '';
     room.gameMessage = `Leader must nominate players for the quest.`;
 
     resetQuests(room);

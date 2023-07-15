@@ -88,7 +88,10 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
         }
     };
 
-    const onJoinGame = () => {};
+    const onJoinGameAsViewer = () => {
+        dispatch(setAction('join viewer'));
+        navigate(`/avalon/${roomCode}`);
+    };
 
     const onBackButton = () => {
         navigate(-1);
@@ -122,10 +125,9 @@ export const ActionScreen: React.FC<ActionScreenProps> = ({ type }) => {
                 <>
                     <Button text="join as a player" onClick={joinRoom} extraClasses="actionScreenItem" />
                     <Button
-                        disabled
                         secondary
                         text="join as a screen"
-                        onClick={() => onJoinGame()}
+                        onClick={onJoinGameAsViewer}
                         extraClasses="actionScreenItem"
                     />
                 </>

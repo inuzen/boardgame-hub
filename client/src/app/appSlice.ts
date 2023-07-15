@@ -7,7 +7,7 @@ type Notification = { error: boolean; text: string } | null;
 export interface AppState {
     nickname: string;
     roomCode: string;
-    action: 'create' | 'join' | null;
+    action: 'create' | 'join' | 'join viewer' | null;
     selectedGame: string | null;
     isEstablishingConnection: boolean;
     isConnected: boolean;
@@ -38,7 +38,7 @@ export const appSlice = createSlice({
         setRoomCode: (state, action: PayloadAction<string>) => {
             state.roomCode = action.payload;
         },
-        setAction: (state, action: PayloadAction<'create' | 'join' | null>) => {
+        setAction: (state, action: PayloadAction<'create' | 'join' | 'join viewer' | null>) => {
             state.action = action.payload;
         },
         setGame: (state, action: PayloadAction<string | null>) => {

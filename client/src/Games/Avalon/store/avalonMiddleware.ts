@@ -53,6 +53,10 @@ const avalonMiddleware: Middleware = (store) => {
                     socket.emit('init room', params);
                 }
 
+                if (action === 'join viewer') {
+                    socket.emit('join room as viewer', params);
+                }
+
                 if (action === 'join') {
                     if (playerUUID) {
                         socket.emit('get existing player', {

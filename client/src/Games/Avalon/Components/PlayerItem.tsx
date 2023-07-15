@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import classNames from 'classnames';
 import { useAppDispatch, useAppSelector } from '../../../app/hooks';
 import {
@@ -12,7 +12,7 @@ import {
 } from '../store/avalonSlice';
 import { RiVipCrownFill } from 'react-icons/ri';
 import { BsFillBookmarkStarFill } from 'react-icons/bs';
-import { FaRegCalendarCheck, FaRegCalendarTimes } from 'react-icons/fa';
+import { FaCalendar, FaRegCalendar, FaRegCalendarCheck, FaRegCalendarTimes } from 'react-icons/fa';
 
 import './styles/playerItem.scss';
 import { IconContext } from 'react-icons';
@@ -43,6 +43,7 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
     const showVotes = useAppSelector((state) => state.avalon.revealVotes);
     const showRoles = useAppSelector((state) => state.avalon.revealRoles);
     const votedArray = useAppSelector((state) => state.avalon.votedPlayers);
+    const questVoteInProgress = useAppSelector((state) => state.avalon.questVoteInProgress);
     const host = useAppSelector(selectHost);
 
     const onPlayerSelect = () => {
@@ -58,8 +59,22 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
     const admin = host === socketId;
     const leader = currentLeader === socketId;
 
-    const votedForGood = showVotes && globalVote === 'yes';
-    const votedForBad = showVotes && globalVote === 'no';
+    const voteReady = votedArray.includes(socketId);
+    const votedYes = showVotes && globalVote === 'yes';
+    const votedNo = showVotes && globalVote === 'no';
+
+    const renderVoteIcon = useCallback(() => {
+        if (votedYes) {
+            return <FaRegCalendarCheck />;
+        }
+        if (votedNo) {
+            return <FaRegCalendarTimes />;
+        }
+        if (voteReady && !questVoteInProgress) {
+            return <FaCalendar />;
+        }
+        return <FaRegCalendar />;
+    }, [voteReady, votedNo, votedYes, questVoteInProgress]);
 
     return (
         <div className="playerItemContainer">
@@ -70,21 +85,23 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
                     nominated,
                     leader: leader && !nominated,
                     selectForKill: killLicense,
-                    dangerBorder: votedForBad || targetId === socketId,
-                    goodBorder: votedForGood,
+                    dangerBorder: votedNo || targetId === socketId,
+                    goodBorder: votedYes,
                 })}
                 onClick={onPlayerSelect}
             >
                 <div className="infoBar">
-                    <div className={classNames('infoItem', { show: showVotes })}>
+                    <div className={classNames('infoItem', { show: voteReady || showVotes })}>
                         <IconContext.Provider
                             value={{
                                 className: classNames('voteIcon', {
-                                    good: votedForGood,
+                                    ready: voteReady && !questVoteInProgress,
+                                    good: votedYes,
+                                    bad: votedNo,
                                 }),
                             }}
                         >
-                            {globalVote === 'yes' ? <FaRegCalendarCheck /> : <FaRegCalendarTimes />}
+                            {renderVoteIcon()}
                         </IconContext.Provider>
                     </div>
                     <div className={classNames('infoItem', { show: leader })}>
@@ -104,7 +121,7 @@ export const PlayerItem = ({ name, nominated, socketId, globalVote, imageName, r
                 </div>
                 <div className="pillItemWrapper">
                     {targetId === socketId && <PlayerItemPill text="killed" danger />}
-                    {votedArray.includes(socketId) && <PlayerItemPill text="Ready" ready />}
+                    {voteReady && <PlayerItemPill text="Ready" ready />}
                     {showRoles && <PlayerItemPill text={roleKey} />}
                 </div>
             </div>

@@ -48,6 +48,7 @@ class AvalonConnection {
         socket.on('join room', ({ roomCode, nickname }: { roomCode: string; nickname: string }) =>
             this.addPlayer({ roomCode, nickname }),
         );
+        socket.on('join room as viewer', ({ roomCode }: { roomCode: string }) => this.addViewer({ roomCode }));
     }
 
     initRoom(params: { roomCode: string; nickname: string }) {
@@ -63,6 +64,13 @@ class AvalonConnection {
         } catch (error) {
             console.log(error);
         }
+    }
+
+    addViewer({ roomCode }: { roomCode: string }) {
+        this.roomCode = roomCode;
+        this.socket.join(roomCode);
+        this.ns.to(this.socket.id).emit('update room', this.room);
+        this.ns.to(this.socket.id).emit('players', this.room.players);
     }
 
     addPlayer({
