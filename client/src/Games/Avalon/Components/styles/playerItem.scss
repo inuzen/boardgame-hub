@@ -61,17 +61,23 @@
             .infoItem {
                 width: 20px;
                 height: 100%;
-                visibility: hidden;
+                opacity: 0.3;
                 .voteIcon {
-                    color: $dangerColor;
+                    color: white;
                     &.good {
                         color: $goodColor;
+                    }
+                    &.bad {
+                        color: $dangerColor;
+                    }
+                    &.ready {
+                        color: $readyColor;
                     }
                 }
             }
 
             .show {
-                visibility: visible;
+                opacity: 1;
             }
         }
         .imageContainer {

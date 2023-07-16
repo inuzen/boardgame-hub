@@ -39,39 +39,37 @@ export const ROLES: Record<ROLE_LIST, Role> = {
     [ROLE_LIST.ASSASSIN]: {
         roleName: 'Assassin',
         side: SIDES.EVIL,
-        ability:
-            'If Evil side looses then Assassin gets to kill one of the players. If he kills Merlin the Evil side wins',
+        ability: 'Evil wins if you kill Merlin at the end of the game',
         key: ROLE_LIST.ASSASSIN,
     },
     [ROLE_LIST.MERLIN]: {
         roleName: 'Merlin',
         side: SIDES.GOOD,
-        ability:
-            'You know the names of Evil players. Be careful on how you share this knowledge! If the forces of Good win but you are later killed by an Assassin then the Evil will triumph',
+        ability: 'You know the evil players, but you must remain hidden',
         key: ROLE_LIST.MERLIN,
     },
     [ROLE_LIST.PERCIVAL]: {
         roleName: 'Percival',
         side: SIDES.GOOD,
-        ability: 'Knows who is Merlin',
+        ability: 'You know identity of Merlin',
         key: ROLE_LIST.PERCIVAL,
     },
     [ROLE_LIST.MORDRED]: {
         roleName: 'Mordred',
         side: SIDES.EVIL,
-        ability: 'Does not reveal himself to Merlin',
+        ability: `Merlin doesn't know about you`,
         key: ROLE_LIST.MORDRED,
     },
     [ROLE_LIST.OBERON]: {
         roleName: 'Oberon',
         side: SIDES.EVIL,
-        ability: 'Does not reveal himself to either side',
+        ability: 'Your side is unknown to both teams',
         key: ROLE_LIST.OBERON,
     },
     [ROLE_LIST.MORGANA]: {
         roleName: 'Morgana',
         side: SIDES.EVIL,
-        ability: 'Appears as Merlin to Percival',
+        ability: 'You appear as Merlin to Percival',
         key: ROLE_LIST.MORGANA,
     },
 };
@@ -136,4 +134,5 @@ export type AvalonRoom = {
     revealVotes: boolean;
     roomCode: string;
     takenImages: Record<string, { key: string; taken: boolean }>;
+    viewers: any[];
 };

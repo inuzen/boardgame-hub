@@ -74,6 +74,8 @@ export const createRoleDistributionArray = (playerCount: number, extraRolesList:
 };
 
 export const createMessageByRole = (player: AvalonPlayer, allPlayers: AvalonPlayer[]): string => {
+    console.log(allPlayers);
+
     if (player.side === SIDES.EVIL && player.roleKey !== ROLE_LIST.OBERON) {
         const otherEvilPlayers = allPlayers.filter(
             (p) => p.side === SIDES.EVIL && p.roleKey !== ROLE_LIST.OBERON && p.socketId !== player.socketId,
