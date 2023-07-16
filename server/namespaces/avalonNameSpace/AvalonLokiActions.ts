@@ -110,7 +110,8 @@ export const assignRolesLoki = (room: AvalonLokiRoom) => {
 
     const rolesForPlayers = createRoleDistributionArray(playerCount, room.extraRoles);
 
-    players.forEach((player, i, arr) => {
+    // init info
+    players.forEach((player, i) => {
         player.roleName = rolesForPlayers[i].roleName;
         player.roleKey = rolesForPlayers[i].key;
         player.side = rolesForPlayers[i].side;
@@ -122,6 +123,9 @@ export const assignRolesLoki = (room: AvalonLokiRoom) => {
         }
         player.order = i;
         player.roleDescription = rolesForPlayers[i].ability;
+    });
+    // assign secret info based on assignments above
+    players.forEach((player, i, arr) => {
         player.secretInformation = createMessageByRole(player, arr);
     });
 };
