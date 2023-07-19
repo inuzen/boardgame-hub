@@ -1,0 +1,20 @@
+.roomInfoItem {
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    &.start {
+        justify-content: flex-start;
+    }
+    &.end {
+        justify-content: flex-end;
+    }
+}
+
+.gameTitle {
+    font-size: 16px;
+}
+
+.qr {
+    margin-left: 10px;
+    cursor: pointer;
+}

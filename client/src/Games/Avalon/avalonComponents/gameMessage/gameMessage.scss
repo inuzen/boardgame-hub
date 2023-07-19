@@ -1,0 +1,14 @@
+@import '../../styles/avalonVars.scss';
+@import '../../../../variables';
+
+.gameMessageContainer {
+    width: 100%;
+    background-color: $mainLightColor;
+    color: $mainDarkColor;
+    min-height: 25px;
+    padding: 4px;
+    border-radius: 4px;
+    .gameMessageText {
+        display: inline-block;
+    }
+}

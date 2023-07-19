@@ -1,0 +1,13 @@
+@import '../../styles/avalonVars.scss';
+@import '../../../../variables';
+
+.leaderTextContainer {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    .leaderText {
+        margin-left: 4px;
+        font-size: 12px;
+        color: $leaderColor;
+    }
+}

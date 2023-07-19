@@ -1,0 +1,11 @@
+.addRolesWrapper {
+    display: grid;
+    grid-template-columns: repeat(2, 2fr);
+    gap: 10px;
+    margin: 20px;
+}
+
+.addRolesWrapper > * {
+    justify-self: start;
+    font-size: 12px;
+}
